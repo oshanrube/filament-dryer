@@ -14,7 +14,8 @@ Sensors,Chamber temperature + humidity,1 (buy 2),SHT40 module I2C,6,"Rated to 12
 Sensors,Bay temperature + humidity (optional),1,AHT20 module,1.5,Different I2C address from the SHT40
 Sensors,Heater outlet probe,1,DS18B20 stainless probe silicone cable,2,Silicone cable version for heat
 Sensors,Load cells,2,YZC-131 5kg load cell,10,One per reel
-Sensors,Filament sensors (K1C part),3,Creality K1C filament runout sensor,24,"Lane A, lane B, after the merger; same part as the printers'"
+Sensors,Lane sensors (K1C part),2,Creality K1C filament runout sensor,16,"Lane A and lane B; same part as the printers'"
+Sensors,Motion + runout sensor,1,BIGTREETECH Smart Filament Sensor V2,13,"After the merger: runout switch plus a pulse every 2.88 mm of filament movement; runs on 3.3 V"
 Sensors,Calibration weight,1,calibration weight 500g,5,Accurate scale setup
 Heating and air,PTC air heater,1 (buy 2),PTC heater 12V 150W insulated aluminium,10,"Self-limiting, insulated shell; 150 W for the two-reel chamber"
 Heating and air,Blower (K1C part),1 (buy 2),Creality K1C 4020 blower fan 24V,16,The K1C's part-cooling blower; pushes chamber air through the heater

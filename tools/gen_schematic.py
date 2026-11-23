@@ -107,7 +107,7 @@ def section(x, y, w, h, title):
 # ---------------------------------------------------------------- frame
 out.append(f"<rect width='{W}' height='{H}' fill='white'/>")
 t(30, 44, "Two-reel filament dryer: schematic", 22, weight="bold")
-t(30, 68, "ESP32-C3 SuperMini + MCP23017 · 12 V feed · K1C fans, feeders and runout sensors · nets with the same label are connected · rev 2026-11-23", 12.5, fill=QUIET)
+t(30, 68, "ESP32-C3 SuperMini + MCP23017 · 12 V feed · K1C fans, feeders, runout sensors · BTT motion sensor · nets with the same label are connected · rev 2026-11-23", 12.5, fill=QUIET)
 
 # ---------------------------------------------------------------- power
 section(20, 90, 520, 310, "1  Power in")
@@ -133,17 +133,15 @@ section(560, 90, 520, 440, "2  Controller")
 chip(740, 150, 170, "U1", "ESP32-C3 SuperMini",
      left=[("5V", "+5V"), ("GND", "GND"), ("3V3", "+3V3"), ("GPIO0", "HX_SCK"), ("GPIO1", "HXA_DT"),
            ("GPIO2", "ONEWIRE"), ("GPIO3", "HXB_DT"), ("GPIO4", "HEAT_G")],
-     right=[("GPIO5", "BLOW_G"), ("GPIO6", "EXH_G"), ("GPIO7", "SCL"), ("GPIO8", "SDA"), ("GPIO9", "TACH"),
+     right=[("GPIO5", "BLOW_G"), ("GPIO6", "EXH_G"), ("GPIO7", "SCL"), ("GPIO8", "SDA"), ("GPIO9", None),
             ("GPIO10", "STEP_A"), ("GPIO20", "STEP_B"), ("GPIO21", None)],
      pitch=30, sub="on-board 3V3 regulator")
-t(950, 392, "spare", 10.5, fill=QUIET)
+line(944, 388, 952, 388); resistor(952, 388, "R12 1k", vertical=False); line(982, 388, 992, 388); net(992, 388, "MOTION")
 # pull-ups near MCU
 resistor(680, 464, "R10 4.7k")
 line(680, 456, 680, 464); net(680, 456, "+3V3", "left")
 line(680, 494, 680, 506); net(680, 506, "ONEWIRE", "left")
-resistor(800, 464, "R11 10k")
-line(800, 456, 800, 464); net(800, 456, "+3V3", "left")
-line(800, 494, 800, 506); net(800, 506, "TACH", "left")
+t(950, 302, "free", 10.5, fill=QUIET)
 t(880, 470, "I2C pull-ups: keep one", 10.5, fill=QUIET)
 t(880, 486, "4.7 kΩ pair (a module's", 10.5, fill=QUIET)
 t(880, 502, "own); remove the extras", 10.5, fill=QUIET)
@@ -230,14 +228,15 @@ for i, (ref, step, mot) in enumerate([("U10", "STEP_A", "M3 feeder A"), ("U11", 
     box2(1470, yy + 30, 130, 60, mot, "K1C extruder motor")
     out.append(f"<rect x='1170' y='{yy + 216}' width='14' height='26' fill='white' stroke='{LINE}' stroke-width='1.4'/>")
     line(1166, yy + 216, 1188, yy + 216, w=2)
-    t(1194, yy + 234, "C 100 µF 25 V across VM-GND, close to the driver", 10.5, fill=QUIET)
+    t(1194, yy + 234, "C 100 µF 25 V, VM to GND", 10.5, fill=QUIET)
 # EN pull-up and notes
 resistor(1560, 1180, "R20 10k")
 line(1560, 1172, 1560, 1180); net(1560, 1172, "+3V3", "left")
 line(1560, 1210, 1560, 1222); net(1560, 1222, "FEED_EN", "left")
 t(1640, 1250, "keeps both drivers off at boot", 10.5, "end", QUIET)
-t(1130, 1172, "S1-S3: K1C runout sensors (3-pin switch).", 10.5, fill=QUIET)
-t(1130, 1188, "Signal to LANE_A, LANE_B, MERGE; G to GND.", 10.5, fill=QUIET)
+chip(1500, 735, 120, "U13", "BTT SFS V2", left=[("VCC", "+3V3"), ("GND", "GND"), ("RUNOUT", "MERGE"), ("MOTION", "MOTION")], sub="after the Y-merger")
+t(1130, 1172, "S1, S2: K1C runout sensors (3-pin switch).", 10.5, fill=QUIET)
+t(1130, 1188, "Signal to LANE_A, LANE_B; G to GND.", 10.5, fill=QUIET)
 t(1130, 1204, "SW1 from BTN to GND. Pull-ups on the MCP.", 10.5, fill=QUIET)
 t(1130, 1220, "Feeders: K1C extrusion kits, driver ~0.8 A.", 10.5, fill=QUIET)
 
