@@ -62,7 +62,7 @@
 <header>
   <h1>Two-Reel Filament Dryer</h1>
   <p class="lead">One top-loading, two-reel dryer box per printer, printed in ABS/ASA. Both reels drop onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. When the printer reports a filament runout, the box feeds the second reel in and the print resumes on its own. An ESP32-C3 SuperMini running ESPHome weighs both reels and reports to the Printer Control Center over Wi-Fi.</p>
-  <p class="meta">Plan as of 2026-11-23 · parts about US$210 per box plus about 1.5 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
+  <p class="meta">Plan as of 2026-11-23 · parts about US$286 per box plus about 1.5 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
   <div class="links">
     <a href="https://github.com/oshanrube/filament-dryer">Repository</a>
     <a href="schematic.svg">Schematic (SVG)</a>
@@ -93,6 +93,7 @@
   <li><strong>Three zones plus a side pod:</strong> a heated chamber on top, an insulated floor, and a cool electronics bay underneath. The feeders sit in a pod on the side, outside the heat.</li>
   <li><strong>Weigh each cradle, not the box.</strong> Each reel's roller cradle stands on its own post through the floor to its own load cell in the cool bay.</li>
   <li><strong>Drop-in loading.</strong> Lift the lid, drop the reel on its rollers, push the filament end into its lane.</li>
+  <li><strong>K1C parts wherever they fit.</strong> The two feeders (K1C extrusion kit + extruder motor), the three filament sensors (K1C runout sensor) and both fans (K1C 4020 blower and 3010 fan) are K1C spares, so the dryers and printers share one spares box. A 12 V → 24 V boost converter feeds the 24 V K1C fans.</li>
   <li><strong>Housing in ABS or ASA only.</strong> PLA softens near 60 °C and PETG near 80 °C; both creep at 65 °C over months.</li>
 </ul>
 <div class="table-wrap"><table>
@@ -102,7 +103,7 @@
     <tr><td>eSUN 1 kg reels</td><td>Two lanes, each for Ø200 mm × up to 90 mm wide; full-width rollers fit any reel width</td></tr>
     <tr><td>Bearings fine at 65 °C</td><td>608ZZ steel-shielded bearings with standard lithium grease (rated about −20 to +120 °C)</td></tr>
     <tr><td>Automatic temp/humidity</td><td>PID heater control, SHT40 humidity sensor, exhaust fan vent, Dry / Keep dry / Print modes</td></tr>
-    <tr><td>Long-lasting parts</td><td>Ball-bearing fans, YZC load cells, TMC2209 drivers, silicone wire, stainless hardware, brass inserts</td></tr>
+    <tr><td>Long-lasting parts</td><td>K1C spare parts for the fans, feeders and filament sensors; YZC load cells, TMC2209 drivers, silicone wire, stainless hardware, brass inserts</td></tr>
     <tr><td>Weighs the reels, reports remaining</td><td>A load cell per reel; grams and metres per reel sent to the control center</td></tr>
     <tr><td>Second reel loads itself</td><td>A feeder per reel and a Y-merger; the switch starts when the printer reports a runout</td></tr>
     <tr><td>Power</td><td>12 V feed from the shared server supply, XT60 on every box</td></tr>
@@ -121,7 +122,7 @@
   <tbody>
     <tr><td>Chamber inside (L × W × H)</td><td>230 × 230 × 235 mm</td><td>Ø200 reels + 15 mm clearance; two 95 mm lanes and a 40 mm heater duct at the back</td></tr>
     <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck converter, two load cells, stepper drivers</td></tr>
-    <tr><td>Feeder pod, right side</td><td>about 70 × 185 × 120 mm</td><td>Lane sensors, feeders, Y-merger, merge sensor, outside the heat</td></tr>
+    <tr><td>Feeder pod, right side</td><td>about 85 × 185 × 120 mm</td><td>Lane sensors, feeders, Y-merger, merge sensor, outside the heat</td></tr>
     <tr><td>Outside, without the pod</td><td>250 × 250 × 335 mm</td><td>4 mm walls + 6 mm insulation</td></tr>
     <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
     <tr><td>Roller length</td><td>95 mm per lane</td><td>Any reel 50-90 mm wide</td></tr>
@@ -148,7 +149,7 @@
     <tr><td>Load posts + mount blocks</td><td>2 sets</td><td>25 g each</td><td>K1C</td><td>Print the posts solid</td></tr>
     <tr><td>Heater duct + blower mount</td><td>1</td><td>40 g</td><td>K1C</td><td>At least 15 mm between ABS and the PTC fins</td></tr>
     <tr><td>Desiccant cassette</td><td>1</td><td>30 g</td><td>K1C</td><td>Perforated face</td></tr>
-    <tr><td>Feeder pod + cover</td><td>1</td><td>90 g</td><td>K1C</td><td>Both feeders, three sensors, the Y-merger</td></tr>
+    <tr><td>Feeder pod + cover</td><td>1</td><td>90 g</td><td>K1C</td><td>Both K1C extruders, three K1C runout sensors, the Y-merger</td></tr>
     <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Perfboard, OLED, button</td></tr>
   </tbody>
 </table></div>
@@ -176,8 +177,8 @@
 
 <h2 id="heating">Heating, humidity and safety</h2>
 <p>A PID loop on the ESP32 drives a 12 V 150 W PTC heater, a blower pushes chamber air through it, and an exhaust fan vents moist air while drying. Four independent layers stop it overheating.</p>
-<p><strong>Air loop.</strong> The 5015 blower sits at the inlet of the duct behind the reels, pulling chamber air (at most 70 °C) through the PTC fins and forward over both reels. The PTC sits in a short bent aluminium channel; the printed duct starts after it.</p>
-<p><strong>Venting.</strong> A 4010 12 V exhaust fan behind a gravity flap in the lid pulses while drying and the flap falls shut when it stops.</p>
+<p><strong>Air loop.</strong> The blower (a K1C 4020 part-cooling blower, 24 V) sits at the inlet of the duct behind the reels, pulling chamber air (at most 70 °C) through the PTC fins and forward over both reels. The PTC sits in a short bent aluminium channel; the printed duct starts after it.</p>
+<p><strong>Venting.</strong> A K1C 3010 hotend fan (24 V) as the exhaust fan, behind a gravity flap in the lid pulses while drying and the flap falls shut when it stops.</p>
 <p><strong>Sensors.</strong> SHT40 for chamber temperature and humidity (rated to 125 °C), a DS18B20 in the heater outlet, and an optional AHT20 in the bay.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
@@ -232,12 +233,12 @@
 <h2 id="power">Power: 12 V feed</h2>
 <p>Every box runs from one shared HP 1600 W server supply over a 12 V feed; only that supply touches mains (240 V AC). There is no other power input on the box.</p>
 <ul>
-  <li><strong>Load per box:</strong> heater 12.5 A, fans about 0.4 A, feeders about 0.6 A while feeding, electronics about 0.15 A: about 13.5 A peak. Seven boxes are about 1.1 kW at worst, 70% of the supply's rating.</li>
+  <li><strong>Load per box:</strong> heater 12.5 A, fans about 0.7 A through the 24 V boost converter, feeders about 0.6 A while feeding, electronics about 0.15 A: about 13.5 A peak. Seven boxes are about 1.1 kW at worst, 70% of the supply's rating.</li>
   <li><strong>Connector: XT60, not a barrel jack.</strong> Common 5.5 mm barrel jacks are rated 3-5 A.</li>
   <li><strong>Fuse every branch at the supply:</strong> a short 6 AWG cable to a blade fuse block, a 15 A fuse per box there and another inside each box. Fuse only the + wire.</li>
   <li><strong>Wire gauge:</strong> 14 AWG for leads up to about 3 m, 12 AWG beyond that.</li>
   <li><strong>The supply:</strong> needs its enable pins bridged or a breakout board; its fans are loud.</li>
-  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini's 5 V pin; the SuperMini makes its own 3.3 V.</li>
+  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini's 5 V pin; the SuperMini makes its own 3.3 V. An XL6009 boost converter makes 24 V for the two K1C fans.</li>
   <li><strong>If the supply goes off,</strong> every box goes offline; the printer's own runout pause still works.</li>
 </ul>
 
@@ -275,7 +276,7 @@
 </table></div>
 
 <h2 id="parts">Parts catalog</h2>
-<p>About US$212 per box, plus about US$30 once for the shared supply's wiring. Prices are approximate, not checked against today's listings; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
+<p>About US$286 per box, plus about US$30 once for the shared supply's wiring. Prices are approximate, not checked against today's listings; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>. Parts marked "K1C part" are Creality K1C spares: they cost about US$75 more per box than generic equivalents, but each can go straight into a printer. Check part numbers against a printer before ordering.</p>
 <h3>Control electronics (≈ US$17)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
@@ -291,35 +292,36 @@
 <tr><td>Push button</td><td>1</td><td>12mm momentary panel push button</td><td class="num">0.5</td><td>Short press cycles mode, long press tares</td></tr>
 <tr><td>Buzzer</td><td>1</td><td>active buzzer 5V</td><td class="num">0.5</td><td>Fault alarm</td></tr>
 </tbody></table></div>
-<h3>Sensors (≈ US$30)</h3>
+<h3>Sensors (≈ US$48)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
 <tr><td>Chamber temperature + humidity</td><td>1 (buy 2)</td><td>SHT40 module I2C</td><td class="num">6</td><td>Rated to 125 C, stable in hot damp air</td></tr>
 <tr><td>Bay temperature + humidity (optional)</td><td>1</td><td>AHT20 module</td><td class="num">1.5</td><td>Different I2C address from the SHT40</td></tr>
 <tr><td>Heater outlet probe</td><td>1</td><td>DS18B20 stainless probe silicone cable</td><td class="num">2</td><td>Silicone cable version for heat</td></tr>
 <tr><td>Load cells</td><td>2</td><td>YZC-131 5kg load cell</td><td class="num">10</td><td>One per reel</td></tr>
-<tr><td>Filament sensors</td><td>3</td><td>filament runout sensor switch module</td><td class="num">5</td><td>Lane A, lane B, and after the merger</td></tr>
+<tr><td>Filament sensors (K1C part)</td><td>3</td><td>Creality K1C filament runout sensor</td><td class="num">24</td><td>Lane A, lane B, after the merger; same part as the printers&#x27;</td></tr>
 <tr><td>Calibration weight</td><td>1</td><td>calibration weight 500g</td><td class="num">5</td><td>Accurate scale setup</td></tr>
 </tbody></table></div>
-<h3>Heating and air (≈ US$26)</h3>
+<h3>Heating and air (≈ US$46)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
 <tr><td>PTC air heater</td><td>1 (buy 2)</td><td>PTC heater 12V 150W insulated aluminium</td><td class="num">10</td><td>Self-limiting, insulated shell; 150 W for the two-reel chamber</td></tr>
-<tr><td>Blower fan</td><td>1 (buy 2)</td><td>5015 blower 12V dual ball bearing</td><td class="num">6</td><td>Ball bearings outlast sleeve bearings in heat</td></tr>
-<tr><td>Exhaust fan</td><td>1</td><td>4010 fan 12V ball bearing</td><td class="num">2.5</td><td>Vent while drying</td></tr>
+<tr><td>Blower (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 4020 blower fan 24V</td><td class="num">16</td><td>The K1C&#x27;s part-cooling blower; pushes chamber air through the heater</td></tr>
+<tr><td>Exhaust fan (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 3010 hotend fan 24V</td><td class="num">10</td><td>The K1C&#x27;s hotend fan; vents while drying</td></tr>
+<tr><td>12 V to 24 V boost converter</td><td>1</td><td>XL6009 boost converter module</td><td class="num">1.5</td><td>Powers the two 24 V K1C fans (about 0.3 A)</td></tr>
 <tr><td>Bimetal thermostat</td><td>2</td><td>KSD301 85 normally closed 16A</td><td class="num">1.5</td><td>Auto-reset hardware cut-out</td></tr>
 <tr><td>Thermal fuse</td><td>10-pack</td><td>thermal fuse 92C 15A</td><td class="num">1.5</td><td>One-shot last-resort cut-out</td></tr>
 <tr><td>Aluminium sheet</td><td>1</td><td>aluminium sheet 1mm 100x200</td><td class="num">3</td><td>Heater channel and heat shield</td></tr>
 <tr><td>Inline blade fuse holder + fuses</td><td>1</td><td>mini blade fuse holder 14AWG</td><td class="num">2</td><td>15 A on the box&#x27;s 12 V input</td></tr>
 </tbody></table></div>
-<h3>Feeders (≈ US$36)</h3>
+<h3>Feeders (≈ US$72)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
-<tr><td>Feeder gears</td><td>2 sets</td><td>BMG dual drive extruder gear kit</td><td class="num">8</td><td>Grips from both sides, pushes filament up a long tube</td></tr>
-<tr><td>Feeder motors</td><td>2</td><td>NEMA14 pancake stepper 20mm</td><td class="num">16</td><td>Small and light, enough torque to feed</td></tr>
-<tr><td>Stepper drivers</td><td>2</td><td>TMC2209 stepper driver</td><td class="num">6</td><td>Quiet; standalone mode, current set on the driver&#x27;s pot</td></tr>
+<tr><td>Feeder mechanism (K1C part)</td><td>2</td><td>Creality K1C extrusion kit 4001020076 (without motor)</td><td class="num">30</td><td>The K1C&#x27;s own dual-gear extruder; spares shared with the printers</td></tr>
+<tr><td>Feeder motor (K1C part)</td><td>2</td><td>Creality K1C extruder motor 42-40 circular</td><td class="num">30</td><td>The K1C&#x27;s extruder stepper (1 A); fine on 12 V at feeding speeds</td></tr>
+<tr><td>Stepper drivers</td><td>2</td><td>TMC2209 stepper driver</td><td class="num">6</td><td>Quiet; standalone mode, current set on the driver&#x27;s pot (about 0.8 A)</td></tr>
 <tr><td>Y-merger</td><td>1</td><td>2 in 1 PTFE filament hub PC4</td><td class="num">3</td><td>Two lanes into one tube</td></tr>
-<tr><td>PTFE for inside the pod</td><td>1 m</td><td>PTFE tube 2x4mm</td><td class="num">2</td><td>Feeders to merger</td></tr>
+<tr><td>PTFE for inside the pod</td><td>1 m</td><td>PTFE tube 2x4mm</td><td class="num">2</td><td>The same tube the K1C uses</td></tr>
 <tr><td>Driver capacitors</td><td>2</td><td>100uF 25V electrolytic capacitor</td><td class="num">1</td><td>Across each driver&#x27;s 12 V input, close to the driver</td></tr>
 </tbody></table></div>
 <h3>Power (≈ US$37)</h3>

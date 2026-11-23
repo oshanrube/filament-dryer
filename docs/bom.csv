@@ -14,20 +14,21 @@ Sensors,Chamber temperature + humidity,1 (buy 2),SHT40 module I2C,6,"Rated to 12
 Sensors,Bay temperature + humidity (optional),1,AHT20 module,1.5,Different I2C address from the SHT40
 Sensors,Heater outlet probe,1,DS18B20 stainless probe silicone cable,2,Silicone cable version for heat
 Sensors,Load cells,2,YZC-131 5kg load cell,10,One per reel
-Sensors,Filament sensors,3,filament runout sensor switch module,5,"Lane A, lane B, and after the merger"
+Sensors,Filament sensors (K1C part),3,Creality K1C filament runout sensor,24,"Lane A, lane B, after the merger; same part as the printers'"
 Sensors,Calibration weight,1,calibration weight 500g,5,Accurate scale setup
 Heating and air,PTC air heater,1 (buy 2),PTC heater 12V 150W insulated aluminium,10,"Self-limiting, insulated shell; 150 W for the two-reel chamber"
-Heating and air,Blower fan,1 (buy 2),5015 blower 12V dual ball bearing,6,Ball bearings outlast sleeve bearings in heat
-Heating and air,Exhaust fan,1,4010 fan 12V ball bearing,2.5,Vent while drying
+Heating and air,Blower (K1C part),1 (buy 2),Creality K1C 4020 blower fan 24V,16,The K1C's part-cooling blower; pushes chamber air through the heater
+Heating and air,Exhaust fan (K1C part),1 (buy 2),Creality K1C 3010 hotend fan 24V,10,The K1C's hotend fan; vents while drying
+Heating and air,12 V to 24 V boost converter,1,XL6009 boost converter module,1.5,Powers the two 24 V K1C fans (about 0.3 A)
 Heating and air,Bimetal thermostat,2,KSD301 85 normally closed 16A,1.5,Auto-reset hardware cut-out
 Heating and air,Thermal fuse,10-pack,thermal fuse 92C 15A,1.5,One-shot last-resort cut-out
 Heating and air,Aluminium sheet,1,aluminium sheet 1mm 100x200,3,Heater channel and heat shield
 Heating and air,Inline blade fuse holder + fuses,1,mini blade fuse holder 14AWG,2,15 A on the box's 12 V input
-Feeders,Feeder gears,2 sets,BMG dual drive extruder gear kit,8,"Grips from both sides, pushes filament up a long tube"
-Feeders,Feeder motors,2,NEMA14 pancake stepper 20mm,16,"Small and light, enough torque to feed"
-Feeders,Stepper drivers,2,TMC2209 stepper driver,6,"Quiet; standalone mode, current set on the driver's pot"
+Feeders,Feeder mechanism (K1C part),2,Creality K1C extrusion kit 4001020076 (without motor),30,The K1C's own dual-gear extruder; spares shared with the printers
+Feeders,Feeder motor (K1C part),2,Creality K1C extruder motor 42-40 circular,30,The K1C's extruder stepper (1 A); fine on 12 V at feeding speeds
+Feeders,Stepper drivers,2,TMC2209 stepper driver,6,"Quiet; standalone mode, current set on the driver's pot (about 0.8 A)"
 Feeders,Y-merger,1,2 in 1 PTFE filament hub PC4,3,Two lanes into one tube
-Feeders,PTFE for inside the pod,1 m,PTFE tube 2x4mm,2,Feeders to merger
+Feeders,PTFE for inside the pod,1 m,PTFE tube 2x4mm,2,The same tube the K1C uses
 Feeders,Driver capacitors,2,100uF 25V electrolytic capacitor,1,"Across each driver's 12 V input, close to the driver"
 Power,Shared: server supply breakout board,1,HP 1200W 1600W server power supply breakout board,10,"Switches the supply on, screw terminals for 12 V"
 Power,Shared: fuse block,1,12 way blade fuse box with negative bus,10,"One 15 A fuse per box, room for all seven"

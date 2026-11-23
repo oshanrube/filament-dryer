@@ -107,7 +107,7 @@ def section(x, y, w, h, title):
 # ---------------------------------------------------------------- frame
 out.append(f"<rect width='{W}' height='{H}' fill='white'/>")
 t(30, 44, "Two-reel filament dryer: schematic", 22, weight="bold")
-t(30, 68, "ESP32-C3 SuperMini + MCP23017 · 12 V feed · nets with the same label are connected · rev 2026-11-23", 12.5, fill=QUIET)
+t(30, 68, "ESP32-C3 SuperMini + MCP23017 · 12 V feed · K1C fans, feeders and runout sensors · nets with the same label are connected · rev 2026-11-23", 12.5, fill=QUIET)
 
 # ---------------------------------------------------------------- power
 section(20, 90, 520, 310, "1  Power in")
@@ -122,6 +122,7 @@ net(262, 165, "+12V")
 line(120, 195, 150, 195)
 gnd(150, 195)
 # buck
+chip(340, 166, 150, "U12", "XL6009 boost", left=[("IN+", "+12V"), ("IN-", "GND")], right=[("OUT+", "+24V"), ("OUT-", "GND")], sub="24 V for the K1C fans")
 chip(340, 300, 150, "U2", "Mini560 buck", left=[("IN+", "+12V"), ("IN-", "GND")], right=[("OUT+", "+5V"), ("OUT-", "GND")], sub="5 V out, 7-20 V in")
 t(50, 256, "Shared server PSU feeds every box;", 10.5, fill=QUIET)
 t(50, 272, "a 15 A fuse per box also sits at", 10.5, fill=QUIET)
@@ -200,8 +201,8 @@ def fan_stage(y, ref, label, sub, gate_net, qref, rref, top_net="+12V"):
     dot(xf - 44, y + 92); line(xf - 44, y + 92, xf - 44, y + 104); resistor(xf - 44, y + 104, "10k"); line(xf - 44, y + 134, xf - 44, y + 138); gnd(xf - 44, y + 138)
 
 
-fan_stage(775, "M1 blower", "5015 12 V", "tach → TACH", "BLOW_G", "Q2", "R3")
-fan_stage(940, "M2 exhaust", "4010 12 V", "", "EXH_G", "Q3", "R5")
+fan_stage(775, "M1 blower", "K1C 4020 24V", "", "BLOW_G", "Q2", "R3", top_net="+24V")
+fan_stage(940, "M2 exhaust", "K1C 3010 24V", "", "EXH_G", "Q3", "R5", top_net="+24V")
 fan_stage(1105, "BZ1 buzzer", "active 5 V", "", "BUZ_G", "Q4", "R7", top_net="+5V")
 
 # ---------------------------------------------------------------- scale + temp
@@ -226,7 +227,7 @@ for i, (ref, step, mot) in enumerate([("U10", "STEP_A", "M3 feeder A"), ("U11", 
          right=[("A1", None), ("A2", None), ("B1", None), ("B2", None)], sub="standalone, 1/8 step")
     for j in range(4):
         line(1424, yy + 28 + j * 22, 1470, yy + 28 + j * 22)
-    box2(1470, yy + 30, 120, 60, mot, "NEMA14 pancake")
+    box2(1470, yy + 30, 130, 60, mot, "K1C extruder motor")
     out.append(f"<rect x='1170' y='{yy + 216}' width='14' height='26' fill='white' stroke='{LINE}' stroke-width='1.4'/>")
     line(1166, yy + 216, 1188, yy + 216, w=2)
     t(1194, yy + 234, "C 100 µF 25 V across VM-GND, close to the driver", 10.5, fill=QUIET)
@@ -235,10 +236,10 @@ resistor(1560, 1180, "R20 10k")
 line(1560, 1172, 1560, 1180); net(1560, 1172, "+3V3", "left")
 line(1560, 1210, 1560, 1222); net(1560, 1222, "FEED_EN", "left")
 t(1640, 1250, "keeps both drivers off at boot", 10.5, "end", QUIET)
-t(1130, 1172, "Filament switch modules (V, G, S) on +3V3:", 10.5, fill=QUIET)
-t(1130, 1188, "S1-S3 S pins to LANE_A, LANE_B, MERGE;", 10.5, fill=QUIET)
-t(1130, 1204, "SW1 from BTN to GND.", 10.5, fill=QUIET)
-t(1130, 1220, "MCP23017 internal pull-ups on.", 10.5, fill=QUIET)
+t(1130, 1172, "S1-S3: K1C runout sensors (3-pin switch).", 10.5, fill=QUIET)
+t(1130, 1188, "Signal to LANE_A, LANE_B, MERGE; G to GND.", 10.5, fill=QUIET)
+t(1130, 1204, "SW1 from BTN to GND. Pull-ups on the MCP.", 10.5, fill=QUIET)
+t(1130, 1220, "Feeders: K1C extrusion kits, driver ~0.8 A.", 10.5, fill=QUIET)
 
 svg = (f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {W} {H}' width='{W}' height='{H}' {FONT}>"
        + "".join(out) + "</svg>\n")
