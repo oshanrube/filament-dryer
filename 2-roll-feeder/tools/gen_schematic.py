@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate docs/schematic.svg for the two-reel filament dryer.
+"""Generate 2-roll-feeder/schematic.svg for the two-reel filament dryer.
 
 Connections use net labels: two pins with the same label are wired together.
-Run:  python3 tools/gen_schematic.py
+Run:  python3 2-roll-feeder/tools/gen_schematic.py
 """
 from pathlib import Path
 
@@ -242,7 +242,7 @@ t(1130, 1220, "Feeders: K1C extrusion kits, driver ~0.8 A.", 10.5, fill=QUIET)
 
 svg = (f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {W} {H}' width='{W}' height='{H}' {FONT}>"
        + "".join(out) + "</svg>\n")
-dest = Path(__file__).resolve().parent.parent / "docs" / "schematic.svg"
+dest = Path(__file__).resolve().parent.parent / "schematic.svg"
 dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_text(svg)
 print("wrote", dest)

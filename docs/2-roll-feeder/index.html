@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Two-Reel Filament Dryer</title>
-<meta name="description" content="A 3D-printed, two-reel filament dryer and dispenser with automatic reel switch-over, per-reel weighing and Printer Control Center integration.">
+<meta name="description" content="Two-reel dryer and feeder with automatic reel switch-over, per-reel weighing and motion sensing.">
 <style>
   :root {
     --bg: #ffffff; --surface: #f6f8fa; --text: #1f2328; --muted: #59636e;
@@ -55,14 +55,26 @@
   ul.checks { list-style: none; padding-left: 0; }
   ul.checks li::before { content: "☐  "; color: var(--muted); }
   footer { margin-top: 64px; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--border); padding-top: 16px; }
+  .site { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .site .brand { font-weight: 700; color: var(--text); text-decoration: none; }
+  .site .repo { font-size: .9rem; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 0 28px; overflow-x: auto; }
+  .tabs a { padding: 10px 14px; text-decoration: none; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tabs a:hover { color: var(--text); }
+  .tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+  .card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--surface); }
+  .card h3 { margin-top: 0; }
+  .card img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); background: #fff; }
 </style>
-</head>
 <body>
 <main>
+<div class="site"><a class="brand" href="../index.html">Filament Dryer</a><a class="repo" href="https://github.com/oshanrube/filament-dryer">GitHub repository</a></div>
+<nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html" aria-current="page">2-roll feeder</a><a href="../1-roll/index.html">1 roll</a></nav>
 <header>
   <h1>Two-Reel Filament Dryer</h1>
   <p class="lead">One top-loading, two-reel dryer box per printer, printed in ABS/ASA. Both reels drop onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. When the printer reports a filament runout, the box feeds the second reel in and the print resumes on its own. An ESP32-C3 SuperMini running ESPHome weighs both reels and reports to the Printer Control Center over Wi-Fi.</p>
-  <p class="meta">Plan as of 2026-11-23 · parts about US${{BOM_PER_BOX}} per box plus about 1.5 kg of ABS/ASA; the shared 12 V supply's wiring adds about US${{BOM_SHARED}} once.</p>
+  <p class="meta">Plan as of 2026-11-23 · parts about US$291 per box plus about 1.5 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
   <div class="links">
     <a href="https://github.com/oshanrube/filament-dryer">Repository</a>
     <a href="schematic.svg">Schematic (SVG)</a>
@@ -277,8 +289,93 @@
 </table></div>
 
 <h2 id="parts">Parts catalog</h2>
-<p>About US${{BOM_PER_BOX}} per box, plus about US${{BOM_SHARED}} once for the shared supply's wiring. Prices are approximate, not checked against today's listings; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>. Parts marked "K1C part" are Creality K1C spares: they cost about US$75 more per box than generic equivalents, but each can go straight into a printer. Check part numbers against a printer before ordering.</p>
-{{BOM_TABLES}}
+<p>About US$291 per box, plus about US$30 once for the shared supply's wiring. Prices are approximate, not checked against today's listings; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>. Parts marked "K1C part" are Creality K1C spares: they cost about US$75 more per box than generic equivalents, but each can go straight into a printer. Check part numbers against a printer before ordering.</p>
+<h3>Control electronics (≈ US$17)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>ESP32-C3 SuperMini</td><td>1</td><td>(already on hand)</td><td class="num">0</td><td>Enough pins with the I/O expander</td></tr>
+<tr><td>I/O expander</td><td>1</td><td>MCP23017 module I2C</td><td class="num">1.5</td><td>Filament sensors, button, buzzer, feeder enable and direction</td></tr>
+<tr><td>HX711 load-cell amplifiers</td><td>2 (buy 3)</td><td>HX711 module red shielded</td><td class="num">4</td><td>Shielded board; avoid the green ones with the E- ground fault</td></tr>
+<tr><td>Heater MOSFET</td><td>2</td><td>IRLB8721 TO-220</td><td class="num">1.5</td><td>Fully on with a 3.3 V gate, runs cool at 12.5 A</td></tr>
+<tr><td>Fan and buzzer MOSFETs</td><td>10-pack</td><td>AO3400 SOT-23</td><td class="num">1</td><td>Blower, exhaust fan, buzzer</td></tr>
+<tr><td>12 V to 5 V buck converter</td><td>1 (buy 2)</td><td>Mini560 5V 3A step down</td><td class="num">1.5</td><td>Takes 7-20 V in, so 12 V suits it</td></tr>
+<tr><td>Perfboard</td><td>2</td><td>double sided prototype PCB 5x7</td><td class="num">1.5</td><td>Everything soldered on one board, JST-XH headers to the box</td></tr>
+<tr><td>Resistor kit</td><td>1</td><td>1/4W metal film resistor kit</td><td class="num">2</td><td>10k gate pull-downs and feeder-enable pull-up, 100R gate resistors, 4.7k 1-wire pull-up</td></tr>
+<tr><td>OLED display (optional)</td><td>1</td><td>1.3 inch SH1106 OLED I2C</td><td class="num">3</td><td>Local status</td></tr>
+<tr><td>Push button</td><td>1</td><td>12mm momentary panel push button</td><td class="num">0.5</td><td>Short press cycles mode, long press tares</td></tr>
+<tr><td>Buzzer</td><td>1</td><td>active buzzer 5V</td><td class="num">0.5</td><td>Fault alarm</td></tr>
+</tbody></table></div>
+<h3>Sensors (≈ US$54)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Chamber temperature + humidity</td><td>1 (buy 2)</td><td>SHT40 module I2C</td><td class="num">6</td><td>Rated to 125 C, stable in hot damp air</td></tr>
+<tr><td>Bay temperature + humidity (optional)</td><td>1</td><td>AHT20 module</td><td class="num">1.5</td><td>Different I2C address from the SHT40</td></tr>
+<tr><td>Heater outlet probe</td><td>1</td><td>DS18B20 stainless probe silicone cable</td><td class="num">2</td><td>Silicone cable version for heat</td></tr>
+<tr><td>Load cells</td><td>2</td><td>YZC-131 5kg load cell</td><td class="num">10</td><td>One per reel</td></tr>
+<tr><td>Lane sensors (K1C part)</td><td>2</td><td>Creality K1C filament runout sensor</td><td class="num">16</td><td>Lane A and lane B; same part as the printers&#x27;</td></tr>
+<tr><td>Motion + runout sensor</td><td>1</td><td>BIGTREETECH Smart Filament Sensor V2</td><td class="num">13</td><td>After the merger: runout switch plus a pulse every 2.88 mm of filament movement; runs on 3.3 V</td></tr>
+<tr><td>Calibration weight</td><td>1</td><td>calibration weight 500g</td><td class="num">5</td><td>Accurate scale setup</td></tr>
+</tbody></table></div>
+<h3>Heating and air (≈ US$46)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>PTC air heater</td><td>1 (buy 2)</td><td>PTC heater 12V 150W insulated aluminium</td><td class="num">10</td><td>Self-limiting, insulated shell; 150 W for the two-reel chamber</td></tr>
+<tr><td>Blower (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 4020 blower fan 24V</td><td class="num">16</td><td>The K1C&#x27;s part-cooling blower; pushes chamber air through the heater</td></tr>
+<tr><td>Exhaust fan (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 3010 hotend fan 24V</td><td class="num">10</td><td>The K1C&#x27;s hotend fan; vents while drying</td></tr>
+<tr><td>12 V to 24 V boost converter</td><td>1</td><td>XL6009 boost converter module</td><td class="num">1.5</td><td>Powers the two 24 V K1C fans (about 0.3 A)</td></tr>
+<tr><td>Bimetal thermostat</td><td>2</td><td>KSD301 85 normally closed 16A</td><td class="num">1.5</td><td>Auto-reset hardware cut-out</td></tr>
+<tr><td>Thermal fuse</td><td>10-pack</td><td>thermal fuse 92C 15A</td><td class="num">1.5</td><td>One-shot last-resort cut-out</td></tr>
+<tr><td>Aluminium sheet</td><td>1</td><td>aluminium sheet 1mm 100x200</td><td class="num">3</td><td>Heater channel and heat shield</td></tr>
+<tr><td>Inline blade fuse holder + fuses</td><td>1</td><td>mini blade fuse holder 14AWG</td><td class="num">2</td><td>15 A on the box&#x27;s 12 V input</td></tr>
+</tbody></table></div>
+<h3>Feeders (≈ US$72)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Feeder mechanism (K1C part)</td><td>2</td><td>Creality K1C extrusion kit 4001020076 (without motor)</td><td class="num">30</td><td>The K1C&#x27;s own dual-gear extruder; spares shared with the printers</td></tr>
+<tr><td>Feeder motor (K1C part)</td><td>2</td><td>Creality K1C extruder motor 42-40 circular</td><td class="num">30</td><td>The K1C&#x27;s extruder stepper (1 A); fine on 12 V at feeding speeds</td></tr>
+<tr><td>Stepper drivers</td><td>2</td><td>TMC2209 stepper driver</td><td class="num">6</td><td>Quiet; standalone mode, current set on the driver&#x27;s pot (about 0.8 A)</td></tr>
+<tr><td>Y-merger</td><td>1</td><td>2 in 1 PTFE filament hub PC4</td><td class="num">3</td><td>Two lanes into one tube</td></tr>
+<tr><td>PTFE for inside the pod</td><td>1 m</td><td>PTFE tube 2x4mm</td><td class="num">2</td><td>The same tube the K1C uses</td></tr>
+<tr><td>Driver capacitors</td><td>2</td><td>100uF 25V electrolytic capacitor</td><td class="num">1</td><td>Across each driver&#x27;s 12 V input, close to the driver</td></tr>
+</tbody></table></div>
+<h3>Power (≈ US$37)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Shared: server supply breakout board</td><td>1</td><td>HP 1200W 1600W server power supply breakout board</td><td class="num">10</td><td>Switches the supply on, screw terminals for 12 V</td></tr>
+<tr><td>Shared: fuse block</td><td>1</td><td>12 way blade fuse box with negative bus</td><td class="num">10</td><td>One 15 A fuse per box, room for all seven</td></tr>
+<tr><td>Shared: trunk cable</td><td>1 m red + 1 m black</td><td>6AWG silicone wire</td><td class="num">10</td><td>Supply to fuse block, up to about 95 A</td></tr>
+<tr><td>Per box: power connector</td><td>1 pair</td><td>XT60 panel mount</td><td class="num">2</td><td>Rated far above 13 A, keyed</td></tr>
+<tr><td>Per box: supply lead</td><td>up to 3 m red + black</td><td>14AWG silicone wire</td><td class="num">5</td><td>About 0.6 V drop at 13 A over 3 m</td></tr>
+</tbody></table></div>
+<h3>Wiring and connectors (≈ US$26)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Heater-path wire</td><td>2 m red + 2 m black</td><td>14AWG silicone wire</td><td class="num">4</td><td>Silicone insulation, rated to 200 C</td></tr>
+<tr><td>Signal wire</td><td>set</td><td>22AWG silicone wire 6 colours</td><td class="num">5</td><td>Sensors, fans, steppers</td></tr>
+<tr><td>Lever connectors</td><td>set</td><td>WAGO 221</td><td class="num">4</td><td>Get the genuine ones</td></tr>
+<tr><td>Ferrules + crimper</td><td>kit</td><td>ferrule crimping tool kit</td><td class="num">5</td><td>Reliable screw-terminal joints</td></tr>
+<tr><td>JST-XH connectors</td><td>kit</td><td>JST XH 2.54 kit with crimper</td><td class="num">5</td><td>Unpluggable sensors, fans and steppers</td></tr>
+<tr><td>Heat-shrink</td><td>set</td><td>heat shrink tube kit</td><td class="num">3</td><td></td></tr>
+</tbody></table></div>
+<h3>Mechanical and consumables (≈ US$70)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Bearings</td><td>8 (pack of 10)</td><td>608ZZ bearing NSK or 608ZZ C&amp;U</td><td class="num">6</td><td>Steel shields, grease rated about -20 to +120 C</td></tr>
+<tr><td>Roller axles</td><td>4 + nuts</td><td>M8 x 120 stainless A2 hex bolt + nyloc</td><td class="num">6</td><td>No rust in a humid box</td></tr>
+<tr><td>Lid hinges</td><td>2</td><td>stainless steel hinge 40mm</td><td class="num">3</td><td></td></tr>
+<tr><td>Lid latches</td><td>2</td><td>mini stainless toggle latch</td><td class="num">4</td><td>Positive seal; magnets weaken when hot</td></tr>
+<tr><td>Lid gasket</td><td>3 m</td><td>silicone D seal strip self adhesive</td><td class="num">4</td><td>Stays soft at 70 C</td></tr>
+<tr><td>Filament fittings</td><td>8</td><td>PC4-M10 pneumatic coupler bulkhead</td><td class="num">5</td><td>Lane exits, pod connections, printer end</td></tr>
+<tr><td>PTFE tube</td><td>2 m</td><td>PTFE tube 2x4mm</td><td class="num">4</td><td>Box to printer</td></tr>
+<tr><td>Insulation</td><td>0.7 m2</td><td>NBR rubber foam aluminium foil self adhesive 6mm</td><td class="num">11</td><td>Rated to about 105 C</td></tr>
+<tr><td>Heat-set inserts</td><td>100</td><td>M3 brass heat set insert</td><td class="num">4</td><td>Screws that can be undone many times</td></tr>
+<tr><td>Screws</td><td>kit</td><td>M3 stainless socket screw kit</td><td class="num">6</td><td></td></tr>
+<tr><td>Load-cell screws</td><td>8</td><td>M4 / M5 stainless (match your cells&#x27; threads)</td><td class="num">3</td><td></td></tr>
+<tr><td>Feet</td><td>4</td><td>rubber feet adhesive</td><td class="num">1</td><td></td></tr>
+<tr><td>Desiccant</td><td>500 g</td><td>orange indicating silica gel</td><td class="num">5</td><td>Changes colour when spent</td></tr>
+<tr><td>High-temp silicone</td><td>1 tube</td><td>high temperature RTV silicone red</td><td class="num">4</td><td>Seal cable holes through the floor</td></tr>
+<tr><td>Window (optional)</td><td>1</td><td>polycarbonate sheet 2mm</td><td class="num">4</td><td>Not acrylic</td></tr>
+</tbody></table></div>
 
 <h2 id="integration">Firmware and control center</h2>
 <p>The box runs ESPHome (<code>firmware/dryer.yaml</code> in this repo). The Printer Control Center keeps one live connection per dryer, links it to the printer it feeds and shows both reels on that printer's card. The safety rules run on the ESP32 itself, so the box stays safe if Wi-Fi or the Pi is down.</p>
@@ -321,7 +418,7 @@
   <li>Housing shows no warping after the 12 h soak</li>
 </ul>
 
-<footer>Generated from <code>site/index.template.html</code> and <code>docs/bom.csv</code> by <code>tools/build_site.py</code>.</footer>
+<footer>Built from <code>2-roll-feeder/page.html</code> and <code>2-roll-feeder/bom.csv</code> by <code>tools/build_site.py</code>.</footer>
 </main>
 </body>
 </html>

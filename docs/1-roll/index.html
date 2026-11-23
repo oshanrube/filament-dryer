@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Single-Reel Filament Dryer</title>
+<meta name="description" content="Single-reel dryer with weighing, filament motion sensing and Printer Control Center integration.">
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f6f8fa; --text: #1f2328; --muted: #59636e;
+    --border: #d1d9e0; --accent: #0969da; --warn: #bc4c00; --code-bg: #eff2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --surface: #151b23; --text: #e6edf3; --muted: #9198a1;
+      --border: #3d444d; --accent: #4493f8; --warn: #f0883e; --code-bg: #1f2630;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117; --surface: #151b23; --text: #e6edf3; --muted: #9198a1;
+    --border: #3d444d; --accent: #4493f8; --warn: #f0883e; --code-bg: #1f2630;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 80px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 8px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.45rem; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; margin: 28px 0 8px; }
+  p, li { max-width: 72ch; }
+  a { color: var(--accent); }
+  .lead { font-size: 1.08rem; }
+  .meta { color: var(--muted); font-size: .92rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: .95rem; }
+  nav.toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 24px 0; }
+  nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+  nav.toc li { break-inside: avoid; }
+  @media (max-width: 600px) { nav.toc ol { columns: 1; } }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  .table-wrap { overflow-x: auto; margin: 12px 0 20px; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; white-space: nowrap; }
+  figure { margin: 20px 0 28px; }
+  figure img { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+  figcaption { color: var(--muted); font-size: .9rem; margin-top: 6px; }
+  .callout { border-left: 3px solid var(--warn); background: var(--surface); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; overflow-x: auto; }
+  ul.checks { list-style: none; padding-left: 0; }
+  ul.checks li::before { content: "☐  "; color: var(--muted); }
+  footer { margin-top: 64px; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--border); padding-top: 16px; }
+  .site { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .site .brand { font-weight: 700; color: var(--text); text-decoration: none; }
+  .site .repo { font-size: .9rem; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 0 28px; overflow-x: auto; }
+  .tabs a { padding: 10px 14px; text-decoration: none; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tabs a:hover { color: var(--text); }
+  .tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+  .card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--surface); }
+  .card h3 { margin-top: 0; }
+  .card img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); background: #fff; }
+</style>
+<body>
+<main>
+<div class="site"><a class="brand" href="../index.html">Filament Dryer</a><a class="repo" href="https://github.com/oshanrube/filament-dryer">GitHub repository</a></div>
+<nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html">2-roll feeder</a><a href="../1-roll/index.html" aria-current="page">1 roll</a></nav>
+<header>
+  <h1>Single-Reel Filament Dryer</h1>
+  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and an ESP32-C3 SuperMini running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
+  <p class="meta">Plan as of 2026-11-23 · parts about US$186 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
+  <div class="links">
+    <a href="schematic.svg">Schematic (SVG)</a>
+    <a href="bom.csv">Parts list (CSV)</a>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#housing">Housing</a></li>
+    <li><a href="#heating">Heating, humidity and safety</a></li>
+    <li><a href="#weighing">Weighing and motion</a></li>
+    <li><a href="#power">Power: 12 V feed</a></li>
+    <li><a href="#electronics">Electronics and pin map</a></li>
+    <li><a href="#parts">Parts catalog</a></li>
+    <li><a href="#integration">Firmware and control center</a></li>
+    <li><a href="#build">Build plan</a></li>
+  </ol>
+</nav>
+
+<h2 id="summary">Summary</h2>
+<p>The single-reel box is the two-reel design without the second lane: no feeders, no I/O expander, one load cell. When a reel runs out, the printer pauses as it does today. It shares its heater, fans, sensors, controller and power feed with the two-reel box, so the two use the same spares.</p>
+<ul>
+  <li><strong>12 V feed, no mains in the box.</strong> The same shared HP 1600 W server supply and XT60 lead as the two-reel box.</li>
+  <li><strong>Three zones:</strong> a heated chamber on top, an insulated floor, and a cool electronics bay underneath.</li>
+  <li><strong>Weigh the cradle, not the box.</strong> The roller cradle stands on a post through the floor to a load cell in the cool bay.</li>
+  <li><strong>Drop-in loading.</strong> Lift the lid, drop the reel on the rollers, feed the filament into the exit.</li>
+  <li><strong>K1C parts wherever they fit:</strong> both fans are the K1C's 4020 blower and 3010 fan (24 V, through a small boost converter).</li>
+  <li><strong>Filament motion is measured</strong> by a BIGTREETECH Smart Filament Sensor V2 at the exit (runout switch plus a pulse every 2.88 mm).</li>
+  <li><strong>Housing in ABS or ASA only.</strong> PLA and PETG creep at 65 °C.</li>
+</ul>
+
+<h2 id="architecture">Architecture</h2>
+<figure><img src="images/architecture.svg" alt="Block diagram: heated chamber with sensors, safety, heater and the reel; insulated floor; electronics bay with MOSFETs, load cell and the ESP32; 12 V supply in; motion sensor at the exit to the printer; Wi-Fi to the control center." loading="lazy"><figcaption>Only the switched 12 V to the heater and the load post cross the insulated floor.</figcaption></figure>
+
+<h2 id="housing">Housing</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Dimension</th><th>Value</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Chamber inside (L × W × H)</td><td>230 × 135 × 235 mm</td><td>Ø200 reel + 15 mm clearance; 95 mm for the reel and a 40 mm heater duct at the back</td></tr>
+    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck and boost converters, load cell</td></tr>
+    <tr><td>Outside</td><td>250 × 155 × 335 mm</td><td>4 mm walls + 6 mm insulation; the motion sensor sits on the right wall</td></tr>
+    <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
+    <tr><td>Roller length</td><td>95 mm</td><td>Any reel 50-90 mm wide</td></tr>
+  </tbody>
+</table></div>
+<figure><img src="images/housing-isometric.svg" alt="Isometric wireframe of the single-reel housing with the inside parts dashed." loading="lazy"><figcaption>Isometric wireframe: solid lines are the housing, dashed lines the parts inside.</figcaption></figure>
+<figure><img src="images/housing-sections.svg" alt="Front and side sections of the single-reel box with dimensions." loading="lazy"><figcaption>Front and side sections, in mm.</figcaption></figure>
+<p><strong>Roller cradle.</strong> Two rollers, each a printed ABS sleeve (30 mm OD) with a 608ZZ bearing pressed into each end, turning on a fixed M8 stainless bolt. A printed front lip stops the reel walking off.</p>
+<p><strong>Weighing path.</strong> The cradle stands on a Ø16 mm ABS post through a 24 mm hole in the insulated floor to the free end of a 5 kg load cell. A skirt on the cradle overlaps a collar round the hole without touching it, and printed hard stops protect the cell from a dropped reel.</p>
+<p><strong>Filament path.</strong> The filament leaves through a PC4-M10 bulkhead high in the right wall, straight into the BTT motion sensor in a small printed holder, then one 2 × 4 mm PTFE tube runs to the printer.</p>
+<p><strong>Lid, insulation, desiccant.</strong> Hinged lid with two stainless toggle latches and a silicone D-seal; 6 mm foil-faced NBR foam on the walls; a snap-in cassette with about 150 g of indicating silica gel.</p>
+<h3>Printed parts</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Part</th><th>Qty</th><th>Approx. filament</th><th>Printer</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Chamber tub</td><td>1</td><td>380 g</td><td>K2 Plus</td><td>Too big for the K1C bed</td></tr>
+    <tr><td>Lid (+ window frame)</td><td>1</td><td>140 g</td><td>K2 Plus</td><td>Hinge knuckles and latch mounts</td></tr>
+    <tr><td>Base / electronics bay</td><td>1</td><td>200 g</td><td>K2 Plus</td><td>Vents, front panel, XT60 cut-out</td></tr>
+    <tr><td>Insulated floor plate</td><td>1</td><td>60 g</td><td>K1C</td><td>Collar for the load post</td></tr>
+    <tr><td>Roller cradle</td><td>1</td><td>60 g</td><td>K1C</td><td>Holds both M8 axles</td></tr>
+    <tr><td>Roller sleeves</td><td>2</td><td>15 g each</td><td>K1C</td><td>608ZZ pressed into both ends</td></tr>
+    <tr><td>Load post + mount block</td><td>1 set</td><td>25 g</td><td>K1C</td><td>Print the post solid</td></tr>
+    <tr><td>Heater duct + blower mount</td><td>1</td><td>40 g</td><td>K1C</td><td>At least 15 mm between ABS and the PTC fins</td></tr>
+    <tr><td>Desiccant cassette</td><td>1</td><td>30 g</td><td>K1C</td><td>Perforated face</td></tr>
+    <tr><td>Motion sensor holder</td><td>1</td><td>20 g</td><td>K1C</td><td>Bolts to the right wall at the exit</td></tr>
+    <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Perfboard, OLED, button</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="heating">Heating, humidity and safety</h2>
+<p>Same as the two-reel box: a PID loop drives the 12 V 150 W PTC heater (the same part, so one spare covers both versions; in the smaller chamber the PID simply runs it less). The K1C 4020 blower pushes chamber air through the heater, and the K1C 3010 fan vents moist air through a gravity flap while drying.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
+  <tbody>
+    <tr><td>Dry</td><td>Material preset</td><td>10 s every minute for the first hour, then every 5 min</td><td>Preset time is up, or humidity below 15% for 30 min after the minimum time; then Keep dry</td></tr>
+    <tr><td>Keep dry</td><td>Off; desiccant does the work</td><td>Off, flap shut</td><td>Humidity above 25% for 15 min starts a short 45 °C dry</td></tr>
+    <tr><td>Print</td><td>Feed temperature (PLA 40 °C, others 45-50 °C)</td><td>Off</td><td>The linked printer stops printing (+30 min)</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Safety chain:</strong> firmware cut-outs (chamber over setpoint + 8 °C or 75 °C, heater outlet over 100 °C, missing sensor, no temperature rise, 24 h limit), a KSD301 85 °C 16 A thermostat and a 92 °C 15 A thermal fuse in series with the heater, a self-limiting PTC, and a 15 A fuse on the box's 12 V input.</p>
+
+<h2 id="weighing">Weighing and motion</h2>
+<p class="formula">grams_left = cradle_g − empty_reel_g<br>metres_left = grams_left / (density_g_per_cm3 × 2.405)</p>
+<p>Calibrate once: tare the empty cradle, put the 500 g calibration weight on and enter its grams, then save an empty eSUN 1 kg reel as a reel profile. The BTT sensor adds the length of filament actually pulled through, so the control center can compare it with what Klipper extruded.</p>
+
+<h2 id="power">Power: 12 V feed</h2>
+<ul>
+  <li><strong>Load:</strong> heater 12.5 A, fans about 0.7 A through the 24 V boost converter, electronics about 0.15 A: about 13.5 A peak.</li>
+  <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
+  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini; an XL6009 boost converter makes 24 V for the two K1C fans.</li>
+</ul>
+
+<h2 id="electronics">Electronics and pin map</h2>
+<figure><a href="schematic.svg"><img src="schematic.svg" alt="Schematic: power in, ESP32-C3 SuperMini, I2C sensors, heater and fan switches, HX711 weighing, BTT motion sensor and button." loading="lazy"></a><figcaption>Schematic (open full size). Nets with the same label are connected.</figcaption></figure>
+<p>No I/O expander is needed: every signal fits on the C3's own pins.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>HX711 SCK</td><td></td></tr>
+    <tr><td>1</td><td>HX711 DOUT</td><td></td></tr>
+    <tr><td>2</td><td>DS18B20 1-wire</td><td>Strapping pin; the 4.7 kΩ pull-up keeps it high at boot</td></tr>
+    <tr><td>3</td><td>BTT runout switch</td><td>Internal pull-up</td></tr>
+    <tr><td>4</td><td>Heater MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: heater off while booting</td></tr>
+    <tr><td>5</td><td>Blower MOSFET gate</td><td>Same as GPIO 4</td></tr>
+    <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 4</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED</td></tr>
+    <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
+    <tr><td>9</td><td>Push button</td><td>Same pin as BOOT: holding it at power-on enters flashing mode</td></tr>
+    <tr><td>10</td><td>Buzzer MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down</td></tr>
+    <tr><td>20</td><td>Free</td><td></td></tr>
+    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="parts">Parts catalog</h2>
+<p>About US$186 per box, plus about US$30 once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
+<h3>Control electronics (≈ US$14)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>ESP32-C3 SuperMini</td><td>1</td><td>(already on hand)</td><td class="num">0</td><td>Enough pins with the I/O expander</td></tr>
+<tr><td>HX711 load-cell amplifier</td><td>1 (buy 2)</td><td>HX711 module red shielded</td><td class="num">2</td><td>Shielded board; avoid the green ones with the E- ground fault</td></tr>
+<tr><td>Heater MOSFET</td><td>2</td><td>IRLB8721 TO-220</td><td class="num">1.5</td><td>Fully on with a 3.3 V gate; same parts as the 2-roll box</td></tr>
+<tr><td>Fan and buzzer MOSFETs</td><td>10-pack</td><td>AO3400 SOT-23</td><td class="num">1</td><td>Blower, exhaust fan, buzzer</td></tr>
+<tr><td>12 V to 5 V buck converter</td><td>1 (buy 2)</td><td>Mini560 5V 3A step down</td><td class="num">1.5</td><td>Takes 7-20 V in, so 12 V suits it</td></tr>
+<tr><td>Perfboard</td><td>2</td><td>double sided prototype PCB 5x7</td><td class="num">1.5</td><td>Everything soldered on one board, JST-XH headers to the box</td></tr>
+<tr><td>Resistor kit</td><td>1</td><td>1/4W metal film resistor kit</td><td class="num">2</td><td>10k gate pull-downs, 100R gate resistors, 4.7k 1-wire pull-up, 1k motion-signal resistor</td></tr>
+<tr><td>OLED display (optional)</td><td>1</td><td>1.3 inch SH1106 OLED I2C</td><td class="num">3</td><td>Local status</td></tr>
+<tr><td>Push button</td><td>1</td><td>12mm momentary panel push button</td><td class="num">0.5</td><td>Short press cycles mode, long press tares</td></tr>
+<tr><td>Buzzer</td><td>1</td><td>active buzzer 5V</td><td class="num">0.5</td><td>Fault alarm</td></tr>
+</tbody></table></div>
+<h3>Sensors (≈ US$32)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Chamber temperature + humidity</td><td>1 (buy 2)</td><td>SHT40 module I2C</td><td class="num">6</td><td>Rated to 125 C, stable in hot damp air</td></tr>
+<tr><td>Bay temperature + humidity (optional)</td><td>1</td><td>AHT20 module</td><td class="num">1.5</td><td>Different I2C address from the SHT40</td></tr>
+<tr><td>Heater outlet probe</td><td>1</td><td>DS18B20 stainless probe silicone cable</td><td class="num">2</td><td>Silicone cable version for heat</td></tr>
+<tr><td>Load cell</td><td>1</td><td>YZC-131 5kg load cell</td><td class="num">5</td><td>Named-maker single-point cell</td></tr>
+<tr><td>Motion + runout sensor</td><td>1</td><td>BIGTREETECH Smart Filament Sensor V2</td><td class="num">13</td><td>At the filament exit: runout switch plus a pulse every 2.88 mm of filament movement; runs on 3.3 V</td></tr>
+<tr><td>Calibration weight</td><td>1</td><td>calibration weight 500g</td><td class="num">5</td><td>Accurate scale setup</td></tr>
+</tbody></table></div>
+<h3>Heating and air (≈ US$46)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>PTC air heater</td><td>1 (buy 2)</td><td>PTC heater 12V 150W insulated aluminium</td><td class="num">10</td><td>Same heater as the 2-roll box, so one spare covers both; the PID limits it</td></tr>
+<tr><td>Blower (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 4020 blower fan 24V</td><td class="num">16</td><td>The K1C&#x27;s part-cooling blower; pushes chamber air through the heater</td></tr>
+<tr><td>Exhaust fan (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 3010 hotend fan 24V</td><td class="num">10</td><td>The K1C&#x27;s hotend fan; vents while drying</td></tr>
+<tr><td>12 V to 24 V boost converter</td><td>1</td><td>XL6009 boost converter module</td><td class="num">1.5</td><td>Powers the two 24 V K1C fans (about 0.3 A)</td></tr>
+<tr><td>Bimetal thermostat</td><td>2</td><td>KSD301 85 normally closed 16A</td><td class="num">1.5</td><td>Auto-reset hardware cut-out</td></tr>
+<tr><td>Thermal fuse</td><td>10-pack</td><td>thermal fuse 92C 15A</td><td class="num">1.5</td><td>One-shot last-resort cut-out</td></tr>
+<tr><td>Aluminium sheet</td><td>1</td><td>aluminium sheet 1mm 100x200</td><td class="num">3</td><td>Heater channel and heat shield</td></tr>
+<tr><td>Inline blade fuse holder + fuses</td><td>1</td><td>mini blade fuse holder 14AWG</td><td class="num">2</td><td>15 A on the box&#x27;s 12 V input</td></tr>
+</tbody></table></div>
+<h3>Power (≈ US$37)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Shared: server supply breakout board</td><td>1</td><td>HP 1200W 1600W server power supply breakout board</td><td class="num">10</td><td>Switches the supply on, screw terminals for 12 V</td></tr>
+<tr><td>Shared: fuse block</td><td>1</td><td>12 way blade fuse box with negative bus</td><td class="num">10</td><td>One 15 A fuse per box, room for all seven</td></tr>
+<tr><td>Shared: trunk cable</td><td>1 m red + 1 m black</td><td>6AWG silicone wire</td><td class="num">10</td><td>Supply to fuse block, up to about 95 A</td></tr>
+<tr><td>Per box: power connector</td><td>1 pair</td><td>XT60 panel mount</td><td class="num">2</td><td>Rated far above 13 A, keyed</td></tr>
+<tr><td>Per box: supply lead</td><td>up to 3 m red + black</td><td>14AWG silicone wire</td><td class="num">5</td><td>About 0.6 V drop at 13 A over 3 m</td></tr>
+</tbody></table></div>
+<h3>Wiring and connectors (≈ US$26)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Heater-path wire</td><td>2 m red + 2 m black</td><td>14AWG silicone wire</td><td class="num">4</td><td>Silicone insulation, rated to 200 C</td></tr>
+<tr><td>Signal wire</td><td>set</td><td>22AWG silicone wire 6 colours</td><td class="num">5</td><td>Sensors, fans, steppers</td></tr>
+<tr><td>Lever connectors</td><td>set</td><td>WAGO 221</td><td class="num">4</td><td>Get the genuine ones</td></tr>
+<tr><td>Ferrules + crimper</td><td>kit</td><td>ferrule crimping tool kit</td><td class="num">5</td><td>Reliable screw-terminal joints</td></tr>
+<tr><td>JST-XH connectors</td><td>kit</td><td>JST XH 2.54 kit with crimper</td><td class="num">5</td><td>Unpluggable sensors, fans and steppers</td></tr>
+<tr><td>Heat-shrink</td><td>set</td><td>heat shrink tube kit</td><td class="num">3</td><td></td></tr>
+</tbody></table></div>
+<h3>Mechanical and consumables (≈ US$61)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Bearings</td><td>4 (pack of 10)</td><td>608ZZ bearing NSK or 608ZZ C&amp;U</td><td class="num">6</td><td>Steel shields, grease rated about -20 to +120 C</td></tr>
+<tr><td>Roller axles</td><td>2 + nuts</td><td>M8 x 120 stainless A2 hex bolt + nyloc</td><td class="num">3</td><td>No rust in a humid box</td></tr>
+<tr><td>Lid hinges</td><td>2</td><td>stainless steel hinge 40mm</td><td class="num">3</td><td></td></tr>
+<tr><td>Lid latches</td><td>2</td><td>mini stainless toggle latch</td><td class="num">4</td><td>Positive seal; magnets weaken when hot</td></tr>
+<tr><td>Lid gasket</td><td>3 m</td><td>silicone D seal strip self adhesive</td><td class="num">4</td><td>Stays soft at 70 C</td></tr>
+<tr><td>Filament fittings</td><td>4</td><td>PC4-M10 pneumatic coupler bulkhead</td><td class="num">3</td><td>Exit, sensor and printer end</td></tr>
+<tr><td>PTFE tube</td><td>2 m</td><td>PTFE tube 2x4mm</td><td class="num">4</td><td>Box to printer</td></tr>
+<tr><td>Insulation</td><td>0.5 m2</td><td>NBR rubber foam aluminium foil self adhesive 6mm</td><td class="num">8</td><td>Rated to about 105 C</td></tr>
+<tr><td>Heat-set inserts</td><td>100</td><td>M3 brass heat set insert</td><td class="num">4</td><td>Screws that can be undone many times</td></tr>
+<tr><td>Screws</td><td>kit</td><td>M3 stainless socket screw kit</td><td class="num">6</td><td></td></tr>
+<tr><td>Load-cell screws</td><td>4</td><td>M4 / M5 stainless (match your cells&#x27; threads)</td><td class="num">2</td><td></td></tr>
+<tr><td>Feet</td><td>4</td><td>rubber feet adhesive</td><td class="num">1</td><td></td></tr>
+<tr><td>Desiccant</td><td>500 g</td><td>orange indicating silica gel</td><td class="num">5</td><td>Changes colour when spent</td></tr>
+<tr><td>High-temp silicone</td><td>1 tube</td><td>high temperature RTV silicone red</td><td class="num">4</td><td>Seal cable holes through the floor</td></tr>
+<tr><td>Window (optional)</td><td>1</td><td>polycarbonate sheet 2mm</td><td class="num">4</td><td>Not acrylic</td></tr>
+</tbody></table></div>
+
+<h2 id="integration">Firmware and control center</h2>
+<p>ESPHome on the box; the Printer Control Center links the box to its printer and shows the reel on that printer's card. The safety rules run on the ESP32 itself.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Rule</th><th>When</th><th>Alert</th></tr></thead>
+  <tbody>
+    <tr><td>Filament not moving</td><td>Printing, and Klipper's filament_used rises 15 mm or more while the BTT sensor measures no movement</td><td>Pause + critical push (clog, jam, tangle or stuck reel end)</td></tr>
+    <tr><td>Not enough filament</td><td>The file needs more than the reel holds, + 5%</td><td>Warning push</td></tr>
+    <tr><td>Running out</td><td>Reel under 30 g</td><td>Warning with the estimated time</td></tr>
+    <tr><td>Runout</td><td>The printer reports a runout</td><td>The existing runout reminders</td></tr>
+    <tr><td>Desiccant spent</td><td>Keep dry and humidity above 30% for 1 h</td><td>Warning</td></tr>
+    <tr><td>Dryer fault</td><td>Any firmware safety cut-out</td><td>Critical push</td></tr>
+    <tr><td>Print mode</td><td>Linked printer starts printing</td><td>No push; Print mode until 30 min after the print</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="build">Build plan</h2>
+<ol>
+  <li><strong>Order parts</strong>; meanwhile measure a real eSUN reel and finish the CAD.</li>
+  <li><strong>Bench electronics:</strong> SuperMini, HX711 and load cell, SHT40, BTT sensor on ESPHome; calibrate and check overnight drift.</li>
+  <li><strong>Heater test in the open:</strong> PID holds, firmware cut-outs trip, the KSD301 opens at about 85 °C.</li>
+  <li><strong>Print and assemble;</strong> then a 12 h soak at 70 °C.</li>
+  <li><strong>Control center integration</strong> and a watched test print.</li>
+</ol>
+<ul class="checks">
+  <li>Reaches 65 °C from 25 °C in under 30 min, lid closed</li>
+  <li>Holds setpoint within ±2 °C; unplugging the blower or the SHT40 cuts the heater</li>
+  <li>Weight within ±2 g of a kitchen scale; drift under 3 g over 12 h at 70 °C</li>
+  <li>Pinching the filament above the extruder raises "filament not moving" within 30 s</li>
+  <li>Housing shows no warping after the 12 h soak</li>
+</ul>
+
+<footer>Built from <code>1-roll/page.html</code> and <code>1-roll/bom.csv</code> by <code>tools/build_site.py</code>.</footer>
+</main>
+</body>
+</html>

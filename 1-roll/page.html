@@ -1,0 +1,154 @@
+<header>
+  <h1>Single-Reel Filament Dryer</h1>
+  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and an ESP32-C3 SuperMini running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
+  <p class="meta">Plan as of 2026-11-23 · parts about US${{BOM_PER_BOX}} per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US${{BOM_SHARED}} once.</p>
+  <div class="links">
+    <a href="schematic.svg">Schematic (SVG)</a>
+    <a href="bom.csv">Parts list (CSV)</a>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#housing">Housing</a></li>
+    <li><a href="#heating">Heating, humidity and safety</a></li>
+    <li><a href="#weighing">Weighing and motion</a></li>
+    <li><a href="#power">Power: 12 V feed</a></li>
+    <li><a href="#electronics">Electronics and pin map</a></li>
+    <li><a href="#parts">Parts catalog</a></li>
+    <li><a href="#integration">Firmware and control center</a></li>
+    <li><a href="#build">Build plan</a></li>
+  </ol>
+</nav>
+
+<h2 id="summary">Summary</h2>
+<p>The single-reel box is the two-reel design without the second lane: no feeders, no I/O expander, one load cell. When a reel runs out, the printer pauses as it does today. It shares its heater, fans, sensors, controller and power feed with the two-reel box, so the two use the same spares.</p>
+<ul>
+  <li><strong>12 V feed, no mains in the box.</strong> The same shared HP 1600 W server supply and XT60 lead as the two-reel box.</li>
+  <li><strong>Three zones:</strong> a heated chamber on top, an insulated floor, and a cool electronics bay underneath.</li>
+  <li><strong>Weigh the cradle, not the box.</strong> The roller cradle stands on a post through the floor to a load cell in the cool bay.</li>
+  <li><strong>Drop-in loading.</strong> Lift the lid, drop the reel on the rollers, feed the filament into the exit.</li>
+  <li><strong>K1C parts wherever they fit:</strong> both fans are the K1C's 4020 blower and 3010 fan (24 V, through a small boost converter).</li>
+  <li><strong>Filament motion is measured</strong> by a BIGTREETECH Smart Filament Sensor V2 at the exit (runout switch plus a pulse every 2.88 mm).</li>
+  <li><strong>Housing in ABS or ASA only.</strong> PLA and PETG creep at 65 °C.</li>
+</ul>
+
+<h2 id="architecture">Architecture</h2>
+<figure><img src="images/architecture.svg" alt="Block diagram: heated chamber with sensors, safety, heater and the reel; insulated floor; electronics bay with MOSFETs, load cell and the ESP32; 12 V supply in; motion sensor at the exit to the printer; Wi-Fi to the control center." loading="lazy"><figcaption>Only the switched 12 V to the heater and the load post cross the insulated floor.</figcaption></figure>
+
+<h2 id="housing">Housing</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Dimension</th><th>Value</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Chamber inside (L × W × H)</td><td>230 × 135 × 235 mm</td><td>Ø200 reel + 15 mm clearance; 95 mm for the reel and a 40 mm heater duct at the back</td></tr>
+    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck and boost converters, load cell</td></tr>
+    <tr><td>Outside</td><td>250 × 155 × 335 mm</td><td>4 mm walls + 6 mm insulation; the motion sensor sits on the right wall</td></tr>
+    <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
+    <tr><td>Roller length</td><td>95 mm</td><td>Any reel 50-90 mm wide</td></tr>
+  </tbody>
+</table></div>
+<figure><img src="images/housing-isometric.svg" alt="Isometric wireframe of the single-reel housing with the inside parts dashed." loading="lazy"><figcaption>Isometric wireframe: solid lines are the housing, dashed lines the parts inside.</figcaption></figure>
+<figure><img src="images/housing-sections.svg" alt="Front and side sections of the single-reel box with dimensions." loading="lazy"><figcaption>Front and side sections, in mm.</figcaption></figure>
+<p><strong>Roller cradle.</strong> Two rollers, each a printed ABS sleeve (30 mm OD) with a 608ZZ bearing pressed into each end, turning on a fixed M8 stainless bolt. A printed front lip stops the reel walking off.</p>
+<p><strong>Weighing path.</strong> The cradle stands on a Ø16 mm ABS post through a 24 mm hole in the insulated floor to the free end of a 5 kg load cell. A skirt on the cradle overlaps a collar round the hole without touching it, and printed hard stops protect the cell from a dropped reel.</p>
+<p><strong>Filament path.</strong> The filament leaves through a PC4-M10 bulkhead high in the right wall, straight into the BTT motion sensor in a small printed holder, then one 2 × 4 mm PTFE tube runs to the printer.</p>
+<p><strong>Lid, insulation, desiccant.</strong> Hinged lid with two stainless toggle latches and a silicone D-seal; 6 mm foil-faced NBR foam on the walls; a snap-in cassette with about 150 g of indicating silica gel.</p>
+<h3>Printed parts</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Part</th><th>Qty</th><th>Approx. filament</th><th>Printer</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Chamber tub</td><td>1</td><td>380 g</td><td>K2 Plus</td><td>Too big for the K1C bed</td></tr>
+    <tr><td>Lid (+ window frame)</td><td>1</td><td>140 g</td><td>K2 Plus</td><td>Hinge knuckles and latch mounts</td></tr>
+    <tr><td>Base / electronics bay</td><td>1</td><td>200 g</td><td>K2 Plus</td><td>Vents, front panel, XT60 cut-out</td></tr>
+    <tr><td>Insulated floor plate</td><td>1</td><td>60 g</td><td>K1C</td><td>Collar for the load post</td></tr>
+    <tr><td>Roller cradle</td><td>1</td><td>60 g</td><td>K1C</td><td>Holds both M8 axles</td></tr>
+    <tr><td>Roller sleeves</td><td>2</td><td>15 g each</td><td>K1C</td><td>608ZZ pressed into both ends</td></tr>
+    <tr><td>Load post + mount block</td><td>1 set</td><td>25 g</td><td>K1C</td><td>Print the post solid</td></tr>
+    <tr><td>Heater duct + blower mount</td><td>1</td><td>40 g</td><td>K1C</td><td>At least 15 mm between ABS and the PTC fins</td></tr>
+    <tr><td>Desiccant cassette</td><td>1</td><td>30 g</td><td>K1C</td><td>Perforated face</td></tr>
+    <tr><td>Motion sensor holder</td><td>1</td><td>20 g</td><td>K1C</td><td>Bolts to the right wall at the exit</td></tr>
+    <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Perfboard, OLED, button</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="heating">Heating, humidity and safety</h2>
+<p>Same as the two-reel box: a PID loop drives the 12 V 150 W PTC heater (the same part, so one spare covers both versions; in the smaller chamber the PID simply runs it less). The K1C 4020 blower pushes chamber air through the heater, and the K1C 3010 fan vents moist air through a gravity flap while drying.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
+  <tbody>
+    <tr><td>Dry</td><td>Material preset</td><td>10 s every minute for the first hour, then every 5 min</td><td>Preset time is up, or humidity below 15% for 30 min after the minimum time; then Keep dry</td></tr>
+    <tr><td>Keep dry</td><td>Off; desiccant does the work</td><td>Off, flap shut</td><td>Humidity above 25% for 15 min starts a short 45 °C dry</td></tr>
+    <tr><td>Print</td><td>Feed temperature (PLA 40 °C, others 45-50 °C)</td><td>Off</td><td>The linked printer stops printing (+30 min)</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Safety chain:</strong> firmware cut-outs (chamber over setpoint + 8 °C or 75 °C, heater outlet over 100 °C, missing sensor, no temperature rise, 24 h limit), a KSD301 85 °C 16 A thermostat and a 92 °C 15 A thermal fuse in series with the heater, a self-limiting PTC, and a 15 A fuse on the box's 12 V input.</p>
+
+<h2 id="weighing">Weighing and motion</h2>
+<p class="formula">grams_left = cradle_g − empty_reel_g<br>metres_left = grams_left / (density_g_per_cm3 × 2.405)</p>
+<p>Calibrate once: tare the empty cradle, put the 500 g calibration weight on and enter its grams, then save an empty eSUN 1 kg reel as a reel profile. The BTT sensor adds the length of filament actually pulled through, so the control center can compare it with what Klipper extruded.</p>
+
+<h2 id="power">Power: 12 V feed</h2>
+<ul>
+  <li><strong>Load:</strong> heater 12.5 A, fans about 0.7 A through the 24 V boost converter, electronics about 0.15 A: about 13.5 A peak.</li>
+  <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
+  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini; an XL6009 boost converter makes 24 V for the two K1C fans.</li>
+</ul>
+
+<h2 id="electronics">Electronics and pin map</h2>
+<figure><a href="schematic.svg"><img src="schematic.svg" alt="Schematic: power in, ESP32-C3 SuperMini, I2C sensors, heater and fan switches, HX711 weighing, BTT motion sensor and button." loading="lazy"></a><figcaption>Schematic (open full size). Nets with the same label are connected.</figcaption></figure>
+<p>No I/O expander is needed: every signal fits on the C3's own pins.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>HX711 SCK</td><td></td></tr>
+    <tr><td>1</td><td>HX711 DOUT</td><td></td></tr>
+    <tr><td>2</td><td>DS18B20 1-wire</td><td>Strapping pin; the 4.7 kΩ pull-up keeps it high at boot</td></tr>
+    <tr><td>3</td><td>BTT runout switch</td><td>Internal pull-up</td></tr>
+    <tr><td>4</td><td>Heater MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: heater off while booting</td></tr>
+    <tr><td>5</td><td>Blower MOSFET gate</td><td>Same as GPIO 4</td></tr>
+    <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 4</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED</td></tr>
+    <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
+    <tr><td>9</td><td>Push button</td><td>Same pin as BOOT: holding it at power-on enters flashing mode</td></tr>
+    <tr><td>10</td><td>Buzzer MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down</td></tr>
+    <tr><td>20</td><td>Free</td><td></td></tr>
+    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="parts">Parts catalog</h2>
+<p>About US${{BOM_PER_BOX}} per box, plus about US${{BOM_SHARED}} once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
+{{BOM_TABLES}}
+
+<h2 id="integration">Firmware and control center</h2>
+<p>ESPHome on the box; the Printer Control Center links the box to its printer and shows the reel on that printer's card. The safety rules run on the ESP32 itself.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Rule</th><th>When</th><th>Alert</th></tr></thead>
+  <tbody>
+    <tr><td>Filament not moving</td><td>Printing, and Klipper's filament_used rises 15 mm or more while the BTT sensor measures no movement</td><td>Pause + critical push (clog, jam, tangle or stuck reel end)</td></tr>
+    <tr><td>Not enough filament</td><td>The file needs more than the reel holds, + 5%</td><td>Warning push</td></tr>
+    <tr><td>Running out</td><td>Reel under 30 g</td><td>Warning with the estimated time</td></tr>
+    <tr><td>Runout</td><td>The printer reports a runout</td><td>The existing runout reminders</td></tr>
+    <tr><td>Desiccant spent</td><td>Keep dry and humidity above 30% for 1 h</td><td>Warning</td></tr>
+    <tr><td>Dryer fault</td><td>Any firmware safety cut-out</td><td>Critical push</td></tr>
+    <tr><td>Print mode</td><td>Linked printer starts printing</td><td>No push; Print mode until 30 min after the print</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="build">Build plan</h2>
+<ol>
+  <li><strong>Order parts</strong>; meanwhile measure a real eSUN reel and finish the CAD.</li>
+  <li><strong>Bench electronics:</strong> SuperMini, HX711 and load cell, SHT40, BTT sensor on ESPHome; calibrate and check overnight drift.</li>
+  <li><strong>Heater test in the open:</strong> PID holds, firmware cut-outs trip, the KSD301 opens at about 85 °C.</li>
+  <li><strong>Print and assemble;</strong> then a 12 h soak at 70 °C.</li>
+  <li><strong>Control center integration</strong> and a watched test print.</li>
+</ol>
+<ul class="checks">
+  <li>Reaches 65 °C from 25 °C in under 30 min, lid closed</li>
+  <li>Holds setpoint within ±2 °C; unplugging the blower or the SHT40 cuts the heater</li>
+  <li>Weight within ±2 g of a kitchen scale; drift under 3 g over 12 h at 70 °C</li>
+  <li>Pinching the filament above the extruder raises "filament not moving" within 30 s</li>
+  <li>Housing shows no warping after the 12 h soak</li>
+</ul>
