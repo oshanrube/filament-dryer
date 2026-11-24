@@ -1,14 +1,7 @@
 section,part,qty,aliexpress_search,approx_usd,why
-Control electronics,ESP32-C3 SuperMini,1,(already on hand),0,Enough pins with the I/O expander
-Control electronics,HX711 load-cell amplifier,1 (buy 2),HX711 module red shielded,2,Shielded board; avoid the green ones with the E- ground fault
-Control electronics,Heater MOSFET,2,IRLB8721 TO-220,1.5,Fully on with a 3.3 V gate; same parts as the 2-roll box
-Control electronics,Fan and buzzer MOSFETs,10-pack,AO3400 SOT-23,1,"Blower, exhaust fan, buzzer"
-Control electronics,12 V to 5 V buck converter,1 (buy 2),Mini560 5V 3A step down,1.5,"Takes 7-20 V in, so 12 V suits it"
-Control electronics,Perfboard,2,double sided prototype PCB 5x7,1.5,"Everything soldered on one board, JST-XH headers to the box"
-Control electronics,Resistor kit,1,1/4W metal film resistor kit,2,"10k gate pull-downs, 100R gate resistors, 4.7k 1-wire pull-up, 1k motion-signal resistor"
+Control electronics,"Controller board (JLCPCB, assembled)",1,(JLCPCB order: pcb/jlcpcb/bom-1-roll.csv),22,"ESP32-C3 module, MCP23017, HX711, 5 V buck, heater and fan switches, buzzer: all assembled"
 Control electronics,OLED display (optional),1,1.3 inch SH1106 OLED I2C,3,Local status
 Control electronics,Push button,1,12mm momentary panel push button,0.5,"Short press cycles mode, long press tares"
-Control electronics,Buzzer,1,active buzzer 5V,0.5,Fault alarm
 Sensors,Chamber temperature + humidity,1 (buy 2),SHT40 module I2C,6,"Rated to 125 C, stable in hot damp air"
 Sensors,Bay temperature + humidity (optional),1,AHT20 module,1.5,Different I2C address from the SHT40
 Sensors,Heater outlet probe,1,DS18B20 stainless probe silicone cable,2,Silicone cable version for heat

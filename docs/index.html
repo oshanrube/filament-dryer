@@ -88,13 +88,13 @@
     <h3><a href="2-roll-feeder/index.html">2-roll feeder</a></h3>
     <img src="2-roll-feeder/images/top-view.png" alt="Two-reel box from above with its feeder pod." loading="lazy">
     <p>Two reels and a feeder pod. When the printer reports a runout, the box feeds the second reel in and the print resumes on its own.</p>
-    <p class="meta">About US$276 per box · 250 × 250 × 335 mm + pod</p>
+    <p class="meta">About US$287 per box · 250 × 250 × 335 mm + pod</p>
   </div>
   <div class="card">
     <h3><a href="1-roll/index.html">1 roll</a></h3>
     <img src="1-roll/images/housing-isometric.svg" alt="Single-reel box, isometric wireframe." loading="lazy">
     <p>One reel, no feeders. Smaller and simpler; when the reel runs out the printer pauses as it does today.</p>
-    <p class="meta">About US$170 per box · 250 × 155 × 335 mm</p>
+    <p class="meta">About US$182 per box · 250 × 155 × 335 mm</p>
   </div>
 </div>
 
@@ -104,28 +104,27 @@
   <tbody>
     <tr><td>Reels</td><td>2, automatic switch-over on runout</td><td>1</td></tr>
     <tr><td>Outside size</td><td>250 × 250 × 335 mm + feeder pod</td><td>250 × 155 × 335 mm</td></tr>
-    <tr><td>Parts per box</td><td>about US$276</td><td>about US$170</td></tr>
+    <tr><td>Parts per box</td><td>about US$287</td><td>about US$182</td></tr>
     <tr><td>Filament to print it</td><td>about 1.5 kg ABS/ASA</td><td>about 1 kg ABS/ASA</td></tr>
     <tr><td>Heater</td><td colspan="2">12 V 150 W PTC (same part)</td></tr>
     <tr><td>Fans</td><td colspan="2">5015 blower + 4010 exhaust fan, 12 V dual ball bearing</td></tr>
     <tr><td>Weighing</td><td>A load cell per reel</td><td>One load cell</td></tr>
     <tr><td>Filament sensing</td><td>K1C runout sensor per lane + BTT SFS V2 after the merger</td><td>BTT SFS V2 at the exit</td></tr>
-    <tr><td>Feeders</td><td>2 × K1C extrusion kit + K1C extruder motor, TMC2209 drivers</td><td>None</td></tr>
-    <tr><td>Controller</td><td>ESP32-C3 SuperMini + MCP23017</td><td>ESP32-C3 SuperMini</td></tr>
+    <tr><td>Feeders</td><td>2 × K1C extrusion kit + K1C extruder motor, TMC2209 drivers on the board</td><td>None</td></tr>
+    <tr><td>Controller</td><td colspan="2">One JLCPCB-assembled board: ESP32-C3-WROOM-02, MCP23017, HX711 scales, heater and fan switches (the 1-roll leaves off the feeder parts)</td></tr>
     <tr><td>Power</td><td colspan="2">12 V feed from the shared HP 1600 W server supply, XT60, 15 A fuse</td></tr>
   </tbody>
 </table></div>
 <p>The shared supply's breakout board, fuse block and trunk cable (about US$30) are bought once for all boxes.</p>
 
 <h2 id="pcb">Controller board (JLCPCB assembly)</h2>
-<p>One controller board serves both versions: the 2-roll build fits everything, the 1-roll build leaves the feeder parts off. It carries the 5 V buck converter, the MCP23017, a 12 V gate driver and MOSFET for the heater, the fan and buzzer switches, and JST XH connectors numbered as in the wiring diagrams. The SuperMini and TMC2209 modules plug into sockets. Every LCSC part number was checked on JLCPCB on 2026-11-24.</p>
+<p>One controller board serves both versions: the 2-roll build fits everything, the 1-roll build leaves the feeder parts off. It carries an ESP32-C3-WROOM-02 module with a USB-C port, the 5 V and 3.3 V supplies, the MCP23017, the HX711 load-cell amplifiers, the TMC2209 feeder drivers, a 12 V gate driver and MOSFET for the heater, the fan and buzzer switches, and JST XH connectors numbered as in the wiring diagrams. Every part is in JLCPCB's library, so the board arrives fully assembled; the parts cost about US$16 per 2-roll board and US$9 per 1-roll board, plus JLCPCB's fees. Every LCSC part number was checked on JLCPCB on 2026-11-24.</p>
 <figure><a href="pcb/schematic.svg"><img src="pcb/schematic.svg" alt="Wired schematic of the dryer controller board." loading="lazy"></a><figcaption>Controller board schematic with every wire drawn (open full size, or the <a href="pcb/schematic.pdf">PDF</a>). Same nets and part numbers as the KiCad schematic.</figcaption></figure>
 <div class="links">
   <a href="pcb/schematic.pdf">Schematic (PDF)</a>
   <a href="pcb/dryer-controller.pdf">KiCad schematic (PDF)</a>
   <a href="pcb/bom-2-roll.csv">JLCPCB BOM, 2-roll</a>
   <a href="pcb/bom-1-roll.csv">JLCPCB BOM, 1-roll</a>
-  <a href="pcb/hand-fit-2-roll.csv">Hand-fit sockets</a>
   <a href="https://github.com/oshanrube/filament-dryer/tree/main/pcb">KiCad project</a>
 </div>
 <p>Still to do before ordering: the PCB layout (Gerbers and placement file), and the checks listed in the project's README.</p>

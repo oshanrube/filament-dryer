@@ -2,7 +2,7 @@
 """Build the GitHub Pages site in docs/ from the version folders.
 
 Each version folder (2-roll-feeder/, 1-roll/) holds page.html (the page body),
-bom.csv, schematic.svg and images/. This script wraps each page in
+bom.csv, wiring.svg and images/. This script wraps each page in
 site/layout.html, fills in the parts tables from bom.csv, copies the assets,
 and writes the overview page from site/overview.html.
 
@@ -101,7 +101,7 @@ def main() -> None:
         body = body.replace("{{WIRING_TABLE}}", wiring_table.read_text(encoding="utf-8") if wiring_table.exists() else "")
         footer = f"Built from <code>{folder}/page.html</code> and <code>{folder}/bom.csv</code> by <code>tools/build_site.py</code>."
         (out / "index.html").write_text(page(title, desc, folder, "../", body, footer), encoding="utf-8")
-        for name in ("bom.csv", "schematic.svg", "wiring.svg"):
+        for name in ("bom.csv", "wiring.svg"):
             shutil.copy2(src / name, out / name)
         shutil.copytree(src / "images", out / "images")
         print(f"wrote docs/{folder}/ (per box ≈ US${per_box:.0f}, shared ≈ US${shared:.0f})")

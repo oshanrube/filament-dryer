@@ -37,9 +37,9 @@ CONN = {
     "J7": ("AHT20 (optional)", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "AHT20 U5", "bay", ""),
     "J8": ("OLED", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "SH1106 OLED U6", "front panel", ""),
     "J9": ("Button", "JST-XH 2", "22 AWG", [("BTN", "green"), ("GND", "black")], "Push button SW1", "front panel", ""),
-    "J11": ("Scale A", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCK", "yellow"), ("DT", "blue")], "HX711 U7, then load cell LC1", "bay",
-            "Load cell to HX711: red E+, black E−, white A−, green A+ (the cell's own leads)"),
-    "J12": ("Scale B", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCK", "yellow"), ("DT", "blue")], "HX711 U8, then load cell LC2", "bay",
+    "J11": ("Load cell A", "JST-XH 4", "the cell's leads", [("E+", "red"), ("E−", "black"), ("A−", "white"), ("A+", "green")], "Load cell LC1 (its HX711, U7, is on the board)", "bay",
+            "Crimp the cell's own four leads straight into the housing"),
+    "J12": ("Load cell B", "JST-XH 4", "the cell's leads", [("E+", "red"), ("E−", "black"), ("A−", "white"), ("A+", "green")], "Load cell LC2 (its HX711, U8, is on the board)", "bay",
             "Same colours as scale A"),
     "J13": ("Lane A sensor", "JST-XH 3", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("LANE_A", "green")], "K1C runout sensor S1", "feeder pod",
             "Check the sensor's pin order with a multimeter first"),
@@ -55,16 +55,17 @@ CONN = {
 VERSIONS = {
     "2-roll-feeder": {
         "title": "Two-reel dryer: wiring",
-        "board": ["U1 ESP32-C3 SuperMini", "U3 MCP23017 I/O expander", "U2 Mini560 12→5 V buck",
-                  "U10, U11 TMC2209 (in sockets)", "Q1 IRLB8721 heater switch", "Q2-Q4 AO3400 fans, buzzer",
-                  "BZ1 buzzer, 2 × 100 µF", "gate and pull-up resistors"],
+        "board": ["U1 ESP32-C3-WROOM-02, J2 USB-C", "U2 12→5 V buck, U12 3.3 V", "U3 MCP23017 I/O expander",
+                  "U4 + Q1 heater switch", "Q2-Q4 fans, buzzer, BZ1", "U7, U8 HX711 scales",
+                  "U10, U11 TMC2209 feeder drivers"],
         "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J7", "J8", "J9", "J11", "J12", "J13", "J14", "J15", "J16", "J17"],
         "right_zone": "Feeder pod (outside the heat)",
     },
     "1-roll": {
         "title": "Single-reel dryer: wiring",
-        "board": ["U1 ESP32-C3 SuperMini", "U2 Mini560 12→5 V buck", "Q1 IRLB8721 heater switch",
-                  "Q2-Q4 AO3400 fans, buzzer", "BZ1 buzzer", "gate and pull-up resistors"],
+        "board": ["U1 ESP32-C3-WROOM-02, J2 USB-C", "U2 12→5 V buck, U12 3.3 V", "U3 MCP23017 I/O expander",
+                  "U4 + Q1 heater switch", "Q2-Q4 fans, buzzer, BZ1", "U7 HX711 scale",
+                  "(feeder parts left off)"],
         "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J7", "J8", "J9", "J11", "J15"],
         "right_zone": "Right wall, outside (filament exit)",
     },
@@ -164,11 +165,9 @@ def diagram(version, spec):
     d.cable([(800, 560), (800, 352), (900, 352), (900, 300)], cols("J6"), "J6", (810, 540))
     d.cable([(860, 560), (860, 392), (1080, 392), (1080, 176)], cols("J4"), "J4", (1000, 386))
     # bay, left of board
-    d.cable([(560, 700), (520, 700)], cols("J11"), "J11", (526, 690 - 4))
-    d.cable([(400, 700), (370, 700)], ["red", "black", "white", "green"])
+    d.cable([(560, 700), (370, 700)], cols("J11"), "J11", (526, 690 - 4))
     if "J12" in has:
-        d.cable([(560, 800), (520, 800)], cols("J12"), "J12", (526, 786))
-        d.cable([(400, 800), (370, 800)], ["red", "black", "white", "green"])
+        d.cable([(560, 800), (370, 800)], cols("J12"), "J12", (526, 786))
     d.cable([(560, 900), (520, 900)], cols("J7"), "J7", (526, 886))
     # front panel (below board)
     d.cable([(640, 1060), (640, 1110)], cols("J8"), "J8", (650, 1090))
@@ -189,7 +188,7 @@ def diagram(version, spec):
     # ---- boxes
     d.rect(bx, by, bw, bh, "white", INK, 1.8, 8)
     d.text(bx + bw / 2, by + 34, "Controller board", 15, "middle", INK, "700")
-    d.text(bx + bw / 2, by + 52, "perfboard in the bay", 11, "middle", QUIET)
+    d.text(bx + bw / 2, by + 52, "JLCPCB-assembled, in the bay", 11, "middle", QUIET)
     for i, line in enumerate(spec["board"]):
         d.text(bx + 44, by + 150 + i * 22, line, 12, fill=INK)
     # connector tags on the board edge
@@ -224,11 +223,9 @@ def diagram(version, spec):
     d.box(1020, 126, 120, 50, "M2 exhaust fan", "4010 12 V, lid")
     d.text(1080, 120, "slack loop at the hinge", 10.5, "middle", QUIET)
 
-    d.box(400, 676, 120, 48, "U7 HX711", "scale A" if "J12" in has else "scale")
-    d.box(270, 676, 100, 48, "LC1", "5 kg cell")
+    d.box(270, 676, 100, 48, "LC1", "5 kg cell" + (", reel A" if "J12" in has else ""))
     if "J12" in has:
-        d.box(400, 776, 120, 48, "U8 HX711", "scale B")
-        d.box(270, 776, 100, 48, "LC2", "5 kg cell")
+        d.box(270, 776, 100, 48, "LC2", "5 kg cell, reel B")
     d.box(400, 876, 120, 48, "U5 AHT20", "optional")
     d.box(580, 1110, 120, 48, "U6 OLED", "front panel")
     d.box(740, 1110, 120, 48, "SW1 button", "front panel")

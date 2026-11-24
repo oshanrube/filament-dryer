@@ -11,7 +11,7 @@ Run from the repo root:  python3 pcb/tools/gen_schematic_svg.py
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-W, H = 1160, 3340
+W, H = 1160, 4740
 o = []
 
 
@@ -147,6 +147,35 @@ def conn(x, y, ref, title, pins, note=None, w=110):
             text(x + w + 14, top + 20 + i * 18, line, "v")
 
 
+def sw_v(x, yt, label):
+    """Push button between (x, yt) and (x, yt + 50); label to the right. Returns the bottom y."""
+    wire((x, yt), (x, yt + 12))
+    o.append(f'<circle class="w" cx="{x}" cy="{yt + 15}" r="3" style="fill:none"/>')
+    o.append(f'<circle class="w" cx="{x}" cy="{yt + 35}" r="3" style="fill:none"/>')
+    o.append(f'<path class="w" d="M{x - 12} {yt + 10} V{yt + 40} M{x - 12} {yt + 25} H{x - 20}"/>')
+    wire((x, yt + 38), (x, yt + 50))
+    text(x + 10, yt + 29, label, "v")
+    return yt + 50
+
+
+def pnp(x, y, label):
+    """PNP with the base lead to the right at (x + 30, y); emitter top (x - 22, y - 24), collector bottom (x - 22, y + 24)."""
+    o.append(f'<path class="w" d="M{x} {y - 16} V{y + 16} M{x} {y} H{x + 30} M{x} {y - 7} L{x - 22} {y - 22} V{y - 30} '
+             f'M{x} {y + 7} L{x - 22} {y + 22} V{y + 30}"/>')
+    o.append(f'<path class="sld" d="M{x + 1} {y - 8} l-9 -1 l4 -7 z"/>')
+    text(x - 30, y + 14, label, "v", "end")
+    return (x + 30, y), (x - 22, y - 30), (x - 22, y + 30)
+
+
+def conn_r(xr, ref, title, pins, w=110):
+    """Connector whose pins face right: box ends at xr; pins = [(label, y)]."""
+    top = min(py for _, py in pins) - 22
+    bot = max(py for _, py in pins) + 22
+    box(xr - w, top, w, bot - top, title, ref=ref)
+    for lab, py in pins:
+        text(xr - 14, py + 4, lab, "r", "end")
+
+
 def section(y, title):
     text(60, y, title, "r")
     o.append(f'<path class="dsh" d="M60 {y + 10} H{W - 60}" style="stroke:#bbbbbb"/>')
@@ -191,18 +220,18 @@ net(1000, 1040, 150, "+5v", side="right")
 
 # ================================================================== 2. controller + output stages
 section(300, "controller and output stages")
-ex, ey, ew, eh = 110, 340, 190, 900
-box(ex, ey, ew, eh, "esp32-c3 super mini", "module in sockets", ref="u1")
-for y, name in ((370, "5v"), (400, "3v3"), (430, "gnd")):
+ex, ey, ew, eh = 110, 340, 190, 940
+box(ex, ey, ew, eh, "esp32-c3-wroom-02-n4", ref="u1")
+for y, name in ((370, "3v3"), (400, "en"), (430, "gnd")):
     pin_l(ex, y, name)
-net(70, ex, 370, "+5v")
-net(70, ex, 400, "+3v3")
+net(70, ex, 370, "+3v3")
+net(70, ex, 400, "en")
 wire((ex, 430), (90, 430), (90, 446)); gnd(90, 446)
-for y, gp, lab in ((1090, "gpio7", "scl"), (1120, "gpio8", "sda"), (1150, "gpio10", "step_a"), (1180, "gpio20", "step_b")):
+for y, gp, lab in ((1090, "gpio7", "scl"), (1120, "gpio8", "sda"), (1150, "gpio10", "step_a"), (1180, "gpio20", "step_b"), (1210, "gpio9", "boot")):
     pin_l(ex, y, gp)
     net(70, ex, y, lab)
-pin_l(ex, 1210, "gpio9"); text(ex - 8, 1214, "nc", "p", "end")
-RP = {"gpio4": 480, "gpio5": 660, "gpio6": 810, "gpio2": 890, "gpio0": 1030, "gpio1": 1060, "gpio3": 1090, "gpio21": 1170}
+RP = {"gpio4": 480, "gpio5": 660, "gpio6": 810, "gpio2": 890, "gpio0": 1030, "gpio1": 1060, "gpio3": 1090, "gpio21": 1150,
+      "gpio18": 1220, "gpio19": 1250}
 for name, y in RP.items():
     pin_r(ex + ew, y, name)
 X0 = ex + ew
@@ -264,24 +293,72 @@ wire((345, 890), (345, b)); net_up(345, t, t - 10, "+3v3")
 conn(900, 0, "j6", "ds18b20, jst xh 3-pin", [("1 +3v3", 830), ("2 gnd", 860), ("3 dq", 890)], ["heater outlet probe"])
 net(860, 900, 830, "+3v3"); net(860, 900, 860, "gnd")
 
-# --- scales: gpio0 sck to both, gpio1 -> J11, gpio3 -> J12
-wire((X0, 1030), (900, 1030)); dot(760, 1030)
-wire((760, 1030), (760, 1190), (900, 1190))
-wire((X0, 1060), (900, 1060))
-wire((X0, 1090), (740, 1090), (740, 1220), (900, 1220))
-conn(900, 0, "j11", "scale a, jst xh 4-pin", [("1 +3v3", 970), ("2 gnd", 1000), ("3 sck", 1030), ("4 dt", 1060)], ["hx711 board, then", "load cell lc1"])
-conn(900, 0, "j12", "scale b, jst xh 4-pin", [("1 +3v3", 1130), ("2 gnd", 1160), ("3 sck", 1190), ("4 dt", 1220)], ["hx711 board, then", "load cell lc2", "(2-roll only)"])
-for y in (970, 1130):
-    net(860, 900, y, "+3v3")
-for y in (1000, 1160):
-    net(860, 900, y, "gnd")
+# --- scale data lines (the hx711s are drawn further down)
+for y, lab in ((1030, "hx_sck"), (1060, "hxa_dt"), (1090, "hxb_dt")):
+    net(X0, X0 + 50, y, lab, side="right")
+text(X0 + 110, 1064, "→ u7, u8 (scales)", "p")
 
 # --- motion: gpio21 -> R4 -> "motion"
-l, r = res_h(400, 1170, "1 kΩ", "r4")
-wire((X0, 1170), (l, 1170))
-net(r, r + 40, 1170, "motion", side="right")
-text(330, 1214, "gpio21 is uart0 tx: the boot log comes out here, hence r4", "p")
+l, r = res_h(400, 1150, "1 kΩ", "r4")
+wire((X0, 1150), (l, 1150))
+net(r, r + 40, 1150, "motion", side="right")
+text(330, 1194, "gpio21 is uart0 tx: the boot log comes out here, hence r4", "p")
 
+# --- usb data lines
+net(X0, X0 + 50, 1220, "usb_dn", side="right")
+net(X0, X0 + 50, 1250, "usb_dp", side="right")
+
+# --- reset and boot
+net(700, 740, 1010, "en")
+wire((740, 1010), (980, 1010)); dot(780, 1010); dot(860, 1010)
+t, b = res_v(780, 970, "r16 10 kΩ")
+wire((780, 1010), (780, b)); net_up(780, t, t - 8, "+3v3")
+t, b = cap_v(860, 1035, "c16 1 µF")
+wire((860, 1010), (860, t)); gnd(860, b)
+gnd(980, sw_v(980, 1010, "sw2 reset"))
+net(700, 740, 1190, "boot")
+wire((740, 1190), (860, 1190)); dot(780, 1190)
+t, b = res_v(780, 1150, "r17 10 kΩ")
+wire((780, 1190), (780, b)); net_up(780, t, t - 8, "+3v3")
+gnd(860, sw_v(860, 1190, "sw3 boot"))
+text(700, 1276, "hold boot, tap reset: download mode", "p")
+
+# ================================================================== 2b. usb and 3.3 v
+y0 = 1320
+section(y0, "usb (data only) and 3.3 v")
+conn_r(210, "j2", "usb-c, type-c-31-m-12", [("a6/b6  d+", y0 + 70), ("a7/b7  d−", y0 + 100), ("a5  cc1", y0 + 130),
+                                             ("b5  cc2", y0 + 160), ("gnd, shell", y0 + 190), ("vbus  nc", y0 + 220)], w=150)
+net(210, 260, y0 + 70, "usb_dp", side="right")
+net(210, 260, y0 + 100, "usb_dn", side="right")
+wire((210, y0 + 130), (360, y0 + 130))
+t, b = res_v(360, y0 + 165, "r18 5.1 kΩ")
+wire((360, y0 + 130), (360, t)); gnd(360, b)
+wire((210, y0 + 160), (440, y0 + 160))
+t, b = res_v(440, y0 + 195, "r19 5.1 kΩ")
+wire((440, y0 + 160), (440, t)); gnd(440, b)
+wire((210, y0 + 190), (240, y0 + 190), (240, y0 + 206)); gnd(240, y0 + 206)
+text(60, y0 + 270, "vbus is not connected: plug in the 12 v feed while flashing over usb", "p")
+net(560, 620, y0 + 80, "+5v")
+wire((620, y0 + 80), (720, y0 + 80)); dot(660, y0 + 80)
+t, b = cap_v(660, y0 + 115, "c12 10 µF", label_left=True)
+wire((660, y0 + 80), (660, t)); gnd(660, b)
+box(720, y0 + 55, 110, 80, "ams1117-3.3", ref="u12")
+pin_l(720, y0 + 80, "vi"); pin_r(830, y0 + 80, "vo")
+text(775, y0 + 128, "gnd", "p", "middle")
+wire((775, y0 + 135), (775, y0 + 150)); gnd(775, y0 + 150)
+wire((830, y0 + 80), (960, y0 + 80)); dot(900, y0 + 80)
+t, b = cap_v(900, y0 + 115, "c13 22 µF")
+wire((900, y0 + 80), (900, t)); gnd(900, b)
+net(960, 1000, y0 + 80, "+3v3", side="right")
+t, b = cap_v(1000, y0 + 165, "")
+net_up(1000, t, t - 10, "+3v3"); gnd(1000, b)
+t, b = cap_v(1070, y0 + 165, "")
+net_up(1070, t, t - 10, "+3v3"); gnd(1070, b)
+text(1035, y0 + 226, "c14 10 µF, c15 100 nF", "v", "middle")
+text(1035, y0 + 242, "at u1's 3v3 pin", "p", "middle")
+text(560, y0 + 270, "u12 feeds u1, u3, the sensors and the logic of u7, u8, u10, u11 (about 0.4 a peak)", "p")
+
+o.append('<g transform="translate(0,340)">')
 # ================================================================== 3. i2c bus
 section(1270, "i2c bus: sensors and display (the mcp23017 below is on the same bus)")
 net(60, 100, 1370, "scl")
@@ -368,59 +445,146 @@ text(d[0] - 16, 2470, "+", "p")
 wire(d, (d[0], 2490))
 net_up(d[0], 2464, 2452, "+5v")
 
-# ================================================================== 5. feeder drivers (2-roll)
-section(2660, "feeder drivers: tmc2209 stepstick modules in sockets, standalone, 1/8 step")
-o.append(f'<rect class="dsh" x="40" y="2680" width="{W - 80}" height="360" style="stroke:#999999"/>')
-text(W - 56, 2700, "2-roll build only", "p", "end")
+o.append('</g>')
+
+# ================================================================== 6. scales (hx711 on the board)
+YS = 2990
+section(YS, "scales: hx711 load-cell amplifiers on the board, load cells plug straight in")
 
 
-def driver(x, y, ref, step, jref, mlabel, cref, pullup=False):
-    box(x, y, 170, 270, "tmc2209 stepstick", "fitted by us", ref=ref)
-    L = [("en", 30, "feed_en"), ("ms1", 60, "gnd"), ("ms2", 90, "gnd"), ("pdn/uart", 120, "nc"), ("pdn/uart", 150, "nc"),
-         ("clk", 180, "nc"), ("step", 210, step), ("dir", 240, "feed_dir")]
-    for name, dy, lab in L:
-        pin_l(x, y + dy, name)
-        if lab == "nc":
-            text(x - 8, y + dy + 4, "nc", "p", "end")
+def scale(X, Y, k, u, q, rt, rb, caps, jref, dt):
+    bx, bw = X + 250, 140
+    exc, vfb, vbg = f"exc_{k}", f"vfb_{k}", f"vbg_{k}"
+    box(bx, Y + 40, bw, 270, "hx711", ref=u)
+    for name, dy in (("vsup", 70), ("base", 100), ("avdd", 130), ("vfb", 160), ("agnd", 190), ("vbg", 220), ("ina−", 250), ("ina+", 280)):
+        pin_l(bx, Y + dy, name)
+    xr = bx + bw
+    for name, dy in (("dvdd", 70), ("rate", 100), ("xi", 130), ("xo", 160), ("dout", 190), ("pd_sck", 220), ("inb+", 250), ("inb−", 280)):
+        pin_r(xr, Y + dy, name)
+    base, e, c = pnp(bx - 60, Y + 100, f"{q} s8550")
+    wire(base, (bx, Y + 100))
+    wire((bx, Y + 70), (X + 120, Y + 70)); dot(e[0], Y + 70); wire(e, (e[0], Y + 70))
+    net(X + 80, X + 120, Y + 70, "+5v")
+    wire((bx, Y + 130), (X + 120, Y + 130)); dot(c[0], Y + 130); wire(c, (c[0], Y + 130))
+    net(X + 80, X + 120, Y + 130, exc)
+    net(bx - 40, bx, Y + 160, vfb)
+    net(bx - 40, bx, Y + 190, "gnd")
+    net(bx - 40, bx, Y + 220, vbg)
+    conn_r(X + 110, jref, f"load cell {k}, xh 4", [("3 a−", Y + 250), ("4 a+", Y + 280), ("1 e+", Y + 310), ("2 e−", Y + 340)])
+    wire((bx, Y + 250), (X + 110, Y + 250))
+    wire((bx, Y + 280), (X + 110, Y + 280))
+    net(X + 110, X + 150, Y + 310, exc, side="right")
+    wire((X + 110, Y + 340), (X + 130, Y + 340), (X + 130, Y + 352)); gnd(X + 130, Y + 352)
+    text(X, Y + 386, "red e+, black e−, white a−, green a+", "p")
+    net(xr, xr + 40, Y + 70, "+3v3", side="right")
+    wire((xr, Y + 100), (xr + 20, Y + 100), (xr + 20, Y + 136)); wire((xr, Y + 130), (xr + 20, Y + 130)); dot(xr + 20, Y + 130)
+    gnd(xr + 20, Y + 136)
+    text(xr + 36, Y + 164, "nc", "p")
+    net(xr, xr + 50, Y + 190, dt, side="right")
+    net(xr, xr + 50, Y + 220, "hx_sck", side="right")
+    text(xr + 8, Y + 254, "nc", "p"); text(xr + 8, Y + 284, "nc", "p")
+    # decoupling and the excitation divider
+    for i, (lab, ref, val, polar) in enumerate(((exc, caps[0], "10 µF", False), (exc, caps[1], "100 nF", False), (vbg, caps[2], "100 nF", False),
+                                                ("+5v", caps[3], "100 nF", False), ("+3v3", caps[4], "100 nF", False))):
+        x = X + 40 + i * 72
+        t, b = cap_v(x, Y + 460, "")
+        net_up(x, t, t - 12, lab); gnd(x, b)
+        text(x, b + 36, ref, "p", "middle"); text(x, b + 50, val, "p", "middle")
+    x = X + 430
+    t, b = res_v(x, Y + 450, f"{rt} 20 kΩ")
+    net_up(x, t, t - 12, exc)
+    wire((x, b), (x, Y + 510)); dot(x, Y + 490)
+    net(x, x + 40, Y + 490, vfb, side="right")
+    t2, b2 = res_v(x, Y + 535, f"{rb} 8.2 kΩ")
+    gnd(x, b2)
+    text(X, Y + 600, "excitation avdd = 1.25 v × (20 k + 8.2 k) / 8.2 k = 4.3 v", "p")
+
+
+scale(40, YS + 10, "a", "u7", "q5", "r20", "r21", ("c17", "c18", "c19", "c20", "c21"), "j11", "hxa_dt")
+o.append(f'<rect class="dsh" x="590" y="{YS + 24}" width="530" height="600" style="stroke:#999999"/>')
+text(W - 56, YS + 44, "2-roll build only", "p", "end")
+scale(600, YS + 10, "b", "u8", "q6", "r22", "r23", ("c22", "c23", "c24", "c25", "c26"), "j12", "hxb_dt")
+
+# ================================================================== 7. feeder drivers (2-roll)
+FS = YS + 660
+section(FS, "feeder drivers: tmc2209 on the board, standalone, 1/8 step")
+o.append(f'<rect class="dsh" x="40" y="{FS + 24}" width="{W - 80}" height="760" style="stroke:#999999"/>')
+text(W - 56, FS + 44, "2-roll build only", "p", "end")
+
+
+def driver(X, Y, u, step, jref, k, m, cb, cs, rs, pullup=False):
+    bx, bw = X + 150, 150
+    xr = bx + bw
+    box(bx, Y + 40, bw, 410, "tmc2209-la-t", ref=u)
+    L = [("en", "feed_en"), ("step", step), ("dir", "feed_dir"), ("ms1", "gnd"), ("ms2", "gnd"), ("pdn/uart", "gnd"), ("spread", "gnd"),
+         ("clk", "gnd"), ("stdby", "gnd"), ("vcc_io", "+3v3"), ("diag", None), ("index", None), ("gnd, pad", "GND")]
+    for i, (name, lab) in enumerate(L):
+        y = Y + 70 + 30 * i
+        pin_l(bx, y, name)
+        if lab is None:
+            text(bx - 8, y + 4, "nc", "p", "end")
+        elif lab == "GND":
+            wire((bx, y), (bx - 20, y), (bx - 20, y + 12)); gnd(bx - 20, y + 12)
         elif name == "en" and pullup:
-            wire((x, y + 30), (x - 40, y + 30)); dot(x - 40, y + 30)
-            t, b = res_v(x - 40, y - 5, "")
+            wire((bx, y), (bx - 40, y)); dot(bx - 40, y)
+            t, b = res_v(bx - 40, y - 35, "")
             o.pop()
-            text(x - 54, y, "r6 10 kΩ", "v", "end")
-            wire((x - 40, y + 30), (x - 40, b)); net_up(x - 40, t, t - 8, "+3v3")
-            net(x - 80, x - 40, y + 30, "feed_en")
+            text(bx - 54, y - 30, "r6 10 kΩ", "v", "end")
+            wire((bx - 40, y), (bx - 40, b)); net_up(bx - 40, t, t - 8, "+3v3")
+            net(bx - 80, bx - 40, y, lab)
         else:
-            net(x - 40, x, y + dy, lab)
-    R_ = [("vm", 30), ("gnd", 60), ("1a", 90), ("1b", 120), ("2a", 150), ("2b", 180), ("vio", 210), ("gnd", 240)]
-    xr = x + 170
-    for name, dy in R_:
-        pin_r(xr, y + dy, name)
-    wire((xr, y + 30), (xr + 60, y + 30)); dot(xr + 60, y + 30)
-    net(xr + 60, xr + 90, y + 30, "+12v", side="right")
-    t, b = cap_v(xr + 60, y + 46, "", True)
-    wire((xr + 60, y + 30), (xr + 60, t)); gnd(xr + 60, b)
-    text(xr + 78, y + 56, cref, "p"); text(xr + 78, y + 70, "100 µF", "p")
-    wire((xr, y + 60), (xr + 22, y + 60), (xr + 22, y + 66)); gnd(xr + 22, y + 66)
-    for name, dy in R_[2:6]:
-        wire((xr, y + dy), (xr + 140, y + dy))
-    net(xr, xr + 30, y + 210, "+3v3", side="right")
-    net(xr, xr + 30, y + 240, "gnd", side="right")
-    conn(xr + 140, 0, jref, f"{mlabel}, xh 4", [("1 1a", y + 90), ("2 1b", y + 120), ("3 2a", y + 150), ("4 2b", y + 180)], w=90)
-    text(xr + 185, y + 230, "k1c extruder motor", "p", "middle")
+            net(bx - 40, bx, y, lab)
+    Rn = ["vs", "vs", "vcp", "cpo", "cpi", "5vout", "vref", "oa1", "oa2", "ob1", "ob2", "bra", "brb"]
+    for i, name in enumerate(Rn):
+        pin_r(xr, Y + 70 + 30 * i, name)
+    wire((xr, Y + 70), (xr + 20, Y + 70), (xr + 20, Y + 100), (xr, Y + 100))
+    net(xr + 20, xr + 60, Y + 70, "+12v", side="right")
+    wire((xr, Y + 130), (xr + 25, Y + 130))
+    cap_h(xr + 40, Y + 130, f"{cs[2]} 100 nF", "")
+    net(xr + 55, xr + 85, Y + 130, "+12v", side="right")
+    wire((xr, Y + 160), (xr + 40, Y + 160)); wire((xr, Y + 190), (xr + 40, Y + 190))
+    cap_v(xr + 40, Y + 175, f"{cs[1]} 22 nF")
+    net(xr, xr + 40, Y + 220, f"{m}_5v", side="right")
+    net(xr, xr + 40, Y + 250, f"{m}_vref", side="right")
+    for i, nm in enumerate(("1 1a", "2 1b", "3 2a", "4 2b")):
+        wire((xr, Y + 280 + 30 * i), (xr + 110, Y + 280 + 30 * i))
+    conn(xr + 110, 0, jref, f"motor {k}", [("1 1a", Y + 280), ("2 1b", Y + 310), ("3 2a", Y + 340), ("4 2b", Y + 370)], w=80)
+    text(xr + 125, Y + 424, "k1c extruder", "p"); text(xr + 125, Y + 438, "motor", "p")
+    wire((xr, Y + 400), (xr + 110, Y + 400))
+    t, b = res_v(xr + 110, Y + 470, f"{rs[2]} 0.11 Ω")
+    wire((xr + 110, Y + 400), (xr + 110, t)); gnd(xr + 110, b)
+    wire((xr, Y + 430), (xr + 30, Y + 430))
+    t, b = res_v(xr + 30, Y + 470, f"{rs[3]} 0.11 Ω")
+    wire((xr + 30, Y + 430), (xr + 30, t)); gnd(xr + 30, b)
+    # decoupling and the current-setting divider
+    for i, (lab, ref, val, polar) in enumerate((("+12v", cb, "100 µF", True), ("+12v", cs[0], "100 nF", False),
+                                                ("+3v3", cs[4], "100 nF", False), (f"{m}_5v", cs[3], "2.2 µF", False))):
+        x = X + 40 + i * 64
+        t, b = cap_v(x, Y + 570, "", polar)
+        net_up(x, t, t - 12, lab); gnd(x, b)
+        text(x, b + 36, ref, "p", "middle"); text(x, b + 50, val, "p", "middle")
+    x = X + 330
+    t, b = res_v(x, Y + 580, f"{rs[0]} 39 kΩ")
+    net_up(x, t, t - 12, f"{m}_5v")
+    wire((x, b), (x, Y + 640)); dot(x, Y + 620)
+    net(x, x + 40, Y + 620, f"{m}_vref", side="right")
+    t2, b2 = res_v(x, Y + 665, f"{rs[1]} 10 kΩ")
+    gnd(x, b2)
 
 
-driver(170, 2740, "u10", "step_a", "j16", "motor a", "c10", pullup=True)
-driver(660, 2740, "u11", "step_b", "j17", "motor b", "c11")
-text(60, 3070, "r6 holds feed_en high: both drivers stay off at boot and while printing, so the k1c extruder pulls freely through the idle gears", "p")
+driver(40, FS + 30, "u10", "step_a", "j16", "a", "ma", "c10", ("c27", "c28", "c29", "c30", "c31"), ("r24", "r25", "r26", "r27"), pullup=True)
+driver(600, FS + 30, "u11", "step_b", "j17", "b", "mb", "c11", ("c32", "c33", "c34", "c35", "c36"), ("r28", "r29", "r30", "r31"))
+text(60, FS + 800, "r6 holds feed_en high: both drivers stay off at boot and while printing, so the k1c extruder pulls freely through the idle gears", "p")
+text(60, FS + 818, "vref = 5 v × 10 k / 49 k = 1.0 v → about 0.72 a rms (1.0 a peak) per motor. change r24/r28 to change it.", "p")
 
 # ================================================================== notes
 NOTES = [
-    "1. one board for both dryers. 1-roll build: leave off u10, u11, c10, c11, j12, j13, j14, j16, j17. a 1-roll box uses this same pin map.",
+    "1. one board for both dryers, every part assembled by jlcpcb. 1-roll build: the 1-roll bom leaves off everything in the dashed boxes and j12–j14.",
     "2. the heater path tb1 → tb2 → q1 carries 12.5 a: wide copper pours, 2 oz copper, a copper area under q1's tab.",
     "3. u4 drives q1's gate at 12 v. r9 holds the driver input low until the firmware takes gpio4, so the heater stays off at boot.",
     "4. r8, r11, r13, r15 hold the mosfet gates low at boot. q2–q4 ao3400a in sot-23: pin 1 gate, 2 source, 3 drain.",
-    "5. u1 and u10/u11 are modules we fit ourselves in 2.54 mm sockets. measure the super mini's header row spacing (footprint: 15.24 mm).",
-    "6. tmc2209 pins 4–6 (pdn/uart, clk) differ between makers, so they're left unconnected. check your module.",
+    "5. u1's antenna end overhangs or sits at the board edge, with no copper, parts or traces under it.",
+    "6. u10, u11 exposed pads to gnd with thermal vias into a ground pour on the back.",
     "7. u2 values from the ap63205 datasheet, table 3: 4.7 µH, 10 µF in, 2 × 22 µF out, 100 nF bootstrap.",
     "8. crossing wires are not connected unless a dot is shown. blue labels with the same name are the same net.",
     "9. part numbers and lcsc codes: pcb/jlcpcb/bom-2-roll.csv. same nets as the kicad schematic pcb/dryer-controller.kicad_sch.",

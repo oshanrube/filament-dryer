@@ -79,11 +79,10 @@
 <nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html">2-roll feeder</a><a href="../1-roll/index.html" aria-current="page">1 roll</a></nav>
 <header>
   <h1>Single-Reel Filament Dryer</h1>
-  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and an ESP32-C3 SuperMini running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
-  <p class="meta">Plan as of 2026-11-23 · parts about US$170 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
+  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and a JLCPCB-assembled controller board with an ESP32-C3 running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
+  <p class="meta">Plan as of 2026-11-23 · parts about US$182 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
   <div class="links">
     <a href="../pcb/schematic.pdf">Board schematic (PDF)</a>
-    <a href="schematic.svg">Hand-wired schematic (SVG)</a>
     <a href="bom.csv">Parts list (CSV)</a>
   </div>
 </header>
@@ -124,7 +123,7 @@
   <thead><tr><th>Dimension</th><th>Value</th><th>Why</th></tr></thead>
   <tbody>
     <tr><td>Chamber inside (L × W × H)</td><td>230 × 135 × 235 mm</td><td>Ø200 reel + 15 mm clearance; 95 mm for the reel and a 40 mm heater duct at the back</td></tr>
-    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck converter, load cell</td></tr>
+    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Controller board, load cell</td></tr>
     <tr><td>Outside</td><td>250 × 155 × 335 mm</td><td>4 mm walls + 6 mm insulation; the motion sensor sits on the right wall</td></tr>
     <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
     <tr><td>Roller length</td><td>95 mm</td><td>Any reel 50-90 mm wide</td></tr>
@@ -150,7 +149,7 @@
     <tr><td>Heater duct + blower mount</td><td>1</td><td>40 g</td><td>K1C</td><td>At least 15 mm between ABS and the PTC fins</td></tr>
     <tr><td>Desiccant cassette</td><td>1</td><td>30 g</td><td>K1C</td><td>Perforated face</td></tr>
     <tr><td>Motion sensor holder</td><td>1</td><td>20 g</td><td>K1C</td><td>Bolts to the right wall at the exit</td></tr>
-    <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Perfboard, OLED, button</td></tr>
+    <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Controller board, OLED, button</td></tr>
   </tbody>
 </table></div>
 
@@ -174,55 +173,53 @@
 <ul>
   <li><strong>Load:</strong> heater 12.5 A, fans about 0.4 A, electronics about 0.15 A: about 13.5 A peak.</li>
   <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
-  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini.</li>
+  <li><strong>Inside the box:</strong> the controller board takes the 12 V feed and makes its own 5 V and 3.3 V.</li>
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
-<h3>On the controller board</h3>
-<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in and 5 V buck, ESP32-C3 SuperMini, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scale connectors; the feeder drivers are in a dashed box." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). The 1-roll build leaves off U10, U11, C10, C11, J12, J13, J14, J16 and J17. On the board the BTT runout switch, button and buzzer go through the MCP23017, so the 1-roll box uses the 2-roll pin map.</figcaption></figure>
-<h3>Hand-wired, without the PCB</h3>
-<figure><a href="schematic.svg"><img src="schematic.svg" alt="Module-level schematic: power in, ESP32-C3 SuperMini, I2C sensors, heater and fan switches, HX711 weighing, BTT motion sensor and button." loading="lazy"></a><figcaption>Module-level drawing for a hand-wired box (open full size). Nets with the same label are connected.</figcaption></figure>
-<p>No I/O expander is needed when hand-wired: every signal fits on the C3's own pins, as in the table below.</p>
+<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in, 5 V buck and 3.3 V regulator, ESP32-C3-WROOM-02 module with USB-C, reset and boot buttons, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scales; the 2-roll-only parts are in dashed boxes." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). It is the same board as the 2-roll box's: the 1-roll BOM leaves off the parts in the dashed boxes (second scale, feeder drivers) and J12-J14. Blue labels with the same name are the same net.</figcaption></figure>
+<p>Every part is assembled by JLCPCB, so nothing plugs into the board but the harness. A USB-C port (data only: plug in the 12 V feed while flashing) loads the first firmware; updates after that go over Wi-Fi. The load cell's own four leads crimp straight into J11. On this board the BTT runout switch, the button and the buzzer go through the MCP23017.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
   <tbody>
-    <tr><td>0</td><td>HX711 SCK</td><td></td></tr>
-    <tr><td>1</td><td>HX711 DOUT</td><td></td></tr>
+    <tr><td>0</td><td>HX711 SCK (U7)</td><td></td></tr>
+    <tr><td>1</td><td>HX711 DOUT (U7)</td><td></td></tr>
     <tr><td>2</td><td>DS18B20 1-wire</td><td>Strapping pin; the 4.7 kΩ pull-up keeps it high at boot</td></tr>
-    <tr><td>3</td><td>BTT runout switch</td><td>Internal pull-up</td></tr>
-    <tr><td>4</td><td>Heater MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: heater off while booting</td></tr>
-    <tr><td>5</td><td>Blower MOSFET gate</td><td>Same as GPIO 4</td></tr>
-    <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 4</td></tr>
-    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED</td></tr>
+    <tr><td>3, 10, 20</td><td>Unused on the 1-roll</td><td>Second scale and feeder STEP lines, not fitted</td></tr>
+    <tr><td>4</td><td>Heater gate driver input (UCC27517)</td><td>10 kΩ pull-down: heater off while booting</td></tr>
+    <tr><td>5</td><td>Blower MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: off while booting</td></tr>
+    <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 5</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED, MCP23017</td></tr>
     <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
-    <tr><td>9</td><td>Push button</td><td>Same pin as BOOT: holding it at power-on enters flashing mode</td></tr>
-    <tr><td>10</td><td>Buzzer MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down</td></tr>
-    <tr><td>20</td><td>Free</td><td></td></tr>
-    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here</td></tr>
+    <tr><td>9</td><td>BOOT button</td><td>10 kΩ pull-up; not used by the firmware</td></tr>
+    <tr><td>18, 19</td><td>USB D−, D+</td><td>USB-C for flashing and logs</td></tr>
+    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here; ESPHome counts the pulses</td></tr>
+  </tbody>
+</table></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>MCP23017</th><th>Use</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>GPA2</td><td>Runout switch of the BTT SFS V2</td><td>Internal pull-up</td></tr>
+    <tr><td>GPA3</td><td>Push button</td><td>Internal pull-up</td></tr>
+    <tr><td>GPA4</td><td>Buzzer (through an AO3400A)</td><td></td></tr>
+    <tr><td>GPA0, GPA1, GPA5, GPA6</td><td>Unused on the 1-roll</td><td>Lane sensors and feeder EN/DIR</td></tr>
   </tbody>
 </table></div>
 
 <h2 id="wiring">Wiring</h2>
 <p>The physical harness: every cable from its connector on the controller board to the part, with wire colours and gauges. Use one colour per job throughout (the 6-colour 22 AWG silicone set covers it), so a cable can be traced at a glance. Crimp JST-XH 2.54 mm connectors on every cable that goes to a sensor, fan or motor, so parts can be swapped without soldering.</p>
 <figure><a href="wiring.svg"><img src="wiring.svg" alt="Wiring diagram: the controller board in the electronics bay with each cable running to the chamber, front panel, scales and motion sensor." loading="lazy"></a><figcaption>Wiring diagram (open full size).</figcaption></figure>
-<div class="table-wrap"><table><thead><tr><th>Connector</th><th>Type, wire</th><th>Pins</th><th>Goes to</th><th>Where</th><th>Notes</th></tr></thead><tbody><tr><td><strong>TB1</strong><br>12 V in</td><td>screw terminal, 2-way<br>14 AWG</td><td><div class="pin">1: +12V (from F1) <span class="wire wire-red">red</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div></td><td>XT60 J1 on the base, through inline fuse F1 15 A</td><td>base wall</td><td></td></tr><tr><td><strong>TB2</strong><br>Heater</td><td>screw terminal, 2-way<br>14 AWG</td><td><div class="pin">1: +12V out → TH1 → TF1 → HT1 <span class="wire wire-red">red</span></div><div class="pin">2: HEATER− (Q1 drain) <span class="wire wire-black">black</span></div></td><td>PTC heater HT1, with TH1 KSD301 and TF1 92 °C in series on the red wire</td><td>chamber</td><td>TH1 and TF1 sit high on the back wall in the chamber air</td></tr><tr><td><strong>J3</strong><br>Blower</td><td>JST-XH 2<br>22 AWG</td><td><div class="pin">1: +12V <span class="wire wire-red">red</span></div><div class="pin">2: FAN− (Q2 drain) <span class="wire wire-black">black</span></div></td><td>5015 blower M1</td><td>chamber, heater duct</td><td>The fan&#x27;s black lead goes to the MOSFET, not GND</td></tr><tr><td><strong>J4</strong><br>Exhaust fan</td><td>JST-XH 2<br>22 AWG</td><td><div class="pin">1: +12V <span class="wire wire-red">red</span></div><div class="pin">2: FAN− (Q3 drain) <span class="wire wire-black">black</span></div></td><td>4010 fan M2 in the lid</td><td>lid</td><td>Leave a slack loop at the hinge</td></tr><tr><td><strong>J5</strong><br>SHT40</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCL <span class="wire wire-yellow">yellow</span></div><div class="pin">4: SDA <span class="wire wire-blue">blue</span></div></td><td>SHT40 U4</td><td>chamber</td><td></td></tr><tr><td><strong>J6</strong><br>DS18B20</td><td>JST-XH 3<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: DQ <span class="wire wire-blue">blue</span></div></td><td>DS18B20 probe U9 at the heater outlet</td><td>chamber</td><td>The probe&#x27;s own leads are red/black/yellow; splice to the harness colours</td></tr><tr><td><strong>J7</strong><br>AHT20 (optional)</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCL <span class="wire wire-yellow">yellow</span></div><div class="pin">4: SDA <span class="wire wire-blue">blue</span></div></td><td>AHT20 U5</td><td>bay</td><td></td></tr><tr><td><strong>J8</strong><br>OLED</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCL <span class="wire wire-yellow">yellow</span></div><div class="pin">4: SDA <span class="wire wire-blue">blue</span></div></td><td>SH1106 OLED U6</td><td>front panel</td><td></td></tr><tr><td><strong>J9</strong><br>Button</td><td>JST-XH 2<br>22 AWG</td><td><div class="pin">1: BTN <span class="wire wire-green">green</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div></td><td>Push button SW1</td><td>front panel</td><td></td></tr><tr><td><strong>J11</strong><br>Scale A</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCK <span class="wire wire-yellow">yellow</span></div><div class="pin">4: DT <span class="wire wire-blue">blue</span></div></td><td>HX711 U7, then load cell LC1</td><td>bay</td><td>Load cell to HX711: red E+, black E−, white A−, green A+ (the cell&#x27;s own leads)</td></tr><tr><td><strong>J15</strong><br>Motion sensor</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: RUNOUT <span class="wire wire-green">green</span></div><div class="pin">4: MOTION <span class="wire wire-yellow">yellow</span></div></td><td>BTT Smart Filament Sensor V2 U13</td><td>pod / exit</td><td>Confirm the BTT pin order with a multimeter while turning the wheel</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Connector</th><th>Type, wire</th><th>Pins</th><th>Goes to</th><th>Where</th><th>Notes</th></tr></thead><tbody><tr><td><strong>TB1</strong><br>12 V in</td><td>screw terminal, 2-way<br>14 AWG</td><td><div class="pin">1: +12V (from F1) <span class="wire wire-red">red</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div></td><td>XT60 J1 on the base, through inline fuse F1 15 A</td><td>base wall</td><td></td></tr><tr><td><strong>TB2</strong><br>Heater</td><td>screw terminal, 2-way<br>14 AWG</td><td><div class="pin">1: +12V out → TH1 → TF1 → HT1 <span class="wire wire-red">red</span></div><div class="pin">2: HEATER− (Q1 drain) <span class="wire wire-black">black</span></div></td><td>PTC heater HT1, with TH1 KSD301 and TF1 92 °C in series on the red wire</td><td>chamber</td><td>TH1 and TF1 sit high on the back wall in the chamber air</td></tr><tr><td><strong>J3</strong><br>Blower</td><td>JST-XH 2<br>22 AWG</td><td><div class="pin">1: +12V <span class="wire wire-red">red</span></div><div class="pin">2: FAN− (Q2 drain) <span class="wire wire-black">black</span></div></td><td>5015 blower M1</td><td>chamber, heater duct</td><td>The fan&#x27;s black lead goes to the MOSFET, not GND</td></tr><tr><td><strong>J4</strong><br>Exhaust fan</td><td>JST-XH 2<br>22 AWG</td><td><div class="pin">1: +12V <span class="wire wire-red">red</span></div><div class="pin">2: FAN− (Q3 drain) <span class="wire wire-black">black</span></div></td><td>4010 fan M2 in the lid</td><td>lid</td><td>Leave a slack loop at the hinge</td></tr><tr><td><strong>J5</strong><br>SHT40</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCL <span class="wire wire-yellow">yellow</span></div><div class="pin">4: SDA <span class="wire wire-blue">blue</span></div></td><td>SHT40 U4</td><td>chamber</td><td></td></tr><tr><td><strong>J6</strong><br>DS18B20</td><td>JST-XH 3<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: DQ <span class="wire wire-blue">blue</span></div></td><td>DS18B20 probe U9 at the heater outlet</td><td>chamber</td><td>The probe&#x27;s own leads are red/black/yellow; splice to the harness colours</td></tr><tr><td><strong>J7</strong><br>AHT20 (optional)</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCL <span class="wire wire-yellow">yellow</span></div><div class="pin">4: SDA <span class="wire wire-blue">blue</span></div></td><td>AHT20 U5</td><td>bay</td><td></td></tr><tr><td><strong>J8</strong><br>OLED</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: SCL <span class="wire wire-yellow">yellow</span></div><div class="pin">4: SDA <span class="wire wire-blue">blue</span></div></td><td>SH1106 OLED U6</td><td>front panel</td><td></td></tr><tr><td><strong>J9</strong><br>Button</td><td>JST-XH 2<br>22 AWG</td><td><div class="pin">1: BTN <span class="wire wire-green">green</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div></td><td>Push button SW1</td><td>front panel</td><td></td></tr><tr><td><strong>J11</strong><br>Load cell A</td><td>JST-XH 4<br>the cell&#x27;s leads</td><td><div class="pin">1: E+ <span class="wire wire-red">red</span></div><div class="pin">2: E− <span class="wire wire-black">black</span></div><div class="pin">3: A− <span class="wire wire-white">white</span></div><div class="pin">4: A+ <span class="wire wire-green">green</span></div></td><td>Load cell LC1 (its HX711, U7, is on the board)</td><td>bay</td><td>Crimp the cell&#x27;s own four leads straight into the housing</td></tr><tr><td><strong>J15</strong><br>Motion sensor</td><td>JST-XH 4<br>22 AWG</td><td><div class="pin">1: +3V3 <span class="wire wire-white">white</span></div><div class="pin">2: GND <span class="wire wire-black">black</span></div><div class="pin">3: RUNOUT <span class="wire wire-green">green</span></div><div class="pin">4: MOTION <span class="wire wire-yellow">yellow</span></div></td><td>BTT Smart Filament Sensor V2 U13</td><td>pod / exit</td><td>Confirm the BTT pin order with a multimeter while turning the wheel</td></tr></tbody></table></div>
 
 
 <h2 id="parts">Parts catalog</h2>
-<p>About US$170 per box, plus about US$30 once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
-<h3>Control electronics (≈ US$14)</h3>
+<p>About US$182 per box, plus about US$30 once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
+<h3>Control electronics (≈ US$26)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
-<tr><td>ESP32-C3 SuperMini</td><td>1</td><td>(already on hand)</td><td class="num">0</td><td>Enough pins with the I/O expander</td></tr>
-<tr><td>HX711 load-cell amplifier</td><td>1 (buy 2)</td><td>HX711 module red shielded</td><td class="num">2</td><td>Shielded board; avoid the green ones with the E- ground fault</td></tr>
-<tr><td>Heater MOSFET</td><td>2</td><td>IRLB8721 TO-220</td><td class="num">1.5</td><td>Fully on with a 3.3 V gate; same parts as the 2-roll box</td></tr>
-<tr><td>Fan and buzzer MOSFETs</td><td>10-pack</td><td>AO3400 SOT-23</td><td class="num">1</td><td>Blower, exhaust fan, buzzer</td></tr>
-<tr><td>12 V to 5 V buck converter</td><td>1 (buy 2)</td><td>Mini560 5V 3A step down</td><td class="num">1.5</td><td>Takes 7-20 V in, so 12 V suits it</td></tr>
-<tr><td>Perfboard</td><td>2</td><td>double sided prototype PCB 5x7</td><td class="num">1.5</td><td>Everything soldered on one board, JST-XH headers to the box</td></tr>
-<tr><td>Resistor kit</td><td>1</td><td>1/4W metal film resistor kit</td><td class="num">2</td><td>10k gate pull-downs, 100R gate resistors, 4.7k 1-wire pull-up, 1k motion-signal resistor</td></tr>
+<tr><td>Controller board (JLCPCB, assembled)</td><td>1</td><td>(JLCPCB order: pcb/jlcpcb/bom-1-roll.csv)</td><td class="num">22</td><td>ESP32-C3 module, MCP23017, HX711, 5 V buck, heater and fan switches, buzzer: all assembled</td></tr>
 <tr><td>OLED display (optional)</td><td>1</td><td>1.3 inch SH1106 OLED I2C</td><td class="num">3</td><td>Local status</td></tr>
 <tr><td>Push button</td><td>1</td><td>12mm momentary panel push button</td><td class="num">0.5</td><td>Short press cycles mode, long press tares</td></tr>
-<tr><td>Buzzer</td><td>1</td><td>active buzzer 5V</td><td class="num">0.5</td><td>Fault alarm</td></tr>
 </tbody></table></div>
 <h3>Sensors (≈ US$32)</h3>
 <div class="table-wrap"><table>
@@ -302,7 +299,7 @@
 <h2 id="build">Build plan</h2>
 <ol>
   <li><strong>Order parts</strong>; meanwhile measure a real eSUN reel and finish the CAD.</li>
-  <li><strong>Bench electronics:</strong> SuperMini, HX711 and load cell, SHT40, BTT sensor on ESPHome; calibrate and check overnight drift.</li>
+  <li><strong>Bench electronics:</strong> the assembled board with the load cell, SHT40 and BTT sensor on ESPHome; calibrate and check overnight drift.</li>
   <li><strong>Heater test in the open:</strong> PID holds, firmware cut-outs trip, the KSD301 opens at about 85 °C.</li>
   <li><strong>Print and assemble;</strong> then a 12 h soak at 70 °C.</li>
   <li><strong>Control center integration</strong> and a watched test print.</li>

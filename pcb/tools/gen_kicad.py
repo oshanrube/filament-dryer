@@ -59,52 +59,32 @@ def prop(key, val, x, y, hide=False, angle=0, justify=None):
 
 
 CUSTOM = {
-    "ESP32-C3_SuperMini": box_symbol(
-        "ESP32-C3_SuperMini", "U", "ESP32-C3 SuperMini",
-        [("1", "5V", "power_in"), ("2", "GND", "power_in"), ("3", "3V3", "power_out"), ("4", "GPIO4", "bidirectional"),
-         ("5", "GPIO3", "bidirectional"), ("6", "GPIO2", "bidirectional"), ("7", "GPIO1", "bidirectional"), ("8", "GPIO0", "bidirectional")],
-        [("9", "GPIO5", "bidirectional"), ("10", "GPIO6", "bidirectional"), ("11", "GPIO7", "bidirectional"), ("12", "GPIO8", "bidirectional"),
-         ("13", "GPIO9", "bidirectional"), ("14", "GPIO10", "bidirectional"), ("15", "GPIO20", "bidirectional"), ("16", "GPIO21", "bidirectional")],
-        "dryer:ESP32-C3_SuperMini_Socket", 17.78, "ESP32-C3 SuperMini on two 1x8 female headers"),
-    "TMC2209_StepStick": box_symbol(
-        "TMC2209_StepStick", "U", "TMC2209 StepStick",
-        [("1", "EN", "input"), ("2", "MS1", "input"), ("3", "MS2", "input"), ("4", "PDN/UART", "passive"), ("5", "PDN/UART", "passive"),
-         ("6", "CLK", "passive"), ("7", "STEP", "input"), ("8", "DIR", "input")],
-        [("16", "VM", "power_in"), ("15", "GND", "power_in"), ("14", "2B", "output"), ("13", "2A", "output"), ("12", "1A", "output"),
-         ("11", "1B", "output"), ("10", "VIO", "power_in"), ("9", "GND", "power_in")],
-        "Module:Pololu_Breakout-16_15.2x20.3mm", 17.78, "TMC2209 StepStick module in two 1x8 female headers; check pins 4-6 on your module"),
+    "ESP32-C3-WROOM-02": box_symbol(
+        "ESP32-C3-WROOM-02", "U", "ESP32-C3-WROOM-02-N4",
+        [("1", "3V3", "power_in"), ("2", "EN", "input"), ("18", "IO0", "bidirectional"), ("17", "IO1", "bidirectional"),
+         ("16", "IO2", "bidirectional"), ("15", "IO3", "bidirectional"), ("3", "IO4", "bidirectional"), ("4", "IO5", "bidirectional"),
+         ("5", "IO6", "bidirectional"), ("9", "GND", "power_in")],
+        [("6", "IO7", "bidirectional"), ("7", "IO8", "bidirectional"), ("8", "IO9", "bidirectional"), ("10", "IO10", "bidirectional"),
+         ("11", "RXD/IO20", "bidirectional"), ("12", "TXD/IO21", "bidirectional"), ("13", "IO18/USB_D-", "bidirectional"),
+         ("14", "IO19/USB_D+", "bidirectional"), ("19", "GND", "passive")],
+        "RF_Module:ESP32-C3-WROOM-02", 25.4, "Espressif ESP32-C3-WROOM-02 Wi-Fi module, 4 MB flash, PCB antenna; pin table from its datasheet, Table 3-1"),
+    "TMC2209-LA": box_symbol(
+        "TMC2209-LA", "U", "TMC2209-LA-T",
+        [("2", "~{EN}", "input"), ("16", "STEP", "input"), ("19", "DIR", "input"), ("9", "MS1/AD0", "input"), ("10", "MS2/AD1", "input"),
+         ("14", "~{PD}/UART", "bidirectional"), ("7", "SPREAD", "input"), ("13", "CLK", "input"), ("20", "STDBY", "input"),
+         ("11", "DIAG", "output"), ("12", "INDEX", "output"), ("25", "NC", "passive"), ("15", "VCC_IO", "power_in"),
+         ("3", "GND", "power_in"), ("18", "GND", "passive"), ("29", "EP/GND", "passive")],
+        [("22", "VS", "power_in"), ("28", "VS", "passive"), ("6", "VCP", "output"), ("4", "CPO", "input"), ("5", "CPI", "input"),
+         ("8", "5VOUT", "power_out"), ("17", "VREF", "passive"), ("24", "OA1", "output"), ("21", "OA2", "output"),
+         ("26", "OB1", "output"), ("1", "OB2", "output"), ("23", "BRA", "input"), ("27", "BRB", "input")],
+        "Package_DFN_QFN:QFN-28-1EP_5x5mm_P0.5mm_EP3.75x3.75mm_ThermalVias", 20.32,
+        "ADI Trinamic TMC2209 stepper driver, QFN-28 5x5; pin numbers as KiCad's TMC2209-LA symbol"),
     "UCC27517": box_symbol(
         "UCC27517", "U", "UCC27517DBV",
         [("1", "VDD", "power_in"), ("3", "IN+", "input"), ("4", "IN-", "input")],
         [("5", "OUT", "output"), ("2", "GND", "power_in")],
         "Package_TO_SOT_SMD:SOT-23-5", 12.7, "4 A low-side gate driver, TI UCC27517 (DBV)"),
 }
-
-
-def supermini_footprint():
-    """Two 1x8 rows, 2.54 mm pitch, 15.24 mm apart (measure your board!)."""
-    pads = []
-    left = ["1", "2", "3", "4", "5", "6", "7", "8"]
-    right = ["9", "10", "11", "12", "13", "14", "15", "16"]
-    for i, n in enumerate(left):
-        pads.append(f'  (pad "{n}" thru_hole {"rect" if n == "1" else "oval"} (at 0 {i * 2.54:.2f}) (size 1.7 1.7) (drill 1) (layers "*.Cu" "*.Mask"))')
-    for i, n in enumerate(right):
-        pads.append(f'  (pad "{n}" thru_hole oval (at 15.24 {i * 2.54:.2f}) (size 1.7 1.7) (drill 1) (layers "*.Cu" "*.Mask"))')
-    x0, y0, x1, y1 = -1.38, -4.0, 16.62, 18.52
-    return "\n".join([
-        '(footprint "ESP32-C3_SuperMini_Socket" (version 20221018) (generator gen_kicad)',
-        '  (layer "F.Cu")',
-        '  (descr "ESP32-C3 SuperMini (22.5 x 18 mm) on two 1x8 2.54 mm female headers, rows 15.24 mm apart. MEASURE YOUR BOARD before ordering.")',
-        '  (attr through_hole)',
-        '  (fp_text reference "REF**" (at 7.62 -5.5) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))',
-        '  (fp_text value "ESP32-C3_SuperMini" (at 7.62 20) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))',
-        '  (fp_text user "USB" (at 7.62 -2.6) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))',
-        f'  (fp_rect (start {x0} {y0}) (end {x1} {y1}) (stroke (width 0.12) (type solid)) (fill none) (layer "F.SilkS"))',
-        f'  (fp_rect (start {x0 - 0.25} {y0 - 0.25}) (end {x1 + 0.25} {y1 + 0.25}) (stroke (width 0.05) (type solid)) (fill none) (layer "F.CrtYd"))',
-        *pads,
-        ")",
-        "",
-    ])
 
 
 # ---------------------------------------------------------------- library symbols
@@ -172,12 +152,14 @@ def part(ref, lib_id, value, fp, lcsc, at, nets, variant="all", mpn="", note="",
 
 def R(ref, val, lcsc, at, a, b, variant="all"):
     part(ref, "Device:R", val, R0603, lcsc, at, {"1": a, "2": b}, variant, mpn={"C25804": "0603WAF1002T5E", "C23162": "0603WAF4701T5E",
-         "C22775": "0603WAF1000T5E", "C21190": "0603WAF1001T5E", "C22859": "0603WAF100JT5E"}[lcsc])
+         "C22775": "0603WAF1000T5E", "C21190": "0603WAF1001T5E", "C22859": "0603WAF100JT5E", "C23186": "0603WAF5101T5E",
+         "C4184": "0603WAF2002T5E", "C25981": "0603WAF8201T5E", "C23153": "0603WAF3902T5E"}[lcsc])
 
 
 def C(ref, val, lcsc, at, a, b, variant="all"):
     fp = C0805 if lcsc in ("C15850", "C45783") else C0603
-    mpn = {"C14663": "CC0603KRX7R9BB104", "C15850": "CL21A106KAYNNNE", "C45783": "CL21A226MAQNNNE"}[lcsc]
+    mpn = {"C14663": "CC0603KRX7R9BB104", "C15850": "CL21A106KAYNNNE", "C45783": "CL21A226MAQNNNE", "C15849": "CL10A105KB8NNNC",
+           "C21122": "CL10B223KB8NNNC", "C23630": "CL10A225KO8NNNC"}[lcsc]
     part(ref, "Device:C", val, fp, lcsc, at, {"1": a, "2": b}, variant, mpn=mpn)
 
 
@@ -207,10 +189,32 @@ C("C5", "22uF 25V", "C45783", (144.78, 60.96), "+5V", "GND")
 C("C6", "22uF 25V", "C45783", (160.02, 60.96), "+5V", "GND")
 
 # --- 2. controller
-part("U1", "dryer:ESP32-C3_SuperMini", "ESP32-C3 SuperMini", "dryer:ESP32-C3_SuperMini_Socket", "C27438", (213.36, 66.04),
-     {"1": "+5V", "2": "GND", "3": "+3V3", "4": "HEAT_IN", "5": "HXB_DT", "6": "ONEWIRE", "7": "HXA_DT", "8": "HX_SCK",
-      "9": "BLOW_IN", "10": "EXH_IN", "11": "SCL", "12": "SDA", "13": None, "14": "STEP_A", "15": "STEP_B", "16": "MOTION_MCU"},
-     mpn="2x 2.54-1*8P female header", note="Two C27438 1x8 sockets; the SuperMini itself plugs in (yours)", jlc=False)
+part("U1", "dryer:ESP32-C3-WROOM-02", "ESP32-C3-WROOM-02-N4", "RF_Module:ESP32-C3-WROOM-02", "C2934560", (213.36, 66.04),
+     {"1": "+3V3", "2": "EN", "18": "HX_SCK", "17": "HXA_DT", "16": "ONEWIRE", "15": "HXB_DT", "3": "HEAT_IN", "4": "BLOW_IN",
+      "5": "EXH_IN", "9": "GND", "6": "SCL", "7": "SDA", "8": "BOOT", "10": "STEP_A", "11": "STEP_B", "12": "MOTION_MCU",
+      "13": "USB_DN", "14": "USB_DP", "19": "GND"},
+     mpn="ESP32-C3-WROOM-02-N4", note="Antenna end at the board edge, no copper under the antenna")
+C("C14", "10uF 25V", "C15850", (182.88, 45.72), "+3V3", "GND")
+C("C15", "100nF", "C14663", (193.04, 45.72), "+3V3", "GND")
+R("R16", "10k", "C25804", (241.3, 45.72), "+3V3", "EN")
+C("C16", "1uF", "C15849", (251.46, 45.72), "EN", "GND")
+part("SW2", "Switch:SW_Push", "RESET", "Button_Switch_SMD:SW_Push_1P1T_XKB_TS-1187A", "C318884", (236.22, 116.84), {"1": "EN", "2": "GND"},
+     mpn="TS-1187A-B-A-B")
+R("R17", "10k", "C25804", (233.68, 104.14), "+3V3", "BOOT")
+part("SW3", "Switch:SW_Push", "BOOT", "Button_Switch_SMD:SW_Push_1P1T_XKB_TS-1187A", "C318884", (264.16, 116.84), {"1": "BOOT", "2": "GND"},
+     mpn="TS-1187A-B-A-B", note="Hold BOOT, press RESET: download mode")
+
+# --- 2b. USB (data only) and 3.3 V
+part("J2", "Connector:USB_C_Receptacle_USB2.0_16P", "USB-C", "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12", "C165948", (294.64, 271.78),
+     {"A1": "GND", "A12": "GND", "B1": "GND", "B12": "GND", "A4": None, "A9": None, "B4": None, "B9": None,
+      "A5": "CC1", "B5": "CC2", "A6": "USB_DP", "B6": "USB_DP", "A7": "USB_DN", "B7": "USB_DN", "A8": None, "B8": None, "S1": "GND"},
+     mpn="TYPE-C-31-M-12", note="Programming and logs (USB serial/JTAG). Data only: VBUS is not connected, so plug in 12 V while flashing")
+R("R18", "5.1k", "C23186", (330.2, 279.4), "CC1", "GND")
+R("R19", "5.1k", "C23186", (340.36, 279.4), "CC2", "GND")
+part("U12", "Regulator_Linear:AMS1117-3.3", "AMS1117-3.3", "Package_TO_SOT_SMD:SOT-223-3_TabPin2", "C6186", (386.08, 266.7),
+     {"1": "GND", "2": "+3V3", "3": "+5V"}, mpn="AMS1117-3.3", note="3.3 V for the module, MCP23017, sensors and logic (up to ~0.4 A peak)")
+C("C12", "10uF 25V", "C15850", (363.22, 279.4), "+5V", "GND")
+C("C13", "22uF 25V", "C45783", (406.4, 279.4), "+3V3", "GND")
 R("R1", "4.7k", "C23162", (182.88, 104.14), "+3V3", "ONEWIRE")
 R("R2", "4.7k", "C23162", (193.04, 104.14), "+3V3", "SCL")
 R("R3", "4.7k", "C23162", (203.2, 104.14), "+3V3", "SDA")
@@ -263,29 +267,63 @@ CONN("J6", ["+3V3", "GND", "ONEWIRE"], (335.28, 172.72), value="DS18B20")
 CONN("J7", ["+3V3", "GND", "SCL", "SDA"], (335.28, 190.5), value="AHT20")
 CONN("J8", ["+3V3", "GND", "SCL", "SDA"], (335.28, 210.82), value="OLED")
 CONN("J9", ["BTN", "GND"], (335.28, 228.6), value="BUTTON")
-CONN("J11", ["+3V3", "GND", "HX_SCK", "HXA_DT"], (386.08, 152.4), value="SCALE_A")
-CONN("J12", ["+3V3", "GND", "HX_SCK", "HXB_DT"], (386.08, 172.72), "2roll", value="SCALE_B")
-CONN("J13", ["+3V3", "GND", "LANE_A"], (386.08, 193.04), "2roll", value="LANE_A")
+CONN("J11", ["EXC_A", "GND", "LCA_N", "LCA_P"], (386.08, 149.86), value="LOAD_CELL_A")
+CONN("J12", ["EXC_B", "GND", "LCB_N", "LCB_P"], (386.08, 170.18), "2roll", value="LOAD_CELL_B")
+CONN("J13", ["+3V3", "GND", "LANE_A"], (386.08, 190.5), "2roll", value="LANE_A")
 CONN("J14", ["+3V3", "GND", "LANE_B"], (386.08, 208.28), "2roll", value="LANE_B")
-CONN("J15", ["+3V3", "GND", "MERGE", "MOTION"], (386.08, 226.06), value="BTT_SFS")
+CONN("J15", ["+3V3", "GND", "MERGE", "MOTION"], (386.08, 228.6), value="BTT_SFS")
 
-# --- 7. feeder drivers (2-roll only)
-for k, (u, step, j, c, m, y) in enumerate((("U10", "STEP_A", "J16", "C10", "MA", 66.04), ("U11", "STEP_B", "J17", "C11", "MB", 132.08))):
-    part(u, "dryer:TMC2209_StepStick", "TMC2209 StepStick", "Module:Pololu_Breakout-16_15.2x20.3mm", "C27438", (474.98, y),
-         {"1": "FEED_EN", "2": "GND", "3": "GND", "4": None, "5": None, "6": None, "7": step, "8": "FEED_DIR",
-          "16": "+12V", "15": "GND", "14": f"{m}_2B", "13": f"{m}_2A", "12": f"{m}_1A", "11": f"{m}_1B", "10": "+3V3", "9": "GND"},
-         "2roll", mpn="2x 2.54-1*8P female header", note="Two C27438 sockets; the TMC2209 module plugs in", jlc=False)
-    CP(c, (444.5, y), "+12V", "GND", "2roll")
-    CONN(j, [f"{m}_1A", f"{m}_1B", f"{m}_2A", f"{m}_2B"], (520.7, y), "2roll", value=f"MOTOR_{'AB'[k]}")
+# --- 7. scales: HX711 on the board, load cells straight into J11/J12
+for u, q, rs, cs, k, dt, x, y, var in (("U7", "Q5", ("R20", "R21"), ("C17", "C18", "C19", "C20", "C21"), "A", "HXA_DT", 452.12, 246.38, "all"),
+                                       ("U8", "Q6", ("R22", "R23"), ("C22", "C23", "C24", "C25", "C26"), "B", "HXB_DT", 538.48, 246.38, "2roll")):
+    exc, vfb, base = f"EXC_{k}", f"VFB_{k}", f"HXBASE_{k}"
+    part(u, "Analog_ADC:HX711", "HX711", "Package_SO:SOP-16_3.9x9.9mm_P1.27mm", "C43656", (x, y),
+         {"1": "+5V", "2": base, "3": exc, "4": vfb, "5": "GND", "6": f"VBG_{k}", "7": f"LC{k}_N", "8": f"LC{k}_P",
+          "9": None, "10": None, "11": "HX_SCK", "12": dt, "13": None, "14": "GND", "15": "GND", "16": "+3V3"},
+         var, mpn="HX711", note="Load-cell ADC; 10 samples/s, internal oscillator")
+    part(q, "Device:Q_PNP_BEC", "S8550", "Package_TO_SOT_SMD:SOT-23", "C105432", (x - 27.94, y - 30.48), {"1": base, "2": "+5V", "3": exc},
+         var, mpn="S8550 (RANGE:120-200)", note="Excitation regulator pass transistor (AVDD = 4.3 V)")
+    R(rs[0], "20k", "C4184", (x + 20.32, y - 30.48), exc, vfb, var)
+    R(rs[1], "8.2k", "C25981", (x + 33.02, y - 30.48), vfb, "GND", var)
+    C(cs[0], "10uF 25V", "C15850", (x - 30.48, y + 30.48), exc, "GND", var)
+    C(cs[1], "100nF", "C14663", (x - 15.24, y + 30.48), exc, "GND", var)
+    C(cs[2], "100nF", "C14663", (x - 2.54, y + 30.48), f"VBG_{k}", "GND", var)
+    C(cs[3], "100nF", "C14663", (x + 10.16, y + 30.48), "+5V", "GND", var)
+    C(cs[4], "100nF", "C14663", (x + 22.86, y + 30.48), "+3V3", "GND", var)
+
+# --- 8. feeder drivers (2-roll only): TMC2209 on the board, standalone, 1/8 step
+for k, (u, step, j, cb, m, y, rr, cc) in enumerate((
+        ("U10", "STEP_A", "J16", "C10", "MA", 66.04, ("R24", "R25", "R26", "R27"), ("C27", "C28", "C29", "C30", "C31")),
+        ("U11", "STEP_B", "J17", "C11", "MB", 147.32, ("R28", "R29", "R30", "R31"), ("C32", "C33", "C34", "C35", "C36")))):
+    v5, vref, cpi, cpo, vcp, bra, brb = (f"{m}_5V", f"{m}_VREF", f"{m}_CPI", f"{m}_CPO", f"{m}_VCP", f"{m}_BRA", f"{m}_BRB")
+    part(u, "dryer:TMC2209-LA", "TMC2209-LA-T", "Package_DFN_QFN:QFN-28-1EP_5x5mm_P0.5mm_EP3.75x3.75mm_ThermalVias", "C2150710", (474.98, y),
+         {"2": "FEED_EN", "16": step, "19": "FEED_DIR", "9": "GND", "10": "GND", "14": "GND", "7": "GND", "13": "GND", "20": "GND",
+          "11": None, "12": None, "25": None, "15": "+3V3", "3": "GND", "18": "GND", "29": "GND",
+          "22": "+12V", "28": "+12V", "6": vcp, "4": cpo, "5": cpi, "8": v5, "17": vref,
+          "24": f"{m}_1A", "21": f"{m}_1B", "26": f"{m}_2A", "1": f"{m}_2B", "23": bra, "27": brb},
+         "2roll", mpn="TMC2209-LA-T", note="Exposed pad to GND with thermal vias into a ground pour")
+    CP(cb, (431.8, y - 17.78), "+12V", "GND", "2roll")
+    C(cc[0], "100nF", "C14663", (431.8, y + 2.54), "+12V", "GND", "2roll")
+    C(cc[1], "22nF 50V", "C21122", (500.38, y - 27.94), cpo, cpi, "2roll")
+    C(cc[2], "100nF", "C14663", (513.08, y - 27.94), vcp, "+12V", "2roll")
+    C(cc[3], "2.2uF", "C23630", (525.78, y - 27.94), v5, "GND", "2roll")
+    C(cc[4], "100nF", "C14663", (431.8, y + 22.86), "+3V3", "GND", "2roll")
+    R(rr[0], "39k", "C23153", (500.38, y + 25.4), v5, vref, "2roll")
+    R(rr[1], "10k", "C25804", (513.08, y + 25.4), vref, "GND", "2roll")
+    for ref, net in ((rr[2], bra), (rr[3], brb)):
+        part(ref, "Device:R", "0.11R 1%", "Resistor_SMD:R_1206_3216Metric", "C82532", (525.78 + (12.7 if ref == rr[3] else 0), y + 25.4),
+             {"1": net, "2": "GND"}, "2roll", mpn="1206W4F110LT5E", note="Sense resistor: sets the current range")
+    CONN(j, [f"{m}_1A", f"{m}_1B", f"{m}_2A", f"{m}_2B"], (556.26, y), "2roll", value=f"MOTOR_{'AB'[k]}")
 
 # --- power nets: one power symbol + PWR_FLAG per rail, tied to the same-named labels
 POWER = [("+12V", "power:+12V", (30.48, 330.2)), ("+5V", "power:+5V", (55.88, 330.2)),
          ("+3V3", "power:+3V3", (81.28, 330.2)), ("GND", "power:GND", (106.68, 340.36))]
 FLAGS = ["+12V", "+5V", "GND"]
 
-BLOCKS = [("1  12 V in, 5 V buck", 22, 30), ("2  Controller (ESP32-C3 SuperMini)", 170, 30), ("3  I/O expander", 262, 30),
+BLOCKS = [("1  12 V in, 5 V buck", 22, 30), ("2  Controller (ESP32-C3-WROOM-02)", 170, 30), ("3  I/O expander", 262, 30),
           ("4  Heater switch, 12 V gate drive", 22, 130), ("5  Fans and buzzer (low-side)", 170, 130),
-          ("6  Sensor, panel and scale connectors", 322, 130), ("7  Feeder drivers (2-roll build only)", 430, 30),
+          ("6  Sensor, panel and load-cell connectors", 322, 130), ("7  Scales: HX711 (U8 parts: 2-roll only)", 425, 205),
+          ("8  Feeder drivers (2-roll build only)", 425, 30), ("2b  USB (data only) and 3.3 V", 280, 250),
           ("Power rails", 22, 315)]
 
 
@@ -304,7 +342,7 @@ def write_schematic():
     def instance(lib_id, ref, value, x, y, fields, pins, in_bom=True, dnp=False, extent=None):
         if lib_id in ("Device:R", "Device:C", "Device:C_Polarized", "Device:L"):
             props = [prop("Reference", ref, x + 2.54, y - 1.27, justify="left"), prop("Value", value, x + 2.54, y + 1.27, justify="left")]
-        elif lib_id in ("Device:Q_NMOS_GDS", "Transistor_FET:AO3400A"):
+        elif lib_id in ("Device:Q_NMOS_GDS", "Transistor_FET:AO3400A", "Device:Q_PNP_BEC"):
             props = [prop("Reference", ref, x + 5.08, y - 1.27, justify="left"), prop("Value", value, x + 5.08, y + 1.27, justify="left")]
         elif lib_id == "Device:D_Schottky":
             props = [prop("Reference", ref, x, y - 3.81), prop("Value", value, x, y + 3.81)]
@@ -352,9 +390,9 @@ def write_schematic():
         label(net, x, y, 0)
     for title, x, y in BLOCKS:
         body.append([S("text"), title, [S("at"), x, y, 0], [S("effects"), [S("font"), [S("size"), 2.54, 2.54], S("bold")], [S("justify"), S("left"), S("bottom")]], [S("uuid"), uid()]])
-    notes = ["One board for both dryers. 1-roll build: leave off U10, U11, C10, C11, J12, J13, J14, J16, J17.",
-             "U1 SuperMini: measure the header row spacing of your board; the footprint assumes 15.24 mm.",
-             "U10/U11 StepStick pins 4-6 differ between TMC2209 modules: they are left unconnected here.",
+    notes = ["One board for both dryers, every part assembled by JLCPCB. The 1-roll BOM leaves off the 2-roll-only parts (field Build).",
+             "U1 antenna at the board edge: no copper, parts or traces under it. USB is data only: plug in 12 V while flashing.",
+             "U10/U11: 39k/10k on VREF = 1.0 V -> about 0.72 A RMS with 0.11 R sense resistors. Exposed pad to GND with vias.",
              "Heater path TB1 -> TB2 -> Q1 carries 12.5 A: wide pours, 2 oz copper, copper area under Q1."]
     for i, t in enumerate(notes):
         body.append([S("text"), t, [S("at"), 260, 330.2 + i * 6, 0], [S("effects"), [S("font"), [S("size"), 1.8, 1.8]], [S("justify"), S("left"), S("bottom")]], [S("uuid"), uid()]])
@@ -372,22 +410,26 @@ def write_project_files():
     (ROOT / f"{PROJECT}.kicad_pro").write_text('{\n  "meta": {"filename": "%s.kicad_pro", "version": 1},\n  "schematic": {"legacy_lib_dir": "", "legacy_lib_list": []},\n  "sheets": [],\n  "text_variables": {}\n}\n' % PROJECT)
     lib = [S("kicad_symbol_lib"), [S("version"), 20220914], [S("generator"), S("gen_kicad")], *CUSTOM.values()]
     (ROOT / "dryer.kicad_sym").write_text(dump(lib) + "\n")
-    (ROOT / "dryer.pretty").mkdir(exist_ok=True)
-    (ROOT / "dryer.pretty" / "ESP32-C3_SuperMini_Socket.kicad_mod").write_text(supermini_footprint())
+    old = ROOT / "dryer.pretty" / "ESP32-C3_SuperMini_Socket.kicad_mod"
+    if old.exists():
+        old.unlink()
     (ROOT / "sym-lib-table").write_text('(sym_lib_table\n  (lib (name "dryer")(type "KiCad")(uri "${KIPRJMOD}/dryer.kicad_sym")(options "")(descr "Filament dryer parts"))\n)\n')
-    (ROOT / "fp-lib-table").write_text('(fp_lib_table\n  (lib (name "dryer")(type "KiCad")(uri "${KIPRJMOD}/dryer.pretty")(options "")(descr "Filament dryer footprints"))\n)\n')
+    fpt = ROOT / "fp-lib-table"
+    if fpt.exists():
+        fpt.unlink()
+    if (ROOT / "dryer.pretty").exists() and not any((ROOT / "dryer.pretty").iterdir()):
+        (ROOT / "dryer.pretty").rmdir()
 
 
 def write_boms():
     (ROOT / "jlcpcb").mkdir(exist_ok=True)
     for build, keep in (("2-roll", {"all", "2roll"}), ("1-roll", {"all"})):
         groups = {}
-        hand = [p for p in PARTS if p["variant"] in keep and not p["jlc"]]
-        with (ROOT / "jlcpcb" / f"hand-fit-{build}.csv").open("w", newline="") as f:
-            w = csv.writer(f, lineterminator="\n")
-            w.writerow(["Designator", "Part", "LCSC Part #", "Qty", "Note"])
-            for p in hand:
-                w.writerow([p["ref"], "2.54 mm 1x8 female header", p["lcsc"], 2, p["note"]])
+        if any(p["variant"] in keep and not p["jlc"] for p in PARTS):
+            raise SystemExit("every part is meant to be assembled by JLCPCB")
+        old = ROOT / "jlcpcb" / f"hand-fit-{build}.csv"
+        if old.exists():
+            old.unlink()
         for p in PARTS:
             if p["variant"] not in keep or not p["jlc"]:
                 continue

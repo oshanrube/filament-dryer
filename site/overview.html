@@ -31,22 +31,21 @@
     <tr><td>Fans</td><td colspan="2">5015 blower + 4010 exhaust fan, 12 V dual ball bearing</td></tr>
     <tr><td>Weighing</td><td>A load cell per reel</td><td>One load cell</td></tr>
     <tr><td>Filament sensing</td><td>K1C runout sensor per lane + BTT SFS V2 after the merger</td><td>BTT SFS V2 at the exit</td></tr>
-    <tr><td>Feeders</td><td>2 × K1C extrusion kit + K1C extruder motor, TMC2209 drivers</td><td>None</td></tr>
-    <tr><td>Controller</td><td>ESP32-C3 SuperMini + MCP23017</td><td>ESP32-C3 SuperMini</td></tr>
+    <tr><td>Feeders</td><td>2 × K1C extrusion kit + K1C extruder motor, TMC2209 drivers on the board</td><td>None</td></tr>
+    <tr><td>Controller</td><td colspan="2">One JLCPCB-assembled board: ESP32-C3-WROOM-02, MCP23017, HX711 scales, heater and fan switches (the 1-roll leaves off the feeder parts)</td></tr>
     <tr><td>Power</td><td colspan="2">12 V feed from the shared HP 1600 W server supply, XT60, 15 A fuse</td></tr>
   </tbody>
 </table></div>
 <p>The shared supply's breakout board, fuse block and trunk cable (about US${{2_ROLL_FEEDER_SHARED}}) are bought once for all boxes.</p>
 
 <h2 id="pcb">Controller board (JLCPCB assembly)</h2>
-<p>One controller board serves both versions: the 2-roll build fits everything, the 1-roll build leaves the feeder parts off. It carries the 5 V buck converter, the MCP23017, a 12 V gate driver and MOSFET for the heater, the fan and buzzer switches, and JST XH connectors numbered as in the wiring diagrams. The SuperMini and TMC2209 modules plug into sockets. Every LCSC part number was checked on JLCPCB on 2026-11-24.</p>
+<p>One controller board serves both versions: the 2-roll build fits everything, the 1-roll build leaves the feeder parts off. It carries an ESP32-C3-WROOM-02 module with a USB-C port, the 5 V and 3.3 V supplies, the MCP23017, the HX711 load-cell amplifiers, the TMC2209 feeder drivers, a 12 V gate driver and MOSFET for the heater, the fan and buzzer switches, and JST XH connectors numbered as in the wiring diagrams. Every part is in JLCPCB's library, so the board arrives fully assembled; the parts cost about US$16 per 2-roll board and US$9 per 1-roll board, plus JLCPCB's fees. Every LCSC part number was checked on JLCPCB on 2026-11-24.</p>
 <figure><a href="pcb/schematic.svg"><img src="pcb/schematic.svg" alt="Wired schematic of the dryer controller board." loading="lazy"></a><figcaption>Controller board schematic with every wire drawn (open full size, or the <a href="pcb/schematic.pdf">PDF</a>). Same nets and part numbers as the KiCad schematic.</figcaption></figure>
 <div class="links">
   <a href="pcb/schematic.pdf">Schematic (PDF)</a>
   <a href="pcb/dryer-controller.pdf">KiCad schematic (PDF)</a>
   <a href="pcb/bom-2-roll.csv">JLCPCB BOM, 2-roll</a>
   <a href="pcb/bom-1-roll.csv">JLCPCB BOM, 1-roll</a>
-  <a href="pcb/hand-fit-2-roll.csv">Hand-fit sockets</a>
   <a href="https://github.com/oshanrube/filament-dryer/tree/main/pcb">KiCad project</a>
 </div>
 <p>Still to do before ordering: the PCB layout (Gerbers and placement file), and the checks listed in the project's README.</p>

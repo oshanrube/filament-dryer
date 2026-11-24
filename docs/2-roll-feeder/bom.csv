@@ -1,21 +1,13 @@
 section,part,qty,aliexpress_search,approx_usd,why
-Control electronics,ESP32-C3 SuperMini,1,(already on hand),0,Enough pins with the I/O expander
-Control electronics,I/O expander,1,MCP23017 module I2C,1.5,"Filament sensors, button, buzzer, feeder enable and direction"
-Control electronics,HX711 load-cell amplifiers,2 (buy 3),HX711 module red shielded,4,Shielded board; avoid the green ones with the E- ground fault
-Control electronics,Heater MOSFET,2,IRLB8721 TO-220,1.5,"Fully on with a 3.3 V gate, runs cool at 12.5 A"
-Control electronics,Fan and buzzer MOSFETs,10-pack,AO3400 SOT-23,1,"Blower, exhaust fan, buzzer"
-Control electronics,12 V to 5 V buck converter,1 (buy 2),Mini560 5V 3A step down,1.5,"Takes 7-20 V in, so 12 V suits it"
-Control electronics,Perfboard,2,double sided prototype PCB 5x7,1.5,"Everything soldered on one board, JST-XH headers to the box"
-Control electronics,Resistor kit,1,1/4W metal film resistor kit,2,"10k gate pull-downs and feeder-enable pull-up, 100R gate resistors, 4.7k 1-wire pull-up"
+Control electronics,"Controller board (JLCPCB, assembled)",1,(JLCPCB order: pcb/jlcpcb/bom-2-roll.csv),32,"ESP32-C3 module, MCP23017, both HX711s, both TMC2209 drivers, 5 V buck, heater and fan switches, buzzer: all assembled"
 Control electronics,OLED display (optional),1,1.3 inch SH1106 OLED I2C,3,Local status
 Control electronics,Push button,1,12mm momentary panel push button,0.5,"Short press cycles mode, long press tares"
-Control electronics,Buzzer,1,active buzzer 5V,0.5,Fault alarm
 Sensors,Chamber temperature + humidity,1 (buy 2),SHT40 module I2C,6,"Rated to 125 C, stable in hot damp air"
 Sensors,Bay temperature + humidity (optional),1,AHT20 module,1.5,Different I2C address from the SHT40
 Sensors,Heater outlet probe,1,DS18B20 stainless probe silicone cable,2,Silicone cable version for heat
 Sensors,Load cells,2,YZC-131 5kg load cell,10,One per reel
-Sensors,Lane sensors (K1C part),2,Creality K1C filament runout sensor,16,"Lane A and lane B; same part as the printers'"
-Sensors,Motion + runout sensor,1,BIGTREETECH Smart Filament Sensor V2,13,"After the merger: runout switch plus a pulse every 2.88 mm of filament movement; runs on 3.3 V"
+Sensors,Lane sensors (K1C part),2,Creality K1C filament runout sensor,16,Lane A and lane B; same part as the printers'
+Sensors,Motion + runout sensor,1,BIGTREETECH Smart Filament Sensor V2,13,After the merger: runout switch plus a pulse every 2.88 mm of filament movement; runs on 3.3 V
 Sensors,Calibration weight,1,calibration weight 500g,5,Accurate scale setup
 Heating and air,PTC air heater,1 (buy 2),PTC heater 12V 150W insulated aluminium,10,"Self-limiting, insulated shell; 150 W for the two-reel chamber"
 Heating and air,Blower,1 (buy 2),5015 blower 12V dual ball bearing,7,"Cheap; ball bearings outlast sleeve bearings in heat. Gdstime and Winsinn are common, reliable makes"
@@ -26,10 +18,8 @@ Heating and air,Aluminium sheet,1,aluminium sheet 1mm 100x200,3,Heater channel a
 Heating and air,Inline blade fuse holder + fuses,1,mini blade fuse holder 14AWG,2,15 A on the box's 12 V input
 Feeders,Feeder mechanism (K1C part),2,Creality K1C extrusion kit 4001020076 (without motor),30,The K1C's own dual-gear extruder; spares shared with the printers
 Feeders,Feeder motor (K1C part),2,Creality K1C extruder motor 42-40 circular,30,The K1C's extruder stepper (1 A); fine on 12 V at feeding speeds
-Feeders,Stepper drivers,2,TMC2209 stepper driver,6,"Quiet; standalone mode, current set on the driver's pot (about 0.8 A)"
 Feeders,Y-merger,1,2 in 1 PTFE filament hub PC4,3,Two lanes into one tube
 Feeders,PTFE for inside the pod,1 m,PTFE tube 2x4mm,2,The same tube the K1C uses
-Feeders,Driver capacitors,2,100uF 25V electrolytic capacitor,1,"Across each driver's 12 V input, close to the driver"
 Power,Shared: server supply breakout board,1,HP 1200W 1600W server power supply breakout board,10,"Switches the supply on, screw terminals for 12 V"
 Power,Shared: fuse block,1,12 way blade fuse box with negative bus,10,"One 15 A fuse per box, room for all seven"
 Power,Shared: trunk cable,1 m red + 1 m black,6AWG silicone wire,10,"Supply to fuse block, up to about 95 A"

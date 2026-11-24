@@ -1,10 +1,9 @@
 <header>
   <h1>Single-Reel Filament Dryer</h1>
-  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and an ESP32-C3 SuperMini running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
+  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and a JLCPCB-assembled controller board with an ESP32-C3 running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
   <p class="meta">Plan as of 2026-11-23 · parts about US${{BOM_PER_BOX}} per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US${{BOM_SHARED}} once.</p>
   <div class="links">
     <a href="../pcb/schematic.pdf">Board schematic (PDF)</a>
-    <a href="schematic.svg">Hand-wired schematic (SVG)</a>
     <a href="bom.csv">Parts list (CSV)</a>
   </div>
 </header>
@@ -45,7 +44,7 @@
   <thead><tr><th>Dimension</th><th>Value</th><th>Why</th></tr></thead>
   <tbody>
     <tr><td>Chamber inside (L × W × H)</td><td>230 × 135 × 235 mm</td><td>Ø200 reel + 15 mm clearance; 95 mm for the reel and a 40 mm heater duct at the back</td></tr>
-    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck converter, load cell</td></tr>
+    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Controller board, load cell</td></tr>
     <tr><td>Outside</td><td>250 × 155 × 335 mm</td><td>4 mm walls + 6 mm insulation; the motion sensor sits on the right wall</td></tr>
     <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
     <tr><td>Roller length</td><td>95 mm</td><td>Any reel 50-90 mm wide</td></tr>
@@ -71,7 +70,7 @@
     <tr><td>Heater duct + blower mount</td><td>1</td><td>40 g</td><td>K1C</td><td>At least 15 mm between ABS and the PTC fins</td></tr>
     <tr><td>Desiccant cassette</td><td>1</td><td>30 g</td><td>K1C</td><td>Perforated face</td></tr>
     <tr><td>Motion sensor holder</td><td>1</td><td>20 g</td><td>K1C</td><td>Bolts to the right wall at the exit</td></tr>
-    <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Perfboard, OLED, button</td></tr>
+    <tr><td>Electronics tray + front panel</td><td>1</td><td>40 g</td><td>K1C</td><td>Controller board, OLED, button</td></tr>
   </tbody>
 </table></div>
 
@@ -95,31 +94,36 @@
 <ul>
   <li><strong>Load:</strong> heater 12.5 A, fans about 0.4 A, electronics about 0.15 A: about 13.5 A peak.</li>
   <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
-  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini.</li>
+  <li><strong>Inside the box:</strong> the controller board takes the 12 V feed and makes its own 5 V and 3.3 V.</li>
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
-<h3>On the controller board</h3>
-<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in and 5 V buck, ESP32-C3 SuperMini, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scale connectors; the feeder drivers are in a dashed box." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). The 1-roll build leaves off U10, U11, C10, C11, J12, J13, J14, J16 and J17. On the board the BTT runout switch, button and buzzer go through the MCP23017, so the 1-roll box uses the 2-roll pin map.</figcaption></figure>
-<h3>Hand-wired, without the PCB</h3>
-<figure><a href="schematic.svg"><img src="schematic.svg" alt="Module-level schematic: power in, ESP32-C3 SuperMini, I2C sensors, heater and fan switches, HX711 weighing, BTT motion sensor and button." loading="lazy"></a><figcaption>Module-level drawing for a hand-wired box (open full size). Nets with the same label are connected.</figcaption></figure>
-<p>No I/O expander is needed when hand-wired: every signal fits on the C3's own pins, as in the table below.</p>
+<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in, 5 V buck and 3.3 V regulator, ESP32-C3-WROOM-02 module with USB-C, reset and boot buttons, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scales; the 2-roll-only parts are in dashed boxes." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). It is the same board as the 2-roll box's: the 1-roll BOM leaves off the parts in the dashed boxes (second scale, feeder drivers) and J12-J14. Blue labels with the same name are the same net.</figcaption></figure>
+<p>Every part is assembled by JLCPCB, so nothing plugs into the board but the harness. A USB-C port (data only: plug in the 12 V feed while flashing) loads the first firmware; updates after that go over Wi-Fi. The load cell's own four leads crimp straight into J11. On this board the BTT runout switch, the button and the buzzer go through the MCP23017.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
   <tbody>
-    <tr><td>0</td><td>HX711 SCK</td><td></td></tr>
-    <tr><td>1</td><td>HX711 DOUT</td><td></td></tr>
+    <tr><td>0</td><td>HX711 SCK (U7)</td><td></td></tr>
+    <tr><td>1</td><td>HX711 DOUT (U7)</td><td></td></tr>
     <tr><td>2</td><td>DS18B20 1-wire</td><td>Strapping pin; the 4.7 kΩ pull-up keeps it high at boot</td></tr>
-    <tr><td>3</td><td>BTT runout switch</td><td>Internal pull-up</td></tr>
-    <tr><td>4</td><td>Heater MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: heater off while booting</td></tr>
-    <tr><td>5</td><td>Blower MOSFET gate</td><td>Same as GPIO 4</td></tr>
-    <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 4</td></tr>
-    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED</td></tr>
+    <tr><td>3, 10, 20</td><td>Unused on the 1-roll</td><td>Second scale and feeder STEP lines, not fitted</td></tr>
+    <tr><td>4</td><td>Heater gate driver input (UCC27517)</td><td>10 kΩ pull-down: heater off while booting</td></tr>
+    <tr><td>5</td><td>Blower MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: off while booting</td></tr>
+    <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 5</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED, MCP23017</td></tr>
     <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
-    <tr><td>9</td><td>Push button</td><td>Same pin as BOOT: holding it at power-on enters flashing mode</td></tr>
-    <tr><td>10</td><td>Buzzer MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down</td></tr>
-    <tr><td>20</td><td>Free</td><td></td></tr>
-    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here</td></tr>
+    <tr><td>9</td><td>BOOT button</td><td>10 kΩ pull-up; not used by the firmware</td></tr>
+    <tr><td>18, 19</td><td>USB D−, D+</td><td>USB-C for flashing and logs</td></tr>
+    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here; ESPHome counts the pulses</td></tr>
+  </tbody>
+</table></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>MCP23017</th><th>Use</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>GPA2</td><td>Runout switch of the BTT SFS V2</td><td>Internal pull-up</td></tr>
+    <tr><td>GPA3</td><td>Push button</td><td>Internal pull-up</td></tr>
+    <tr><td>GPA4</td><td>Buzzer (through an AO3400A)</td><td></td></tr>
+    <tr><td>GPA0, GPA1, GPA5, GPA6</td><td>Unused on the 1-roll</td><td>Lane sensors and feeder EN/DIR</td></tr>
   </tbody>
 </table></div>
 
@@ -150,7 +154,7 @@
 <h2 id="build">Build plan</h2>
 <ol>
   <li><strong>Order parts</strong>; meanwhile measure a real eSUN reel and finish the CAD.</li>
-  <li><strong>Bench electronics:</strong> SuperMini, HX711 and load cell, SHT40, BTT sensor on ESPHome; calibrate and check overnight drift.</li>
+  <li><strong>Bench electronics:</strong> the assembled board with the load cell, SHT40 and BTT sensor on ESPHome; calibrate and check overnight drift.</li>
   <li><strong>Heater test in the open:</strong> PID holds, firmware cut-outs trip, the KSD301 opens at about 85 °C.</li>
   <li><strong>Print and assemble;</strong> then a 12 h soak at 70 °C.</li>
   <li><strong>Control center integration</strong> and a watched test print.</li>
