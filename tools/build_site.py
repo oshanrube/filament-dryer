@@ -97,9 +97,11 @@ def main() -> None:
         body = (body.replace("{{BOM_TABLES}}", bom_tables(rows))
                     .replace("{{BOM_PER_BOX}}", f"{per_box:.0f}")
                     .replace("{{BOM_SHARED}}", f"{shared:.0f}"))
+        wiring_table = src / "wiring-table.html"
+        body = body.replace("{{WIRING_TABLE}}", wiring_table.read_text(encoding="utf-8") if wiring_table.exists() else "")
         footer = f"Built from <code>{folder}/page.html</code> and <code>{folder}/bom.csv</code> by <code>tools/build_site.py</code>."
         (out / "index.html").write_text(page(title, desc, folder, "../", body, footer), encoding="utf-8")
-        for name in ("bom.csv", "schematic.svg"):
+        for name in ("bom.csv", "schematic.svg", "wiring.svg"):
             shutil.copy2(src / name, out / name)
         shutil.copytree(src / "images", out / "images")
         print(f"wrote docs/{folder}/ (per box ≈ US${per_box:.0f}, shared ≈ US${shared:.0f})")

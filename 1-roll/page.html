@@ -17,6 +17,7 @@
     <li><a href="#weighing">Weighing and motion</a></li>
     <li><a href="#power">Power: 12 V feed</a></li>
     <li><a href="#electronics">Electronics and pin map</a></li>
+    <li><a href="#wiring">Wiring</a></li>
     <li><a href="#parts">Parts catalog</a></li>
     <li><a href="#integration">Firmware and control center</a></li>
     <li><a href="#build">Build plan</a></li>
@@ -117,6 +118,11 @@
     <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here</td></tr>
   </tbody>
 </table></div>
+
+<h2 id="wiring">Wiring</h2>
+<p>The physical harness: every cable from its connector on the controller board to the part, with wire colours and gauges. Use one colour per job throughout (the 6-colour 22 AWG silicone set covers it), so a cable can be traced at a glance. Crimp JST-XH 2.54 mm connectors on every cable that goes to a sensor, fan or motor, so parts can be swapped without soldering.</p>
+<figure><a href="wiring.svg"><img src="wiring.svg" alt="Wiring diagram: the controller board in the electronics bay with each cable running to the chamber, front panel, scales and motion sensor." loading="lazy"></a><figcaption>Wiring diagram (open full size).</figcaption></figure>
+{{WIRING_TABLE}}
 
 <h2 id="parts">Parts catalog</h2>
 <p>About US${{BOM_PER_BOX}} per box, plus about US${{BOM_SHARED}} once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>

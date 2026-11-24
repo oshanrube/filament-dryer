@@ -66,6 +66,12 @@
   .card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--surface); }
   .card h3 { margin-top: 0; }
   .card img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); background: #fff; }
+  .pin { white-space: nowrap; }
+  .wire { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: .8rem; line-height: 1.5; border: 1px solid var(--border); margin-left: 4px; }
+  .wire::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; border: 1px solid #8c959f; }
+  .wire-red::before { background: #d1242f; } .wire-black::before { background: #24292f; } .wire-white::before { background: #ffffff; }
+  .wire-yellow::before { background: #d4a72c; } .wire-blue::before { background: #0969da; } .wire-green::before { background: #1a7f37; }
+  .wire-motor::before { background: #8250df; }
 </style>
 <body>
 <main>
