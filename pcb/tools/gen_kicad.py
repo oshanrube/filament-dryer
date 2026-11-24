@@ -18,6 +18,7 @@ from sexp import Sym, dump, find, first, parse
 ROOT = Path(__file__).resolve().parent.parent
 PROJECT = "dryer-controller"
 KICAD_SYMS = Path("/usr/share/kicad/symbols")
+KICAD_FPS = Path("/usr/share/kicad/footprints")
 S = Sym
 
 
@@ -353,8 +354,11 @@ BLOCKS = [("1  12 V in (XT60, fuse), 5 V buck", 22, 30), ("2  Controller (ESP32-
 
 
 # ---------------------------------------------------------------- writers
+ROOT_UUID = uid()
+
+
 def write_schematic():
-    root_uuid = uid()
+    root_uuid = ROOT_UUID
     used = sorted({p["lib_id"] for p in PARTS} | {lib for _, lib, _ in POWER} | {"power:PWR_FLAG"})
     lib_syms = {lid: lib_symbol(lid) for lid in used}
     body = []
@@ -380,21 +384,25 @@ def write_schematic():
             props = [prop("Reference", ref, x, y - 7.62), prop("Value", value, x, y + 7.62)]
         for k, v in fields.items():
             props.append(prop(k, v, x, y, hide=True))
+        sym_uuid = uid()
         body.append([S("symbol"), [S("lib_id"), lib_id], [S("at"), x, y, 0], [S("unit"), 1],
                      [S("in_bom"), S("yes" if in_bom else "no")], [S("on_board"), S("yes")], [S("dnp"), S("yes" if dnp else "no")],
-                     [S("uuid"), uid()], *props, *[[S("pin"), n, [S("uuid"), uid()]] for n in pins],
+                     [S("uuid"), sym_uuid], *props, *[[S("pin"), n, [S("uuid"), uid()]] for n in pins],
                      [S("instances"), [S("project"), PROJECT, [S("path"), "/" + root_uuid, [S("reference"), ref], [S("unit"), 1]]]]])
+        return sym_uuid
 
     for p in PARTS:
         x, y = p["at"]
         pins = pin_table(lib_syms[p["lib_id"]])
         fields = {"Footprint": p["fp"], "LCSC": p["lcsc"], "MPN": p["mpn"], "Build": "both" if p["variant"] == "all" else "2-roll only"}
+        if p["bom"]:
+            fields.update({"Supplier": "LCSC", "Supplier Part": p["lcsc"], "Manufacturer Part": p["mpn"]})
         ys = [py for (_, py, _, _) in pins.values()]
         body_rects = [r for sub in find(lib_syms[p["lib_id"]], "symbol") for r in find(sub, "rectangle")]
         for r in body_rects:
             ys += [float(first(r, "start")[2]), float(first(r, "end")[2])]
         vertical = any(ang in (90, 270) for (_, _, ang, t) in pins.values() if t != "no_connect")
-        instance(p["lib_id"], p["ref"], p["value"], x, y, fields, sorted(pins), in_bom=p["bom"], extent=(max(ys), min(ys), vertical))
+        p["uuid"] = instance(p["lib_id"], p["ref"], p["value"], x, y, fields, sorted(pins), in_bom=p["bom"], extent=(max(ys), min(ys), vertical))
         for num, (px, py, ang, ptype) in pins.items():
             if num not in p["nets"]:
                 raise SystemExit(f"{p['ref']} pin {num} has no net")
@@ -440,11 +448,22 @@ def write_project_files():
     if old.exists():
         old.unlink()
     (ROOT / "sym-lib-table").write_text('(sym_lib_table\n  (lib (name "dryer")(type "KiCad")(uri "${KIPRJMOD}/dryer.kicad_sym")(options "")(descr "Filament dryer parts"))\n)\n')
-    fpt = ROOT / "fp-lib-table"
-    if fpt.exists():
-        fpt.unlink()
     if (ROOT / "dryer.pretty").exists() and not any((ROOT / "dryer.pretty").iterdir()):
         (ROOT / "dryer.pretty").rmdir()
+    # every footprint the board uses, copied into the project so it opens anywhere (KiCad, EasyEDA Pro import)
+    import shutil
+    libs = ROOT / "libs"
+    if libs.exists():
+        shutil.rmtree(libs)
+    nicks = sorted({p["fp"].split(":")[0] for p in PARTS})
+    for p in PARTS:
+        nick, name = p["fp"].split(":")
+        d = libs / f"{nick}.pretty"
+        d.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(KICAD_FPS / f"{nick}.pretty" / f"{name}.kicad_mod", d / f"{name}.kicad_mod")
+    (ROOT / "fp-lib-table").write_text("(fp_lib_table\n" + "".join(
+        f'  (lib (name "{n}")(type "KiCad")(uri "${{KIPRJMOD}}/libs/{n}.pretty")(options "")(descr "Copied from KiCad 7 for this project"))\n'
+        for n in nicks) + ")\n")
 
 
 def write_boms():
@@ -493,9 +512,76 @@ def export():
     print("wrote", out)
 
 
+def write_pcb():
+    """Unrouted starting board: every footprint, with its nets, linked to the schematic symbols. Layout is still to do."""
+    try:
+        import pcbnew
+    except ImportError:
+        print("pcbnew Python module not found: skipped the .kicad_pcb")
+        return
+    from sexp import parse as _parse
+    netlist = _parse((ROOT / "export" / f"{PROJECT}.net").read_text())[0]
+    pin_net = {}
+    for n in find(first(netlist, "nets"), "net"):
+        name = first(n, "name")[1]
+        if name.startswith("unconnected-"):
+            continue
+        for node in find(n, "node"):
+            pin_net[(first(node, "ref")[1], first(node, "pin")[1])] = name
+    board = pcbnew.BOARD()
+    nets = {}
+    for name in sorted(set(pin_net.values())):
+        ni = pcbnew.NETINFO_ITEM(board, name)
+        board.Add(ni)
+        nets[name] = ni
+    x, y, row_h, row_w = 0.0, 0.0, 0.0, 180.0
+    for p in PARTS:
+        nick, name = p["fp"].split(":")
+        fp = pcbnew.FootprintLoad(str(ROOT / "libs" / f"{nick}.pretty"), name)
+        fp.SetFPID(pcbnew.LIB_ID(nick, name))
+        fp.SetReference(p["ref"])
+        fp.SetValue(p["value"])
+        fp.SetPath(pcbnew.KIID_PATH(f"/{ROOT_UUID}/{p['uuid']}"))
+        if p["bom"]:
+            for k, v in (("LCSC", p["lcsc"]), ("Supplier Part", p["lcsc"]), ("MPN", p["mpn"])):
+                fp.SetProperty(k, v)
+        for pad in fp.Pads():
+            net = pin_net.get((p["ref"], pad.GetNumber()))
+            if net:
+                pad.SetNet(nets[net])
+        bb = fp.GetBoundingBox(False, False)
+        w, h = pcbnew.ToMM(bb.GetWidth()) + 2, pcbnew.ToMM(bb.GetHeight()) + 2
+        if x + w > row_w:
+            x, y, row_h = 0.0, y + row_h, 0.0
+        fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(100 + x + w / 2), pcbnew.FromMM(50 + y + h / 2)))
+        bb2 = fp.GetBoundingBox(False, False)
+        fp.Move(pcbnew.VECTOR2I(pcbnew.FromMM(100 + x) - bb2.GetX(), pcbnew.FromMM(50 + y) - bb2.GetY()))
+        x += w
+        row_h = max(row_h, h)
+        board.Add(fp)
+    pcbnew.SaveBoard(str(ROOT / f"{PROJECT}.kicad_pcb"), board)
+    print("wrote", ROOT / f"{PROJECT}.kicad_pcb", f"({len(PARTS)} footprints, {len(nets)} nets, unrouted)")
+
+
+def write_easyeda_zip():
+    """The project as KiCad's 'Archive Project' would pack it: what EasyEDA Pro's KiCad import expects."""
+    import zipfile
+    out = ROOT / "easyeda" / f"{PROJECT}-kicad.zip"
+    out.parent.mkdir(exist_ok=True)
+    files = [f"{PROJECT}.kicad_pro", f"{PROJECT}.kicad_sch", f"{PROJECT}.kicad_pcb", "sym-lib-table", "fp-lib-table", "dryer.kicad_sym"]
+    files += [str(f.relative_to(ROOT)) for f in sorted((ROOT / "libs").rglob("*.kicad_mod"))]
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in files:
+            if (ROOT / f).exists():
+                z.write(ROOT / f, f"{PROJECT}/{f}")
+    print("wrote", out)
+
+
 if __name__ == "__main__":
     write_project_files()
     write_schematic()
     write_boms()
     print("wrote", ROOT / f"{PROJECT}.kicad_sch")
     export()
+    write_pcb()
+    write_easyeda_zip()

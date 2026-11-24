@@ -6,6 +6,9 @@ One controller board for both dryer versions. The 2-roll build fits everything; 
 | --- | --- |
 | `schematic.svg`, `schematic.pdf` | The board with every wire drawn, for reading (from `tools/gen_schematic_svg.py`; PDF via `node tools/svg_to_pdf.js`) |
 | `dryer-controller.kicad_sch` | Schematic (open in KiCad 7 or newer) |
+| `dryer-controller.kicad_pcb` | Starting board: every footprint with its nets, linked to the schematic, placed in rows. Not laid out or routed yet, and no board outline |
+| `libs/`, `fp-lib-table` | Every footprint the board uses, copied from KiCad 7, so the project opens without KiCad's libraries installed |
+| `easyeda/dryer-controller-kicad.zip` | The whole project zipped the way KiCad's File → Archive Project packs it, for EasyEDA Pro's KiCad import |
 | `dryer.kicad_sym` | Project symbols: ESP32-C3-WROOM-02, TMC2209-LA, UCC27517 (footprints all come from KiCad's own libraries) |
 | `export/dryer-controller.pdf`, `.svg`, `.net` | Schematic PDF/SVG and netlist |
 | `jlcpcb/bom-2-roll.csv`, `jlcpcb/bom-1-roll.csv` | JLCPCB assembly BOMs (Comment, Designator, Footprint, LCSC Part #) |
@@ -45,6 +48,16 @@ One controller board for both dryer versions. The 2-roll build fits everything; 
 - [ ] **Footprints to compare with the part drawings:** L1 uses the 4030 Changjiang footprint for the XR XRNR4030; TB2 uses the Phoenix MKDS 5.08 mm footprint for the KF128 terminal. **J1 polarity:** KiCad's XT60PW-M footprint marks pad 1 as − and pad 2 as +; check that against the Amass drawing and the lead before the first power-up. **F1:** the Littelfuse 178.6165 holder is specified for boards up to 1.5 mm thick; order 1.6 mm boards only after checking its pins still seat, or ask for 1.2 mm.
 - [ ] **Layout rules for the 12.5 A path** (J1 → F1 → TB2 → Q1): wide pours, 2 oz copper, copper area under Q1.
 - [ ] **Stock:** check again when ordering; MCP23017 (C47023) has had low stock at times.
+
+## Opening it in EasyEDA Pro
+
+EasyEDA Pro imports KiCad projects below version 10 (these files are KiCad 7). Its docs ask for a zip made by KiCad's own Archive Project, so that the libraries come along; `easyeda/dryer-controller-kicad.zip` is packed the same way.
+
+1. In EasyEDA Pro, from the start page: File → Import → KiCad, and pick `easyeda/dryer-controller-kicad.zip`.
+2. Check the schematic and that each part kept its LCSC number (the symbols carry `LCSC`, `Supplier` = LCSC and `Supplier Part` fields). Where a part lost its link, bind it to the LCSC number from `jlcpcb/bom-2-roll.csv`.
+3. Open the PCB, draw the board outline and lay it out (the checks below still apply), then order from EasyEDA straight to JLCPCB.
+
+This zip hasn't been through EasyEDA's importer yet, so check the result: EasyEDA's docs warn that copper areas are rebuilt on import and that conversions between tools can't be guaranteed.
 
 ## Ordering at JLCPCB
 

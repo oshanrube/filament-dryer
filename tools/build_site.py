@@ -108,7 +108,7 @@ def main() -> None:
 
     pcb_out = DOCS / "pcb"
     pcb_out.mkdir()
-    for f in [ROOT / "pcb" / "schematic.svg", ROOT / "pcb" / "schematic.pdf"] + list((ROOT / "pcb" / "export").glob("*.pdf")) + list((ROOT / "pcb" / "export").glob("*.svg")) + list((ROOT / "pcb" / "jlcpcb").glob("*.csv")):
+    for f in [ROOT / "pcb" / "schematic.svg", ROOT / "pcb" / "schematic.pdf", ROOT / "pcb" / "easyeda" / "dryer-controller-kicad.zip"] + list((ROOT / "pcb" / "export").glob("*.pdf")) + list((ROOT / "pcb" / "export").glob("*.svg")) + list((ROOT / "pcb" / "jlcpcb").glob("*.csv")):
         shutil.copy2(f, pcb_out / f.name)
     print("wrote docs/pcb/")
 
