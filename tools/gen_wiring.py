@@ -31,10 +31,9 @@ CONN = {
            "The fan's black lead goes to the MOSFET, not GND"),
     "J4": ("Exhaust fan", "JST-XH 2", "22 AWG", [("+12V", "red"), ("FAN− (Q3 drain)", "black")], "4010 fan M2 in the lid", "lid",
            "Leave a slack loop at the hinge"),
-    "J5": ("SHT40", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "SHT40 U4", "chamber", ""),
-    "J6": ("DS18B20", "JST-XH 3", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("DQ", "blue")], "DS18B20 probe U9 at the heater outlet", "chamber",
-           "The probe's own leads are red/black/yellow; splice to the harness colours"),
-    "J7": ("AHT20 (optional)", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "AHT20 U5", "bay", ""),
+    "J5": ("Chamber sensor", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "Sensor board S1 (SHT40), wires soldered to its pads", "chamber", "Silicone wire: the chamber reaches 70 °C"),
+    "J6": ("Heater outlet sensor", "JST-XH 3", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("DQ", "blue")], "Sensor board S2 (DS18B20Z) in the heater outlet, wires soldered to its pads", "chamber",
+           "Silicone wire; the board sits in the outlet air, not on the heater"),
     "J8": ("OLED", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "SH1106 OLED U6", "front panel", ""),
     "J9": ("Button", "JST-XH 2", "22 AWG", [("BTN", "green"), ("GND", "black")], "Push button SW1", "front panel", ""),
     "J11": ("Load cell A", "JST-XH 4", "the cell's leads", [("E+", "red"), ("E−", "black"), ("A−", "white"), ("A+", "green")], "Load cell LC1 (its HX711, U7, is on the board)", "bay",
@@ -56,17 +55,17 @@ VERSIONS = {
     "2-roll-feeder": {
         "title": "Two-reel dryer: wiring",
         "board": ["U1 ESP32-C3-WROOM-02, J2 USB-C", "U2 12→5 V buck, U12 3.3 V", "U3 MCP23017 I/O expander",
-                  "U4 + Q1 heater switch", "Q2-Q4 fans, buzzer, BZ1", "U7, U8 HX711 scales",
+                  "U4 + Q1 heater, Q2-Q4 fans", "U13 bay SHT40, BZ1 buzzer", "U7, U8 HX711 scales",
                   "U10, U11 TMC2209 feeder drivers"],
-        "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J7", "J8", "J9", "J11", "J12", "J13", "J14", "J15", "J16", "J17"],
+        "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J8", "J9", "J11", "J12", "J13", "J14", "J15", "J16", "J17"],
         "right_zone": "Feeder pod (outside the heat)",
     },
     "1-roll": {
         "title": "Single-reel dryer: wiring",
         "board": ["U1 ESP32-C3-WROOM-02, J2 USB-C", "U2 12→5 V buck, U12 3.3 V", "U3 MCP23017 I/O expander",
-                  "U4 + Q1 heater switch", "Q2-Q4 fans, buzzer, BZ1", "U7 HX711 scale",
+                  "U4 + Q1 heater, Q2-Q4 fans", "U13 bay SHT40, BZ1 buzzer", "U7 HX711 scale",
                   "(feeder parts left off)"],
-        "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J7", "J8", "J9", "J11", "J15"],
+        "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J8", "J9", "J11", "J15"],
         "right_zone": "Right wall, outside (filament exit)",
     },
 }
@@ -168,7 +167,6 @@ def diagram(version, spec):
     d.cable([(560, 700), (370, 700)], cols("J11"), "J11", (526, 690 - 4))
     if "J12" in has:
         d.cable([(560, 800), (370, 800)], cols("J12"), "J12", (526, 786))
-    d.cable([(560, 900), (520, 900)], cols("J7"), "J7", (526, 886))
     # front panel (below board)
     d.cable([(640, 1060), (640, 1110)], cols("J8"), "J8", (650, 1090))
     d.cable([(800, 1060), (800, 1110)], cols("J9"), "J9", (810, 1090))
@@ -194,7 +192,7 @@ def diagram(version, spec):
     # connector tags on the board edge
     tags = [("TB1", bx + 6, 624, "start"), ("TB2", 590, by + 16, "middle"), ("J3", 640, by + 16, "middle"),
             ("J5", 740, by + 16, "middle"), ("J6", 800, by + 16, "middle"), ("J4", 860, by + 16, "middle"),
-            ("J11", bx + 6, 704, "start"), ("J7", bx + 6, 904, "start"), ("J8", 640, by + bh - 6, "middle"),
+            ("J11", bx + 6, 704, "start"), ("J8", 640, by + bh - 6, "middle"),
             ("J9", 800, by + bh - 6, "middle")]
     if "J12" in has:
         tags.append(("J12", bx + 6, 804, "start"))
@@ -218,15 +216,14 @@ def diagram(version, spec):
         if i < 2:
             d.o.append(f"<path d='M380 {204 + i * 54}V{216 + i * 54}' stroke='{COL['red']}' stroke-width='2.2'/>")
     d.box(520, 250, 120, 50, "M1 blower", "5015 12 V")
-    d.box(680, 250, 120, 50, "U4 SHT40", "chamber air")
-    d.box(840, 250, 120, 50, "U9 DS18B20", "heater outlet")
+    d.box(680, 250, 120, 50, "S1 SHT40 board", "chamber air")
+    d.box(840, 250, 120, 50, "S2 DS18B20 board", "heater outlet")
     d.box(1020, 126, 120, 50, "M2 exhaust fan", "4010 12 V, lid")
     d.text(1080, 120, "slack loop at the hinge", 10.5, "middle", QUIET)
 
     d.box(270, 676, 100, 48, "LC1", "5 kg cell" + (", reel A" if "J12" in has else ""))
     if "J12" in has:
         d.box(270, 776, 100, 48, "LC2", "5 kg cell, reel B")
-    d.box(400, 876, 120, 48, "U5 AHT20", "optional")
     d.box(580, 1110, 120, 48, "U6 OLED", "front panel")
     d.box(740, 1110, 120, 48, "SW1 button", "front panel")
 

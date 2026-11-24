@@ -145,9 +145,10 @@ TERM = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm
 PARTS = []
 
 
-def part(ref, lib_id, value, fp, lcsc, at, nets, variant="all", mpn="", note="", jlc=True):
+def part(ref, lib_id, value, fp, lcsc, at, nets, variant="all", mpn="", note="", jlc=True, bom=True):
+    """bom=False: copper only (wire pads), nothing to buy or place."""
     PARTS.append(dict(ref=ref, lib_id=lib_id, value=value, fp=fp, lcsc=lcsc, at=at, nets=nets,
-                      variant=variant, mpn=mpn, note=note, jlc=jlc))
+                      variant=variant, mpn=mpn, note=note, jlc=jlc, bom=bom))
 
 
 def R(ref, val, lcsc, at, a, b, variant="all"):
@@ -264,7 +265,6 @@ part("BZ1", "Device:Buzzer", "KXG1205C", "Buzzer_Beeper:Buzzer_12x9.5RM7.6", "C1
 # --- 6. sensor, panel and scale connectors
 CONN("J5", ["+3V3", "GND", "SCL", "SDA"], (335.28, 152.4), value="SHT40")
 CONN("J6", ["+3V3", "GND", "ONEWIRE"], (335.28, 172.72), value="DS18B20")
-CONN("J7", ["+3V3", "GND", "SCL", "SDA"], (335.28, 190.5), value="AHT20")
 CONN("J8", ["+3V3", "GND", "SCL", "SDA"], (335.28, 210.82), value="OLED")
 CONN("J9", ["BTN", "GND"], (335.28, 228.6), value="BUTTON")
 CONN("J11", ["EXC_A", "GND", "LCA_N", "LCA_P"], (386.08, 149.86), value="LOAD_CELL_A")
@@ -272,6 +272,26 @@ CONN("J12", ["EXC_B", "GND", "LCB_N", "LCB_P"], (386.08, 170.18), "2roll", value
 CONN("J13", ["+3V3", "GND", "LANE_A"], (386.08, 190.5), "2roll", value="LANE_A")
 CONN("J14", ["+3V3", "GND", "LANE_B"], (386.08, 208.28), "2roll", value="LANE_B")
 CONN("J15", ["+3V3", "GND", "MERGE", "MOTION"], (386.08, 228.6), value="BTT_SFS")
+
+# --- 6b. bay temperature + humidity, on the board (I2C 0x45; the chamber SHT40 is 0x44)
+part("U13", "Sensor_Humidity:SHT4x", "SHT40-BD1B-R2", "Sensor_Humidity:Sensirion_DFN-4_1.5x1.5mm_P0.8mm_SHT4x_NoCentralPad", "C7461849",
+     (370.84, 106.68), {"1": "SDA", "2": "SCL", "3": "+3V3", "4": "GND"}, mpn="SHT40-BD1B-R2",
+     note="Bay sensor, address 0x45: place at a board edge away from U2, U12, U10, U11, with a slot around it")
+C("C38", "100nF", "C14663", (391.16, 106.68), "+3V3", "GND")
+
+# --- 9. sensor boards: small boards broken off the main panel, wired back to J5 and J6
+part("U14", "Sensor_Humidity:SHT4x", "SHT40-AD1B-R2", "Sensor_Humidity:Sensirion_DFN-4_1.5x1.5mm_P0.8mm_SHT4x_NoCentralPad", "C2909890",
+     (45.72, 388.62), {"1": "S1_SDA", "2": "S1_SCL", "3": "S1_3V3", "4": "S1_GND"}, mpn="SHT40-AD1B-R2",
+     note="Sensor board S1 (chamber air), address 0x44")
+C("C37", "100nF", "C14663", (68.58, 388.62), "S1_3V3", "S1_GND")
+part("J18", "Connector_Generic:Conn_01x04", "S1 WIRES", "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical", "", (93.98, 388.62),
+     {"1": "S1_3V3", "2": "S1_GND", "3": "S1_SCL", "4": "S1_SDA"}, note="Wire pads, same order as J5", bom=False)
+part("U15", "Sensor_Temperature:DS18B20Z", "DS18B20Z", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", "C695837", (139.7, 388.62),
+     {"1": None, "2": None, "3": "S2_3V3", "4": "S2_DQ", "5": "S2_GND", "6": None, "7": None, "8": None}, mpn="DS18B20Z(UMW)",
+     note="Sensor board S2 (heater outlet air)")
+C("C39", "100nF", "C14663", (167.64, 388.62), "S2_3V3", "S2_GND")
+part("J19", "Connector_Generic:Conn_01x03", "S2 WIRES", "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical", "", (193.04, 388.62),
+     {"1": "S2_3V3", "2": "S2_GND", "3": "S2_DQ"}, note="Wire pads, same order as J6", bom=False)
 
 # --- 7. scales: HX711 on the board, load cells straight into J11/J12
 for u, q, rs, cs, k, dt, x, y, var in (("U7", "Q5", ("R20", "R21"), ("C17", "C18", "C19", "C20", "C21"), "A", "HXA_DT", 452.12, 246.38, "all"),
@@ -324,6 +344,7 @@ BLOCKS = [("1  12 V in, 5 V buck", 22, 30), ("2  Controller (ESP32-C3-WROOM-02)"
           ("4  Heater switch, 12 V gate drive", 22, 130), ("5  Fans and buzzer (low-side)", 170, 130),
           ("6  Sensor, panel and load-cell connectors", 322, 130), ("7  Scales: HX711 (U8 parts: 2-roll only)", 425, 205),
           ("8  Feeder drivers (2-roll build only)", 425, 30), ("2b  USB (data only) and 3.3 V", 280, 250),
+          ("9  Sensor boards S1, S2 (break off; wired to J5, J6)", 22, 370), ("6b  Bay sensor", 345, 92),
           ("Power rails", 22, 315)]
 
 
@@ -369,7 +390,7 @@ def write_schematic():
         for r in body_rects:
             ys += [float(first(r, "start")[2]), float(first(r, "end")[2])]
         vertical = any(ang in (90, 270) for (_, _, ang, t) in pins.values() if t != "no_connect")
-        instance(p["lib_id"], p["ref"], p["value"], x, y, fields, sorted(pins), extent=(max(ys), min(ys), vertical))
+        instance(p["lib_id"], p["ref"], p["value"], x, y, fields, sorted(pins), in_bom=p["bom"], extent=(max(ys), min(ys), vertical))
         for num, (px, py, ang, ptype) in pins.items():
             if num not in p["nets"]:
                 raise SystemExit(f"{p['ref']} pin {num} has no net")
@@ -392,6 +413,7 @@ def write_schematic():
         body.append([S("text"), title, [S("at"), x, y, 0], [S("effects"), [S("font"), [S("size"), 2.54, 2.54], S("bold")], [S("justify"), S("left"), S("bottom")]], [S("uuid"), uid()]])
     notes = ["One board for both dryers, every part assembled by JLCPCB. The 1-roll BOM leaves off the 2-roll-only parts (field Build).",
              "U1 antenna at the board edge: no copper, parts or traces under it. USB is data only: plug in 12 V while flashing.",
+             "S1 (U14, C37, J18) and S2 (U15, C39, J19) are small boards on break-off tabs: their nets reach the board only through the harness.",
              "U10/U11: 39k/10k on VREF = 1.0 V -> about 0.72 A RMS with 0.11 R sense resistors. Exposed pad to GND with vias.",
              "Heater path TB1 -> TB2 -> Q1 carries 12.5 A: wide pours, 2 oz copper, copper area under Q1."]
     for i, t in enumerate(notes):
@@ -425,13 +447,13 @@ def write_boms():
     (ROOT / "jlcpcb").mkdir(exist_ok=True)
     for build, keep in (("2-roll", {"all", "2roll"}), ("1-roll", {"all"})):
         groups = {}
-        if any(p["variant"] in keep and not p["jlc"] for p in PARTS):
+        if any(p["variant"] in keep and p["bom"] and not p["jlc"] for p in PARTS):
             raise SystemExit("every part is meant to be assembled by JLCPCB")
         old = ROOT / "jlcpcb" / f"hand-fit-{build}.csv"
         if old.exists():
             old.unlink()
         for p in PARTS:
-            if p["variant"] not in keep or not p["jlc"]:
+            if p["variant"] not in keep or not p["jlc"] or not p["bom"]:
                 continue
             key = (p["lcsc"], p["fp"])
             groups.setdefault(key, []).append(p)
@@ -440,7 +462,7 @@ def write_boms():
             refs = [p["ref"] for p in ps]
             qty = len(refs)
             values = {p["value"] for p in ps}
-            value = values.pop() if len(values) == 1 else ps[0]["mpn"]
+            value = values.pop() if len(values) == 1 and not ps[0]["lib_id"].startswith("Connector_Generic") else ps[0]["mpn"]
             rows.append({"Comment": value,
                          "Designator": ",".join(sorted(refs, key=lambda r: (r.rstrip("0123456789"), int("0" + r[len(r.rstrip("0123456789")):])))),
                          "Footprint": fp.split(":")[1], "LCSC Part #": lcsc, "Qty": qty, "MPN": ps[0]["mpn"].replace("2x ", ""),

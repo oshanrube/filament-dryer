@@ -11,7 +11,7 @@ Run from the repo root:  python3 pcb/tools/gen_schematic_svg.py
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-W, H = 1160, 4740
+W, H = 1160, 5060
 o = []
 
 
@@ -183,7 +183,7 @@ def section(y, title):
 
 # ================================================================== header
 text(60, 36, "Dryer controller board  ·  ESP32-C3 super mini  ·  for pcb layout and jlcpcb assembly")
-text(60, 56, "one board for both dryers. parts in the dashed box are fitted on the 2-roll build only.", "v")
+text(60, 56, "one board for both dryers. parts in dashed boxes marked 2-roll build only are left off the 1-roll build.", "v")
 
 # ================================================================== 1. power in and 5 v buck
 section(84, "12 v in and 5 v buck")
@@ -290,7 +290,7 @@ fan_stage(810, "r12", "r13", "q3", "d2", "j4", "exhaust fan, jst xh 2-pin", "fan
 wire((X0, 890), (900, 890)); dot(345, 890)
 t, b = res_v(345, 860, "r1 4.7 kΩ")
 wire((345, 890), (345, b)); net_up(345, t, t - 10, "+3v3")
-conn(900, 0, "j6", "ds18b20, jst xh 3-pin", [("1 +3v3", 830), ("2 gnd", 860), ("3 dq", 890)], ["heater outlet probe"])
+conn(900, 0, "j6", "sensor board s2, xh 3", [("1 +3v3", 830), ("2 gnd", 860), ("3 dq", 890)], ["→ s2 (ds18b20z)", "in the heater outlet"])
 net(860, 900, 830, "+3v3"); net(860, 900, 860, "gnd")
 
 # --- scale data lines (the hx711s are drawn further down)
@@ -372,14 +372,16 @@ wire((150, 1370), (150, b)); net_up(150, t, t - 8, "+3v3")
 dot(210, 1410)
 t, b = res_v(210, 1450, "r3 4.7 kΩ")
 wire((210, 1410), (210, t)); wire((210, b), (210, b + 8), blue=True); text(210, b + 24, "+3v3", "n", "middle")
-for jx, ref, title, note in ((360, "j5", "sht40, xh 4", "in the chamber"), (590, "j7", "aht20, xh 4", "bay, optional"), (820, "j8", "sh1106 oled, xh 4", "front panel")):
+for jx, ref, title, pins, note in ((360, "j5", "sensor board s1, xh 4", ("3 scl", "4 sda", "1 +3v3", "2 gnd"), "→ s1 in the chamber (sht40, 0x44)"),
+                                   (590, "u13", "sht40-bd1b", ("2 scl", "1 sda", "3 vdd", "4 vss"), "on the board, in the bay (0x45); c38 100 nF"),
+                                   (820, "j8", "sh1106 oled, xh 4", ("3 scl", "4 sda", "1 +3v3", "2 gnd"), "front panel")):
     dot(jx - 30, 1370); dot(jx - 15, 1410)
     wire((jx - 30, 1370), (jx - 30, 1480), (jx, 1480))
     wire((jx - 15, 1410), (jx - 15, 1510), (jx, 1510))
-    conn(jx, 0, ref, title, [("3 scl", 1480), ("4 sda", 1510), ("1 +3v3", 1540), ("2 gnd", 1570)], w=130)
+    conn(jx, 0, ref, title, list(zip(pins, (1480, 1510, 1540, 1570))), w=130)
     net(jx - 40, jx, 1540, "+3v3"); net(jx - 40, jx, 1570, "gnd")
     text(jx + 65, 1620, note, "p", "middle")
-text(60, 1650, "r2, r3 are the only i2c pull-ups needed: if a module has its own, the total should not drop below about 2 kΩ", "p")
+text(60, 1650, "r2, r3 are the pull-ups for the whole bus, sensor board s1 and the oled included (an oled module with its own pull-ups is fine above about 2 kΩ total)", "p")
 
 # ================================================================== 4. mcp23017 and its outputs
 section(1680, "i/o expander: filament sensors, button, buzzer, feeder enable and direction")
@@ -577,13 +579,38 @@ driver(600, FS + 30, "u11", "step_b", "j17", "b", "mb", "c11", ("c32", "c33", "c
 text(60, FS + 800, "r6 holds feed_en high: both drivers stay off at boot and while printing, so the k1c extruder pulls freely through the idle gears", "p")
 text(60, FS + 818, "vref = 5 v × 10 k / 49 k = 1.0 v → about 0.72 a rms (1.0 a peak) per motor. change r24/r28 to change it.", "p")
 
+# ================================================================== 8. sensor boards
+SB = FS + 870
+section(SB, "sensor boards s1, s2: break off the main board, solder the harness wires to their pads")
+
+
+def sensor_board(X, Y, title, jref, pads, uref, chip, chip_pins, cref, extra):
+    o.append(f'<rect class="dsh" x="{X}" y="{Y}" width="520" height="250" style="stroke:#999999"/>')
+    text(X + 14, Y + 20, title, "p")
+    conn_r(X + 130, jref, "wire pads", [(p_, Y + 70 + 30 * i) for i, p_ in enumerate(pads)])
+    box(X + 270, Y + 50, 130, 30 * len(chip_pins) + 10, chip, ref=uref)
+    for i, nm in enumerate(chip_pins):
+        y = Y + 70 + 30 * i
+        pin_l(X + 270, y, nm)
+        wire((X + 130, y), (X + 270, y))
+    dot(X + 210, Y + 70); dot(X + 210, Y + 100)
+    cap_v(X + 210, Y + 85, f"{cref} 100 nF", label_left=True)
+    for i, line in enumerate(extra):
+        text(X + 14, Y + 206 + 18 * i, line, "p")
+
+
+sensor_board(40, SB + 30, "s1: chamber air", "j18", ("1 +3v3", "2 gnd", "3 scl", "4 sda"), "u14", "sht40-ad1b",
+             ("3 vdd", "4 vss", "2 scl", "1 sda"), "c37", ["address 0x44. same pin order as j5.", "solder silicone wires: the chamber reaches 70 °C"])
+sensor_board(600, SB + 30, "s2: heater outlet air", "j19", ("1 +3v3", "2 gnd", "3 dq"), "u15", "ds18b20z",
+             ("3 vdd", "5 gnd", "4 dq"), "c39", ["pins 1, 2, 6–8 nc. pull-up r1 is on the main board.", "rated to 125 °C; the firmware cuts the heater at 100 °C"])
+
 # ================================================================== notes
 NOTES = [
-    "1. one board for both dryers, every part assembled by jlcpcb. 1-roll build: the 1-roll bom leaves off everything in the dashed boxes and j12–j14.",
+    "1. one board for both dryers, every part assembled by jlcpcb. 1-roll build: the 1-roll bom leaves off the boxes marked 2-roll build only, and j12–j14.",
     "2. the heater path tb1 → tb2 → q1 carries 12.5 a: wide copper pours, 2 oz copper, a copper area under q1's tab.",
     "3. u4 drives q1's gate at 12 v. r9 holds the driver input low until the firmware takes gpio4, so the heater stays off at boot.",
     "4. r8, r11, r13, r15 hold the mosfet gates low at boot. q2–q4 ao3400a in sot-23: pin 1 gate, 2 source, 3 drain.",
-    "5. u1's antenna end overhangs or sits at the board edge, with no copper, parts or traces under it.",
+    "5. u1's antenna at the board edge with no copper under it. u13 at an edge away from u2, u12, u10, u11. s1, s2 on break-off tabs.",
     "6. u10, u11 exposed pads to gnd with thermal vias into a ground pour on the back.",
     "7. u2 values from the ap63205 datasheet, table 3: 4.7 µH, 10 µF in, 2 × 22 µF out, 100 nF bootstrap.",
     "8. crossing wires are not connected unless a dot is shown. blue labels with the same name are the same net.",

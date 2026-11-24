@@ -60,7 +60,7 @@ def architecture():
     for p in paths:
         d.raw(f"<path d='{p}' fill='none' stroke='{EDGE}' stroke-width='1.25' marker-end='url(#arr)'/>")
     d.raw(f"<path d='M596 140H580V392H548' fill='none' stroke='{EDGE}' stroke-width='1.25' marker-end='url(#arr)'/>")
-    box(212, 96, 160, "Humidity sensors", "SHT40 + outlet probe")
+    box(212, 96, 160, "Humidity sensors", "SHT40 + outlet DS18B20")
     box(388, 96, 160, "Safety + vent", "thermostat, fuse, fan")
     box(212, 168, 160, "Heater + blower", "PTC 12 V 150 W")
     box(388, 168, 160, "Reel", "on rollers, 608ZZ", main=True)

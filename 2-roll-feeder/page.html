@@ -120,7 +120,7 @@
 <p>A PID loop on the ESP32 drives a 12 V 150 W PTC heater, a blower pushes chamber air through it, and an exhaust fan vents moist air while drying. Four independent layers stop it overheating.</p>
 <p><strong>Air loop.</strong> The 5015 12 V dual-ball-bearing blower sits at the inlet of the duct behind the reels, pulling chamber air (at most 70 °C) through the PTC fins and forward over both reels. The PTC sits in a short bent aluminium channel; the printed duct starts after it.</p>
 <p><strong>Venting.</strong> A 4010 12 V ball-bearing exhaust fan behind a gravity flap in the lid pulses while drying and the flap falls shut when it stops.</p>
-<p><strong>Sensors.</strong> SHT40 for chamber temperature and humidity (rated to 125 °C), a DS18B20 in the heater outlet, and an optional AHT20 in the bay.</p>
+<p><strong>Sensors.</strong> An SHT40 for chamber temperature and humidity (rated to 125 °C) and a DS18B20 in the heater outlet, each on a small sensor board that breaks off the controller board, plus a second SHT40 on the controller board itself for the bay. All three are assembled by JLCPCB with the board.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
   <tbody>
@@ -196,7 +196,7 @@
     <tr><td>4</td><td>Heater gate driver input (UCC27517)</td><td>10 kΩ pull-down: heater off while booting</td></tr>
     <tr><td>5</td><td>Blower MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: off while booting</td></tr>
     <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 5</td></tr>
-    <tr><td>7</td><td>I2C SCL</td><td>SHT40, AHT20, OLED, MCP23017</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>Chamber SHT40 (sensor board S1, 0x44), bay SHT40 (on the board, 0x45), OLED, MCP23017</td></tr>
     <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
     <tr><td>9</td><td>BOOT button</td><td>10 kΩ pull-up; not used by the firmware</td></tr>
     <tr><td>10</td><td>Feeder A STEP</td><td></td></tr>

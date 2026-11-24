@@ -27,6 +27,8 @@ One controller board for both dryer versions. The 2-roll build fits everything; 
 | Heater switch | U4 UCC27517 gate driver, Q1 AOD4184A, R7 10 Ω, R8/R9 10 k | 12 V gate drive (see below) |
 | Fans, buzzer | Q2-Q4 AO3400A, D1/D2 B5819W flyback diodes | Low-side switches |
 | Scales | U7 (and U8 on the 2-roll) HX711, Q5/Q6 S8550, R20-R23, C17-C26 | Load cells plug straight into J11/J12; 4.3 V excitation |
+| Bay sensor | U13 SHT40-BD1B (I2C 0x45), C38 | On the board, which sits in the bay; place it at an edge away from U2, U12, U10, U11 |
+| Sensor boards | S1: U14 SHT40-AD1B (0x44), C37, J18 pads. S2: U15 DS18B20Z, C39, J19 pads | Small boards on break-off tabs; harness wires solder to their pads and plug into J5/J6 |
 | Connectors | JST XH (J3-J17), TB2 heater | Same numbering as the wiring diagrams |
 | Feeders (2-roll) | U10/U11 TMC2209-LA-T, C10/C11 100 µF, C27-C36, R24-R31, J16/J17 | Standalone, 1/8 step, about 0.72 A RMS |
 
@@ -38,6 +40,7 @@ One controller board for both dryer versions. The 2-roll build fits everything; 
 
 - [ ] **U1 antenna:** put the module's antenna end at (or over) the board edge, with no copper, parts or traces under it.
 - [ ] **U10/U11 TMC2209:** the QFN footprint's exposed pad is 3.75 mm (the datasheet's nominal is 3.7 mm); tie it to a ground pour with the footprint's thermal vias. The pin numbers follow KiCad's own TMC2209-LA symbol (current library); check them against the datasheet's pin table once more before ordering.
+- [ ] **Sensor boards S1, S2:** lay them out as small boards joined to the main board by mouse-bite tabs, so one order assembles everything; snap them off after delivery. Their nets (S1_*, S2_*) reach the main board only through the harness. JLCPCB may count break-off boards as extra designs in the panel: check the quote, or order them as a separate small board. Leave U14's top open to the air, and keep U13 away from the warm parts (a routed slot around it helps).
 - [ ] **Motor current:** R24/R28 (39 k) and R25/R29 (10 k) set VREF to about 1.0 V, so about 0.72 A RMS (1.0 A peak) with the 0.11 Ω sense resistors. That suits the K1C extruder motor at feeding speeds; change R24/R28 to change it (I_RMS ≈ VREF / 2.5 V × 1.77 A).
 - [ ] **Footprints to compare with the part drawings:** L1 uses the 4030 Changjiang footprint for the XR XRNR4030; TB1/TB2 use the Phoenix MKDS 5.08 mm footprint for the KF128 terminal.
 - [ ] **Layout rules for the 12.5 A path** (TB1 → TB2 → Q1): wide pours, 2 oz copper, copper area under Q1.
