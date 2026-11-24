@@ -26,7 +26,7 @@ CONN = {
             [("+12V", "red"), ("GND", "black")], "Shared supply's fuse block (15 A per box); F1 15 A on the board", "through the base wall",
             "J1 sits at the board edge and pokes through the base wall; nothing to wire inside the box"),
     "TB2": ("Heater", "screw terminal, 2-way", "14 AWG",
-            [("+12V out → TH1 → TF1 → HT1", "red"), ("HEATER− (Q1 drain)", "black")], "PTC heater HT1, with TH1 KSD301 and TF1 92 °C in series on the red wire", "chamber",
+            [("HEATER− (Q1 drain)", "black"), ("+12V out → TH1 → TF1 → HT1", "red")], "PTC heater HT1, with TH1 KSD301 and TF1 92 °C in series on the red wire", "chamber",
             "TH1 and TF1 sit high on the back wall in the chamber air"),
     "J3": ("Blower", "JST-XH 2", "22 AWG", [("+12V", "red"), ("FAN− (Q2 drain)", "black")], "5015 blower M1", "chamber, heater duct",
            "The fan's black lead goes to the MOSFET, not GND"),

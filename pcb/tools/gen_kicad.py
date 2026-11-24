@@ -246,7 +246,7 @@ R("R8", "10k", "C25804", (101.6, 185.42), "HEAT_G", "GND")
 R("R9", "10k", "C25804", (30.48, 185.42), "HEAT_IN", "GND")
 part("Q1", "Device:Q_NMOS_GDS", "AOD4184A", "Package_TO_SOT_SMD:TO-252-2", "C99124", (124.46, 170.18),
      {"1": "HEAT_G", "2": "HEATER_N", "3": "GND"}, mpn="AOD4184A", note="12.5 A heater: big copper pour on the drain tab, 2 oz copper")
-part("TB2", "Connector:Screw_Terminal_01x02", "HEATER", TERM, "C474952", (149.86, 162.56), {"1": "+12V", "2": "HEATER_N"},
+part("TB2", "Connector:Screw_Terminal_01x02", "HEATER", TERM, "C474952", (149.86, 162.56), {"1": "HEATER_N", "2": "+12V"},
      mpn="KF128-5.08-2P-AA", note="Heater + via KSD301 and thermal fuse (in the harness)")
 
 # --- 5. fans and buzzer
@@ -455,9 +455,10 @@ def write_project_files():
     libs = ROOT / "libs"
     if libs.exists():
         shutil.rmtree(libs)
-    nicks = sorted({p["fp"].split(":")[0] for p in PARTS})
-    for p in PARTS:
-        nick, name = p["fp"].split(":")
+    used = [p["fp"] for p in PARTS] + ["MountingHole:MountingHole_3.2mm_M3"]
+    nicks = sorted({f.split(":")[0] for f in used})
+    for f in used:
+        nick, name = f.split(":")
         d = libs / f"{nick}.pretty"
         d.mkdir(parents=True, exist_ok=True)
         shutil.copy2(KICAD_FPS / f"{nick}.pretty" / f"{name}.kicad_mod", d / f"{name}.kicad_mod")
@@ -559,6 +560,12 @@ def write_pcb():
         x += w
         row_h = max(row_h, h)
         board.Add(fp)
+    try:
+        import place_pcb
+    except ImportError:
+        place_pcb = None
+    if place_pcb:
+        place_pcb.layout(board)
     pcbnew.SaveBoard(str(ROOT / f"{PROJECT}.kicad_pcb"), board)
     print("wrote", ROOT / f"{PROJECT}.kicad_pcb", f"({len(PARTS)} footprints, {len(nets)} nets, unrouted)")
 

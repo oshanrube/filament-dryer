@@ -210,8 +210,8 @@
 <rect class="bx" x="900" y="358" width="110" height="74"/>
 <text class="p" x="900" y="348">tb2</text>
 <text class="r" x="929" y="348">screw terminal → heater</text>
-<text class="r" x="914" y="384">1 +12 v</text>
-<text class="r" x="914" y="414">2 heater −</text>
+<text class="r" x="914" y="384">2 +12 v</text>
+<text class="r" x="914" y="414">1 heater −</text>
 <text class="v" x="1024" y="378">ptc 12 v 150 w heater,</text>
 <text class="v" x="1024" y="396">via ksd301 and fuse</text>
 <text class="v" x="1024" y="414">(in the harness)</text>

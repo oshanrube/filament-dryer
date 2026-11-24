@@ -267,7 +267,7 @@ wire((700, 480), (700, t)); gnd(700, b)
 g, d, s = nmos(740, 450, "q1 aod4184a")
 wire(s, (s[0], 520)); gnd(s[0], 520)
 wire(d, (d[0], 410), (900, 410))
-conn(900, 0, "tb2", "screw terminal → heater", [("1 +12 v", 380), ("2 heater −", 410)],
+conn(900, 0, "tb2", "screw terminal → heater", [("2 +12 v", 380), ("1 heater −", 410)],
      ["ptc 12 v 150 w heater,", "via ksd301 and fuse", "(in the harness)"])
 net(860, 900, 380, "+12v")
 
