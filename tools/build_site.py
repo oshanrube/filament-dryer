@@ -106,6 +106,12 @@ def main() -> None:
         shutil.copytree(src / "images", out / "images")
         print(f"wrote docs/{folder}/ (per box ≈ US${per_box:.0f}, shared ≈ US${shared:.0f})")
 
+    pcb_out = DOCS / "pcb"
+    pcb_out.mkdir()
+    for f in list((ROOT / "pcb" / "export").glob("*.pdf")) + list((ROOT / "pcb" / "export").glob("*.svg")) + list((ROOT / "pcb" / "jlcpcb").glob("*.csv")):
+        shutil.copy2(f, pcb_out / f.name)
+    print("wrote docs/pcb/")
+
     overview = (ROOT / "site" / "overview.html").read_text(encoding="utf-8")
     for folder, (per_box, shared) in costs.items():
         key = folder.upper().replace("-", "_")
