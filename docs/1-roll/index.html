@@ -74,7 +74,7 @@
 <header>
   <h1>Single-Reel Filament Dryer</h1>
   <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and an ESP32-C3 SuperMini running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
-  <p class="meta">Plan as of 2026-11-23 · parts about US$186 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
+  <p class="meta">Plan as of 2026-11-23 · parts about US$170 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
   <div class="links">
     <a href="schematic.svg">Schematic (SVG)</a>
     <a href="bom.csv">Parts list (CSV)</a>
@@ -103,7 +103,7 @@
   <li><strong>Three zones:</strong> a heated chamber on top, an insulated floor, and a cool electronics bay underneath.</li>
   <li><strong>Weigh the cradle, not the box.</strong> The roller cradle stands on a post through the floor to a load cell in the cool bay.</li>
   <li><strong>Drop-in loading.</strong> Lift the lid, drop the reel on the rollers, feed the filament into the exit.</li>
-  <li><strong>K1C parts wherever they fit:</strong> both fans are the K1C's 4020 blower and 3010 fan (24 V, through a small boost converter).</li>
+  <li><strong>Cheap, reliable fans:</strong> a 5015 dual-ball-bearing blower and a 4010 ball-bearing exhaust fan, both 12 V, straight off the feed.</li>
   <li><strong>Filament motion is measured</strong> by a BIGTREETECH Smart Filament Sensor V2 at the exit (runout switch plus a pulse every 2.88 mm).</li>
   <li><strong>Housing in ABS or ASA only.</strong> PLA and PETG creep at 65 °C.</li>
 </ul>
@@ -116,7 +116,7 @@
   <thead><tr><th>Dimension</th><th>Value</th><th>Why</th></tr></thead>
   <tbody>
     <tr><td>Chamber inside (L × W × H)</td><td>230 × 135 × 235 mm</td><td>Ø200 reel + 15 mm clearance; 95 mm for the reel and a 40 mm heater duct at the back</td></tr>
-    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck and boost converters, load cell</td></tr>
+    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck converter, load cell</td></tr>
     <tr><td>Outside</td><td>250 × 155 × 335 mm</td><td>4 mm walls + 6 mm insulation; the motion sensor sits on the right wall</td></tr>
     <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
     <tr><td>Roller length</td><td>95 mm</td><td>Any reel 50-90 mm wide</td></tr>
@@ -147,7 +147,7 @@
 </table></div>
 
 <h2 id="heating">Heating, humidity and safety</h2>
-<p>Same as the two-reel box: a PID loop drives the 12 V 150 W PTC heater (the same part, so one spare covers both versions; in the smaller chamber the PID simply runs it less). The K1C 4020 blower pushes chamber air through the heater, and the K1C 3010 fan vents moist air through a gravity flap while drying.</p>
+<p>Same as the two-reel box: a PID loop drives the 12 V 150 W PTC heater (the same part, so one spare covers both versions; in the smaller chamber the PID simply runs it less). The 5015 blower pushes chamber air through the heater, and the 4010 fan vents moist air through a gravity flap while drying.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
   <tbody>
@@ -164,9 +164,9 @@
 
 <h2 id="power">Power: 12 V feed</h2>
 <ul>
-  <li><strong>Load:</strong> heater 12.5 A, fans about 0.7 A through the 24 V boost converter, electronics about 0.15 A: about 13.5 A peak.</li>
+  <li><strong>Load:</strong> heater 12.5 A, fans about 0.4 A, electronics about 0.15 A: about 13.5 A peak.</li>
   <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
-  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini; an XL6009 boost converter makes 24 V for the two K1C fans.</li>
+  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini.</li>
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
@@ -192,7 +192,7 @@
 </table></div>
 
 <h2 id="parts">Parts catalog</h2>
-<p>About US$186 per box, plus about US$30 once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
+<p>About US$170 per box, plus about US$30 once for the shared supply's wiring (not needed again if the two-reel boxes already use it). Prices are approximate; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>.</p>
 <h3>Control electronics (≈ US$14)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
@@ -217,13 +217,12 @@
 <tr><td>Motion + runout sensor</td><td>1</td><td>BIGTREETECH Smart Filament Sensor V2</td><td class="num">13</td><td>At the filament exit: runout switch plus a pulse every 2.88 mm of filament movement; runs on 3.3 V</td></tr>
 <tr><td>Calibration weight</td><td>1</td><td>calibration weight 500g</td><td class="num">5</td><td>Accurate scale setup</td></tr>
 </tbody></table></div>
-<h3>Heating and air (≈ US$46)</h3>
+<h3>Heating and air (≈ US$30)</h3>
 <div class="table-wrap"><table>
 <thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
 <tr><td>PTC air heater</td><td>1 (buy 2)</td><td>PTC heater 12V 150W insulated aluminium</td><td class="num">10</td><td>Same heater as the 2-roll box, so one spare covers both; the PID limits it</td></tr>
-<tr><td>Blower (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 4020 blower fan 24V</td><td class="num">16</td><td>The K1C&#x27;s part-cooling blower; pushes chamber air through the heater</td></tr>
-<tr><td>Exhaust fan (K1C part)</td><td>1 (buy 2)</td><td>Creality K1C 3010 hotend fan 24V</td><td class="num">10</td><td>The K1C&#x27;s hotend fan; vents while drying</td></tr>
-<tr><td>12 V to 24 V boost converter</td><td>1</td><td>XL6009 boost converter module</td><td class="num">1.5</td><td>Powers the two 24 V K1C fans (about 0.3 A)</td></tr>
+<tr><td>Blower</td><td>1 (buy 2)</td><td>5015 blower 12V dual ball bearing</td><td class="num">7</td><td>Cheap; ball bearings outlast sleeve bearings in heat. Gdstime and Winsinn are common, reliable makes</td></tr>
+<tr><td>Exhaust fan</td><td>1 (buy 2)</td><td>4010 fan 12V dual ball bearing</td><td class="num">5</td><td>Vents while drying</td></tr>
 <tr><td>Bimetal thermostat</td><td>2</td><td>KSD301 85 normally closed 16A</td><td class="num">1.5</td><td>Auto-reset hardware cut-out</td></tr>
 <tr><td>Thermal fuse</td><td>10-pack</td><td>thermal fuse 92C 15A</td><td class="num">1.5</td><td>One-shot last-resort cut-out</td></tr>
 <tr><td>Aluminium sheet</td><td>1</td><td>aluminium sheet 1mm 100x200</td><td class="num">3</td><td>Heater channel and heat shield</td></tr>

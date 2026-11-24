@@ -32,7 +32,7 @@
   <li><strong>Three zones plus a side pod:</strong> a heated chamber on top, an insulated floor, and a cool electronics bay underneath. The feeders sit in a pod on the side, outside the heat.</li>
   <li><strong>Weigh each cradle, not the box.</strong> Each reel's roller cradle stands on its own post through the floor to its own load cell in the cool bay.</li>
   <li><strong>Drop-in loading.</strong> Lift the lid, drop the reel on its rollers, push the filament end into its lane.</li>
-  <li><strong>K1C parts wherever they fit.</strong> The two feeders (K1C extrusion kit + extruder motor), the two lane sensors (K1C runout sensor) and both fans (K1C 4020 blower and 3010 fan) are K1C spares, so the dryers and printers share one spares box. A 12 V → 24 V boost converter feeds the 24 V K1C fans.</li>
+  <li><strong>K1C parts wherever they fit.</strong> The two feeders (K1C extrusion kit + extruder motor) and the two lane sensors (K1C runout sensor) are K1C spares, so the dryers and printers share one spares box. The fans are cheap 12 V dual-ball-bearing ones that run straight off the feed.</li>
   <li><strong>Filament motion is measured.</strong> A BIGTREETECH Smart Filament Sensor V2 after the merger reports runout and counts filament movement (a pulse every 2.88 mm), so the control center knows the extruder is really pulling filament.</li>
   <li><strong>Housing in ABS or ASA only.</strong> PLA softens near 60 °C and PETG near 80 °C; both creep at 65 °C over months.</li>
 </ul>
@@ -43,7 +43,7 @@
     <tr><td>eSUN 1 kg reels</td><td>Two lanes, each for Ø200 mm × up to 90 mm wide; full-width rollers fit any reel width</td></tr>
     <tr><td>Bearings fine at 65 °C</td><td>608ZZ steel-shielded bearings with standard lithium grease (rated about −20 to +120 °C)</td></tr>
     <tr><td>Automatic temp/humidity</td><td>PID heater control, SHT40 humidity sensor, exhaust fan vent, Dry / Keep dry / Print modes</td></tr>
-    <tr><td>Long-lasting parts</td><td>K1C spare parts for the fans, feeders and filament sensors; YZC load cells, TMC2209 drivers, silicone wire, stainless hardware, brass inserts</td></tr>
+    <tr><td>Long-lasting parts</td><td>K1C spare parts for the feeders and lane sensors; dual-ball-bearing fans, YZC load cells, TMC2209 drivers, silicone wire, stainless hardware, brass inserts</td></tr>
     <tr><td>Weighs the reels, reports remaining</td><td>A load cell per reel; grams and metres per reel sent to the control center</td></tr>
     <tr><td>Second reel loads itself</td><td>A feeder per reel and a Y-merger; the switch starts when the printer reports a runout</td></tr>
     <tr><td>Power</td><td>12 V feed from the shared server supply, XT60 on every box</td></tr>
@@ -117,8 +117,8 @@
 
 <h2 id="heating">Heating, humidity and safety</h2>
 <p>A PID loop on the ESP32 drives a 12 V 150 W PTC heater, a blower pushes chamber air through it, and an exhaust fan vents moist air while drying. Four independent layers stop it overheating.</p>
-<p><strong>Air loop.</strong> The blower (a K1C 4020 part-cooling blower, 24 V) sits at the inlet of the duct behind the reels, pulling chamber air (at most 70 °C) through the PTC fins and forward over both reels. The PTC sits in a short bent aluminium channel; the printed duct starts after it.</p>
-<p><strong>Venting.</strong> A K1C 3010 hotend fan (24 V) as the exhaust fan, behind a gravity flap in the lid pulses while drying and the flap falls shut when it stops.</p>
+<p><strong>Air loop.</strong> The 5015 12 V dual-ball-bearing blower sits at the inlet of the duct behind the reels, pulling chamber air (at most 70 °C) through the PTC fins and forward over both reels. The PTC sits in a short bent aluminium channel; the printed duct starts after it.</p>
+<p><strong>Venting.</strong> A 4010 12 V ball-bearing exhaust fan behind a gravity flap in the lid pulses while drying and the flap falls shut when it stops.</p>
 <p><strong>Sensors.</strong> SHT40 for chamber temperature and humidity (rated to 125 °C), a DS18B20 in the heater outlet, and an optional AHT20 in the bay.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
@@ -173,12 +173,12 @@
 <h2 id="power">Power: 12 V feed</h2>
 <p>Every box runs from one shared HP 1600 W server supply over a 12 V feed; only that supply touches mains (240 V AC). There is no other power input on the box.</p>
 <ul>
-  <li><strong>Load per box:</strong> heater 12.5 A, fans about 0.7 A through the 24 V boost converter, feeders about 0.6 A while feeding, electronics about 0.15 A: about 13.5 A peak. Seven boxes are about 1.1 kW at worst, 70% of the supply's rating.</li>
+  <li><strong>Load per box:</strong> heater 12.5 A, fans about 0.4 A, feeders about 0.6 A while feeding, electronics about 0.15 A: about 13.5 A peak. Seven boxes are about 1.1 kW at worst, 70% of the supply's rating.</li>
   <li><strong>Connector: XT60, not a barrel jack.</strong> Common 5.5 mm barrel jacks are rated 3-5 A.</li>
   <li><strong>Fuse every branch at the supply:</strong> a short 6 AWG cable to a blade fuse block, a 15 A fuse per box there and another inside each box. Fuse only the + wire.</li>
   <li><strong>Wire gauge:</strong> 14 AWG for leads up to about 3 m, 12 AWG beyond that.</li>
   <li><strong>The supply:</strong> needs its enable pins bridged or a breakout board; its fans are loud.</li>
-  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini's 5 V pin; the SuperMini makes its own 3.3 V. An XL6009 boost converter makes 24 V for the two K1C fans.</li>
+  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini's 5 V pin; the SuperMini makes its own 3.3 V.</li>
   <li><strong>If the supply goes off,</strong> every box goes offline; the printer's own runout pause still works.</li>
 </ul>
 
@@ -216,7 +216,7 @@
 </table></div>
 
 <h2 id="parts">Parts catalog</h2>
-<p>About US${{BOM_PER_BOX}} per box, plus about US${{BOM_SHARED}} once for the shared supply's wiring. Prices are approximate, not checked against today's listings; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>. Parts marked "K1C part" are Creality K1C spares: they cost about US$75 more per box than generic equivalents, but each can go straight into a printer. Check part numbers against a printer before ordering.</p>
+<p>About US${{BOM_PER_BOX}} per box, plus about US${{BOM_SHARED}} once for the shared supply's wiring. Prices are approximate, not checked against today's listings; search terms are what to type into AliExpress. Also available as <a href="bom.csv">bom.csv</a>. Parts marked "K1C part" are Creality K1C spares: they cost about US$50 more per box than generic equivalents, but each can go straight into a printer. Check part numbers against a printer before ordering.</p>
 {{BOM_TABLES}}
 
 <h2 id="integration">Firmware and control center</h2>

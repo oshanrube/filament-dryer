@@ -107,7 +107,7 @@ def section(x, y, w, h, title):
 # ---------------------------------------------------------------- frame
 out.append(f"<rect width='{W}' height='{H}' fill='white'/>")
 t(30, 44, "Single-reel filament dryer: schematic", 22, weight="bold")
-t(30, 68, "ESP32-C3 SuperMini · 12 V feed · K1C fans · BTT motion sensor · nets with the same label are connected · rev 2026-11-23", 12.5, fill=QUIET)
+t(30, 68, "ESP32-C3 SuperMini · 12 V feed · BTT motion sensor · nets with the same label are connected · rev 2026-11-23", 12.5, fill=QUIET)
 
 # ---------------------------------------------------------------- power
 section(20, 90, 520, 310, "1  Power in")
@@ -122,7 +122,6 @@ net(262, 165, "+12V")
 line(120, 195, 150, 195)
 gnd(150, 195)
 # buck
-chip(340, 166, 150, "U12", "XL6009 boost", left=[("IN+", "+12V"), ("IN-", "GND")], right=[("OUT+", "+24V"), ("OUT-", "GND")], sub="24 V for the K1C fans")
 chip(340, 300, 150, "U2", "Mini560 buck", left=[("IN+", "+12V"), ("IN-", "GND")], right=[("OUT+", "+5V"), ("OUT-", "GND")], sub="5 V out, 7-20 V in")
 t(50, 256, "Shared server PSU feeds every box;", 10.5, fill=QUIET)
 t(50, 272, "a 15 A fuse per box also sits at", 10.5, fill=QUIET)
@@ -195,8 +194,8 @@ def fan_stage(y, ref, label, sub, gate_net, qref, rref, top_net="+12V"):
     dot(xf - 44, y + 92); line(xf - 44, y + 92, xf - 44, y + 104); resistor(xf - 44, y + 104, "10k"); line(xf - 44, y + 134, xf - 44, y + 138); gnd(xf - 44, y + 138)
 
 
-fan_stage(775, "M1 blower", "K1C 4020 24V", "", "BLOW_G", "Q2", "R3", top_net="+24V")
-fan_stage(940, "M2 exhaust", "K1C 3010 24V", "", "EXH_G", "Q3", "R5", top_net="+24V")
+fan_stage(775, "M1 blower", "5015 12 V", "", "BLOW_G", "Q2", "R3")
+fan_stage(940, "M2 exhaust", "4010 12 V", "", "EXH_G", "Q3", "R5")
 fan_stage(1105, "BZ1 buzzer", "active 5 V", "", "BUZ_G", "Q4", "R7", top_net="+5V")
 
 # ---------------------------------------------------------------- scale + temp

@@ -165,7 +165,7 @@ def isometric():
     lead((115, 97.5, 41), 174, 476, "Load cell", "5 kg, in the cool bay", "end")
     lead((60, 155, 36), 174, 546, "OLED + button", "front panel", "end")
     lead((50, 0, 315), 594, 96, "Hinges at the back", "lid lifts open", "start")
-    lead((207, 31, 335), 594, 176, "Exhaust fan + flap", "K1C 3010, vents", "start")
+    lead((207, 31, 335), 594, 176, "Exhaust fan + flap", "vents while drying", "start")
     lead((275, 132.5, 272), 594, 346, "Motion sensor", "BTT V2, PTFE out", "start")
     lead((240, 50, 145), 594, 426, "Heater + blower", "duct at the back", "start")
     lead((250, 40, 35), 594, 516, "Bay vents", "keep the bay cool", "start")

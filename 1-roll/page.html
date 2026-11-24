@@ -30,7 +30,7 @@
   <li><strong>Three zones:</strong> a heated chamber on top, an insulated floor, and a cool electronics bay underneath.</li>
   <li><strong>Weigh the cradle, not the box.</strong> The roller cradle stands on a post through the floor to a load cell in the cool bay.</li>
   <li><strong>Drop-in loading.</strong> Lift the lid, drop the reel on the rollers, feed the filament into the exit.</li>
-  <li><strong>K1C parts wherever they fit:</strong> both fans are the K1C's 4020 blower and 3010 fan (24 V, through a small boost converter).</li>
+  <li><strong>Cheap, reliable fans:</strong> a 5015 dual-ball-bearing blower and a 4010 ball-bearing exhaust fan, both 12 V, straight off the feed.</li>
   <li><strong>Filament motion is measured</strong> by a BIGTREETECH Smart Filament Sensor V2 at the exit (runout switch plus a pulse every 2.88 mm).</li>
   <li><strong>Housing in ABS or ASA only.</strong> PLA and PETG creep at 65 °C.</li>
 </ul>
@@ -43,7 +43,7 @@
   <thead><tr><th>Dimension</th><th>Value</th><th>Why</th></tr></thead>
   <tbody>
     <tr><td>Chamber inside (L × W × H)</td><td>230 × 135 × 235 mm</td><td>Ø200 reel + 15 mm clearance; 95 mm for the reel and a 40 mm heater duct at the back</td></tr>
-    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck and boost converters, load cell</td></tr>
+    <tr><td>Electronics bay inside height</td><td>60 mm</td><td>Perfboard, buck converter, load cell</td></tr>
     <tr><td>Outside</td><td>250 × 155 × 335 mm</td><td>4 mm walls + 6 mm insulation; the motion sensor sits on the right wall</td></tr>
     <tr><td>Roller centres</td><td>110 mm apart, 25 mm above the floor</td><td>Reel sits stable with about 35° contact angle each side</td></tr>
     <tr><td>Roller length</td><td>95 mm</td><td>Any reel 50-90 mm wide</td></tr>
@@ -74,7 +74,7 @@
 </table></div>
 
 <h2 id="heating">Heating, humidity and safety</h2>
-<p>Same as the two-reel box: a PID loop drives the 12 V 150 W PTC heater (the same part, so one spare covers both versions; in the smaller chamber the PID simply runs it less). The K1C 4020 blower pushes chamber air through the heater, and the K1C 3010 fan vents moist air through a gravity flap while drying.</p>
+<p>Same as the two-reel box: a PID loop drives the 12 V 150 W PTC heater (the same part, so one spare covers both versions; in the smaller chamber the PID simply runs it less). The 5015 blower pushes chamber air through the heater, and the 4010 fan vents moist air through a gravity flap while drying.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Mode</th><th>Heater</th><th>Vent fan</th><th>Ends when</th></tr></thead>
   <tbody>
@@ -91,9 +91,9 @@
 
 <h2 id="power">Power: 12 V feed</h2>
 <ul>
-  <li><strong>Load:</strong> heater 12.5 A, fans about 0.7 A through the 24 V boost converter, electronics about 0.15 A: about 13.5 A peak.</li>
+  <li><strong>Load:</strong> heater 12.5 A, fans about 0.4 A, electronics about 0.15 A: about 13.5 A peak.</li>
   <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
-  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini; an XL6009 boost converter makes 24 V for the two K1C fans.</li>
+  <li><strong>Inside the box:</strong> a Mini560 12 V → 5 V buck feeds the SuperMini.</li>
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
