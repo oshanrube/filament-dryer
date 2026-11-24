@@ -1,0 +1,687 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="3340" viewBox="0 0 1160 3340" role="img" aria-labelledby="ttl">
+<title id="ttl">Dryer controller board schematic: ESP32-C3 super mini, AP63205 buck, MCP23017, heater gate driver and MOSFETs, TMC2209 sockets</title>
+<style>
+.w{stroke:#1a1a1a;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bx{stroke:#1a1a1a;stroke-width:1.6;fill:#ffffff}
+.dsh{stroke:#1a1a1a;stroke-width:1.3;fill:none;stroke-dasharray:5 4}
+.sld{fill:#1a1a1a;stroke:none}
+.r{font:13px system-ui,-apple-system,'Segoe UI',sans-serif;fill:#1a1a1a}
+.v{font:12px system-ui,-apple-system,'Segoe UI',sans-serif;fill:#555555}
+.p{font:11px system-ui,-apple-system,'Segoe UI',sans-serif;fill:#777777}
+.n{font:12px system-ui,-apple-system,'Segoe UI',sans-serif;fill:#0b5cad}
+.nw{stroke:#0b5cad;stroke-width:1.6;fill:none;stroke-linecap:round}
+</style>
+<defs>
+<g id="gnd"><path class="w" d="M0 0 V9 M-9 9 H9 M-6 14 H6 M-3 19 H3"/></g>
+<g id="nmos">
+<path class="w" d="M0 30 H18 M18 12 V48"/>
+<path class="w" d="M26 12 V20 M26 26 V34 M26 40 V48"/>
+<path class="w" d="M26 16 H46 M46 16 V0"/>
+<path class="w" d="M26 44 H46 M46 44 V60"/>
+<path class="w" d="M26 30 H46 M46 30 V44"/>
+<polygon class="sld" points="29,30 38,26 38,34"/>
+</g>
+</defs>
+<rect x="0" y="0" width="1160" height="3340" fill="#ffffff"/>
+<text class="r" x="60" y="36">Dryer controller board  ·  ESP32-C3 super mini  ·  for pcb layout and jlcpcb assembly</text>
+<text class="v" x="60" y="56">one board for both dryers. parts in the dashed box are fitted on the 2-roll build only.</text>
+<text class="r" x="60" y="84">12 v in and 5 v buck</text>
+<path class="dsh" d="M60 94 H1100" style="stroke:#bbbbbb"/>
+<rect class="bx" x="60" y="128" width="110" height="74"/>
+<text class="p" x="60" y="118">tb1</text>
+<text class="r" x="89" y="118">screw terminal, 5.08 mm</text>
+<text class="r" x="74" y="154">1 +12 v</text>
+<text class="r" x="74" y="184">2 gnd</text>
+<path class="w" d="M170 150 L500 150"/>
+<path class="w" d="M170 180 L196 180 L196 196"/>
+<use href="#gnd" x="196" y="196"/>
+<circle class="sld" cx="250" cy="150" r="3.2"/>
+<path class="w" d="M238 191 H262 M238 202 Q250 196 262 202"/>
+<text class="p" x="266" y="187">+</text>
+<path class="w" d="M250 180 L250 191"/>
+<path class="w" d="M250 198 L250 210"/>
+<text class="v" x="266" y="199"></text>
+<path class="w" d="M250 150 L250 180"/>
+<use href="#gnd" x="250" y="210"/>
+<text class="v" x="250" y="250" text-anchor="middle">c1 100 µF 25 v</text>
+<circle class="sld" cx="330" cy="150" r="3.2"/>
+<path class="w" d="M318 191 H342 M318 199 H342"/>
+<path class="w" d="M330 180 L330 191"/>
+<path class="w" d="M330 199 L330 210"/>
+<text class="v" x="346" y="199"></text>
+<path class="w" d="M330 150 L330 180"/>
+<use href="#gnd" x="330" y="210"/>
+<text class="v" x="330" y="250" text-anchor="middle">c2 100 nF</text>
+<circle class="sld" cx="410" cy="150" r="3.2"/>
+<path class="w" d="M398 191 H422 M398 199 H422"/>
+<path class="w" d="M410 180 L410 191"/>
+<path class="w" d="M410 199 L410 210"/>
+<text class="v" x="426" y="199"></text>
+<path class="w" d="M410 150 L410 180"/>
+<use href="#gnd" x="410" y="210"/>
+<text class="v" x="410" y="250" text-anchor="middle">c3 10 µF 25 v</text>
+<text class="p" x="60" y="272">12 v feed: xt60 lead with an inline 15 a fuse</text>
+<rect class="bx" x="520" y="125" width="130" height="105"/>
+<text class="p" x="520" y="115">u2</text>
+<text class="r" x="542" y="115">ap63205wu-7  5 v buck</text>
+<text class="p" x="530" y="154">vin</text>
+<text class="p" x="530" y="184">en</text>
+<text class="p" x="640" y="154" text-anchor="end">sw</text>
+<text class="p" x="640" y="184" text-anchor="end">bst</text>
+<text class="p" x="640" y="214" text-anchor="end">fb</text>
+<text class="p" x="585" y="222" text-anchor="middle">gnd</text>
+<path class="w" d="M585 230 L585 246"/>
+<use href="#gnd" x="585" y="246"/>
+<path class="w" d="M470 150 L470 180 L520 180"/>
+<circle class="sld" cx="470" cy="150" r="3.2"/>
+<path class="w" d="M500 150 L520 150"/>
+<path class="w" d="M650 150 L730 150"/>
+<circle class="sld" cx="730" cy="150" r="3.2"/>
+<path class="w" d="M750 150 a8 8 0 0 1 16 0 a8 8 0 0 1 16 0 a8 8 0 0 1 16 0 a8 8 0 0 1 16 0"/>
+<text class="v" x="782" y="136" text-anchor="middle">l1 4.7 µH</text>
+<path class="w" d="M730 150 L750 150"/>
+<path class="w" d="M650 180 L690 180"/>
+<path class="w" d="M701 168 V192 M709 168 V192"/>
+<path class="w" d="M690 180 L701 180"/>
+<path class="w" d="M709 180 L720 180"/>
+<text class="v" x="705" y="164" text-anchor="middle">c4 100 nF</text>
+<text class="p" x="705" y="208" text-anchor="middle"></text>
+<path class="w" d="M720 180 L730 180 L730 150"/>
+<path class="w" d="M814 150 L1000 150"/>
+<circle class="sld" cx="840" cy="150" r="3.2"/>
+<path class="w" d="M650 210 L840 210 L840 150"/>
+<circle class="sld" cx="900" cy="150" r="3.2"/>
+<path class="w" d="M888 191 H912 M888 199 H912"/>
+<path class="w" d="M900 180 L900 191"/>
+<path class="w" d="M900 199 L900 210"/>
+<text class="v" x="916" y="199"></text>
+<path class="w" d="M900 150 L900 180"/>
+<use href="#gnd" x="900" y="210"/>
+<text class="v" x="900" y="250" text-anchor="middle">c5 22 µF</text>
+<circle class="sld" cx="960" cy="150" r="3.2"/>
+<path class="w" d="M948 191 H972 M948 199 H972"/>
+<path class="w" d="M960 180 L960 191"/>
+<path class="w" d="M960 199 L960 210"/>
+<text class="v" x="976" y="199"></text>
+<path class="w" d="M960 150 L960 180"/>
+<use href="#gnd" x="960" y="210"/>
+<text class="v" x="960" y="250" text-anchor="middle">c6 22 µF</text>
+<path class="nw" d="M1000 150 L1040 150"/>
+<text class="n" x="1046" y="154">+5v</text>
+<text class="r" x="60" y="300">controller and output stages</text>
+<path class="dsh" d="M60 310 H1100" style="stroke:#bbbbbb"/>
+<rect class="bx" x="110" y="340" width="190" height="900"/>
+<text class="p" x="110" y="330">u1</text>
+<text class="r" x="132" y="330">esp32-c3 super mini</text>
+<text class="p" x="205.0" y="1230" text-anchor="middle">module in sockets</text>
+<text class="p" x="120" y="374">5v</text>
+<text class="p" x="120" y="404">3v3</text>
+<text class="p" x="120" y="434">gnd</text>
+<path class="nw" d="M70 370 L110 370"/>
+<text class="n" x="64" y="374" text-anchor="end">+5v</text>
+<path class="nw" d="M70 400 L110 400"/>
+<text class="n" x="64" y="404" text-anchor="end">+3v3</text>
+<path class="w" d="M110 430 L90 430 L90 446"/>
+<use href="#gnd" x="90" y="446"/>
+<text class="p" x="120" y="1094">gpio7</text>
+<path class="nw" d="M70 1090 L110 1090"/>
+<text class="n" x="64" y="1094" text-anchor="end">scl</text>
+<text class="p" x="120" y="1124">gpio8</text>
+<path class="nw" d="M70 1120 L110 1120"/>
+<text class="n" x="64" y="1124" text-anchor="end">sda</text>
+<text class="p" x="120" y="1154">gpio10</text>
+<path class="nw" d="M70 1150 L110 1150"/>
+<text class="n" x="64" y="1154" text-anchor="end">step_a</text>
+<text class="p" x="120" y="1184">gpio20</text>
+<path class="nw" d="M70 1180 L110 1180"/>
+<text class="n" x="64" y="1184" text-anchor="end">step_b</text>
+<text class="p" x="120" y="1214">gpio9</text>
+<text class="p" x="102" y="1214" text-anchor="end">nc</text>
+<text class="p" x="290" y="484" text-anchor="end">gpio4</text>
+<text class="p" x="290" y="664" text-anchor="end">gpio5</text>
+<text class="p" x="290" y="814" text-anchor="end">gpio6</text>
+<text class="p" x="290" y="894" text-anchor="end">gpio2</text>
+<text class="p" x="290" y="1034" text-anchor="end">gpio0</text>
+<text class="p" x="290" y="1064" text-anchor="end">gpio1</text>
+<text class="p" x="290" y="1094" text-anchor="end">gpio3</text>
+<text class="p" x="290" y="1174" text-anchor="end">gpio21</text>
+<text class="p" x="420" y="336">heater switch: 12 v gate drive for the 12.5 a heater</text>
+<path class="w" d="M300 480 L420 480"/>
+<circle class="sld" cx="325" cy="480" r="3.2"/>
+<rect class="bx" x="318" y="490" width="14" height="50"/>
+<text class="v" x="339" y="519">r9 10 kΩ</text>
+<path class="w" d="M325 480 L325 490"/>
+<use href="#gnd" x="325" y="540"/>
+<rect class="bx" x="420" y="450" width="120" height="90"/>
+<text class="p" x="420" y="440">u4</text>
+<text class="r" x="442" y="440">ucc27517</text>
+<text class="p" x="430" y="484">in+</text>
+<text class="p" x="430" y="514">in−</text>
+<text class="p" x="530" y="484" text-anchor="end">out</text>
+<text class="p" x="480" y="466" text-anchor="middle">vdd</text>
+<text class="p" x="480" y="534" text-anchor="middle">gnd</text>
+<path class="w" d="M420 510 L410 510 L410 524"/>
+<use href="#gnd" x="410" y="524"/>
+<path class="w" d="M480 540 L480 552"/>
+<use href="#gnd" x="480" y="552"/>
+<path class="w" d="M480 450 L480 400"/>
+<path class="nw" d="M430 400 L480 400"/>
+<text class="n" x="424" y="404" text-anchor="end">+12v</text>
+<path class="w" d="M480 400 L660 400"/>
+<circle class="sld" cx="480" cy="400" r="3.2"/>
+<circle class="sld" cx="580" cy="400" r="3.2"/>
+<path class="w" d="M568 411 H592 M568 419 H592"/>
+<path class="w" d="M580 400 L580 411"/>
+<path class="w" d="M580 419 L580 430"/>
+<text class="v" x="564" y="419" text-anchor="end">c8 10 µF</text>
+<path class="w" d="M580 400 L580 400"/>
+<use href="#gnd" x="580" y="430"/>
+<path class="w" d="M648 411 H672 M648 419 H672"/>
+<path class="w" d="M660 400 L660 411"/>
+<path class="w" d="M660 419 L660 430"/>
+<text class="v" x="676" y="419">c9 100 nF</text>
+<path class="w" d="M660 400 L660 400"/>
+<use href="#gnd" x="660" y="430"/>
+<rect class="bx" x="595" y="473" width="50" height="14"/>
+<text class="v" x="620" y="468" text-anchor="middle">10 Ω</text>
+<text class="p" x="620" y="504" text-anchor="middle">r7</text>
+<path class="w" d="M540 480 L595 480"/>
+<path class="w" d="M645 480 L740 480"/>
+<circle class="sld" cx="700" cy="480" r="3.2"/>
+<rect class="bx" x="693" y="485" width="14" height="50"/>
+<text class="v" x="714" y="514">r8 10 kΩ</text>
+<path class="w" d="M700 480 L700 485"/>
+<use href="#gnd" x="700" y="535"/>
+<use href="#nmos" x="740" y="450"/>
+<text class="r" x="796" y="484">q1 aod4184a</text>
+<path class="w" d="M786 510 L786 520"/>
+<use href="#gnd" x="786" y="520"/>
+<path class="w" d="M786 450 L786 410 L900 410"/>
+<rect class="bx" x="900" y="358" width="110" height="74"/>
+<text class="p" x="900" y="348">tb2</text>
+<text class="r" x="929" y="348">screw terminal → heater</text>
+<text class="r" x="914" y="384">1 +12 v</text>
+<text class="r" x="914" y="414">2 heater −</text>
+<text class="v" x="1024" y="378">ptc 12 v 150 w heater,</text>
+<text class="v" x="1024" y="396">via ksd301 and fuse</text>
+<text class="v" x="1024" y="414">(in the harness)</text>
+<path class="nw" d="M860 380 L900 380"/>
+<text class="n" x="854" y="384" text-anchor="end">+12v</text>
+<rect class="bx" x="375" y="653" width="50" height="14"/>
+<text class="v" x="400" y="648" text-anchor="middle">100 Ω</text>
+<text class="p" x="400" y="684" text-anchor="middle">r10</text>
+<path class="w" d="M300 660 L375 660"/>
+<path class="w" d="M425 660 L520 660"/>
+<circle class="sld" cx="470" cy="660" r="3.2"/>
+<rect class="bx" x="463" y="675" width="14" height="50"/>
+<text class="v" x="484" y="704">r11 10 kΩ</text>
+<path class="w" d="M470 660 L470 675"/>
+<use href="#gnd" x="470" y="725"/>
+<use href="#nmos" x="520" y="630"/>
+<text class="r" x="576" y="664">q2 ao3400a</text>
+<path class="w" d="M566 690 L566 700"/>
+<use href="#gnd" x="566" y="700"/>
+<path class="w" d="M566 630 L566 600 L900 600"/>
+<circle class="sld" cx="780" cy="600" r="3.2"/>
+<path class="nw" d="M740 570 L900 570"/>
+<text class="n" x="734" y="574" text-anchor="end">+12v</text>
+<circle class="sld" cx="780" cy="570" r="3.2"/>
+<polygon class="sld" points="772,591.0 788,591.0 780,579.0"/>
+<path class="w" d="M772 579.0 H788"/>
+<path class="w" d="M780 570 L780 579.0"/>
+<path class="w" d="M780 591.0 L780 600"/>
+<text class="v" x="794" y="589.0">d1 b5819w</text>
+<rect class="bx" x="900" y="548" width="110" height="74"/>
+<text class="p" x="900" y="538">j3</text>
+<text class="r" x="922" y="538">blower, jst xh 2-pin</text>
+<text class="r" x="914" y="574">1 +12 v</text>
+<text class="r" x="914" y="604">2 fan −</text>
+<text class="v" x="1024" y="568">5015 12 v blower</text>
+<rect class="bx" x="375" y="803" width="50" height="14"/>
+<text class="v" x="400" y="798" text-anchor="middle">100 Ω</text>
+<text class="p" x="400" y="834" text-anchor="middle">r12</text>
+<path class="w" d="M300 810 L375 810"/>
+<path class="w" d="M425 810 L520 810"/>
+<circle class="sld" cx="470" cy="810" r="3.2"/>
+<rect class="bx" x="463" y="825" width="14" height="50"/>
+<text class="v" x="484" y="854">r13 10 kΩ</text>
+<path class="w" d="M470 810 L470 825"/>
+<use href="#gnd" x="470" y="875"/>
+<use href="#nmos" x="520" y="780"/>
+<text class="r" x="576" y="814">q3 ao3400a</text>
+<path class="w" d="M566 840 L566 850"/>
+<use href="#gnd" x="566" y="850"/>
+<path class="w" d="M566 780 L566 750 L900 750"/>
+<circle class="sld" cx="780" cy="750" r="3.2"/>
+<path class="nw" d="M740 720 L900 720"/>
+<text class="n" x="734" y="724" text-anchor="end">+12v</text>
+<circle class="sld" cx="780" cy="720" r="3.2"/>
+<polygon class="sld" points="772,741.0 788,741.0 780,729.0"/>
+<path class="w" d="M772 729.0 H788"/>
+<path class="w" d="M780 720 L780 729.0"/>
+<path class="w" d="M780 741.0 L780 750"/>
+<text class="v" x="794" y="739.0">d2 b5819w</text>
+<rect class="bx" x="900" y="698" width="110" height="74"/>
+<text class="p" x="900" y="688">j4</text>
+<text class="r" x="922" y="688">exhaust fan, jst xh 2-pin</text>
+<text class="r" x="914" y="724">1 +12 v</text>
+<text class="r" x="914" y="754">2 fan −</text>
+<text class="v" x="1024" y="718">4010 12 v fan in the lid</text>
+<path class="w" d="M300 890 L900 890"/>
+<circle class="sld" cx="345" cy="890" r="3.2"/>
+<rect class="bx" x="338" y="835" width="14" height="50"/>
+<text class="v" x="359" y="864">r1 4.7 kΩ</text>
+<path class="w" d="M345 890 L345 885"/>
+<path class="nw" d="M345 835 L345 825"/>
+<text class="n" x="345" y="819" text-anchor="middle">+3v3</text>
+<rect class="bx" x="900" y="808" width="110" height="104"/>
+<text class="p" x="900" y="798">j6</text>
+<text class="r" x="922" y="798">ds18b20, jst xh 3-pin</text>
+<text class="r" x="914" y="834">1 +3v3</text>
+<text class="r" x="914" y="864">2 gnd</text>
+<text class="r" x="914" y="894">3 dq</text>
+<text class="v" x="1024" y="828">heater outlet probe</text>
+<path class="nw" d="M860 830 L900 830"/>
+<text class="n" x="854" y="834" text-anchor="end">+3v3</text>
+<path class="nw" d="M860 860 L900 860"/>
+<text class="n" x="854" y="864" text-anchor="end">gnd</text>
+<path class="w" d="M300 1030 L900 1030"/>
+<circle class="sld" cx="760" cy="1030" r="3.2"/>
+<path class="w" d="M760 1030 L760 1190 L900 1190"/>
+<path class="w" d="M300 1060 L900 1060"/>
+<path class="w" d="M300 1090 L740 1090 L740 1220 L900 1220"/>
+<rect class="bx" x="900" y="948" width="110" height="134"/>
+<text class="p" x="900" y="938">j11</text>
+<text class="r" x="929" y="938">scale a, jst xh 4-pin</text>
+<text class="r" x="914" y="974">1 +3v3</text>
+<text class="r" x="914" y="1004">2 gnd</text>
+<text class="r" x="914" y="1034">3 sck</text>
+<text class="r" x="914" y="1064">4 dt</text>
+<text class="v" x="1024" y="968">hx711 board, then</text>
+<text class="v" x="1024" y="986">load cell lc1</text>
+<rect class="bx" x="900" y="1108" width="110" height="134"/>
+<text class="p" x="900" y="1098">j12</text>
+<text class="r" x="929" y="1098">scale b, jst xh 4-pin</text>
+<text class="r" x="914" y="1134">1 +3v3</text>
+<text class="r" x="914" y="1164">2 gnd</text>
+<text class="r" x="914" y="1194">3 sck</text>
+<text class="r" x="914" y="1224">4 dt</text>
+<text class="v" x="1024" y="1128">hx711 board, then</text>
+<text class="v" x="1024" y="1146">load cell lc2</text>
+<text class="v" x="1024" y="1164">(2-roll only)</text>
+<path class="nw" d="M860 970 L900 970"/>
+<text class="n" x="854" y="974" text-anchor="end">+3v3</text>
+<path class="nw" d="M860 1130 L900 1130"/>
+<text class="n" x="854" y="1134" text-anchor="end">+3v3</text>
+<path class="nw" d="M860 1000 L900 1000"/>
+<text class="n" x="854" y="1004" text-anchor="end">gnd</text>
+<path class="nw" d="M860 1160 L900 1160"/>
+<text class="n" x="854" y="1164" text-anchor="end">gnd</text>
+<rect class="bx" x="375" y="1163" width="50" height="14"/>
+<text class="v" x="400" y="1158" text-anchor="middle">1 kΩ</text>
+<text class="p" x="400" y="1194" text-anchor="middle">r4</text>
+<path class="w" d="M300 1170 L375 1170"/>
+<path class="nw" d="M425 1170 L465 1170"/>
+<text class="n" x="471" y="1174">motion</text>
+<text class="p" x="330" y="1214">gpio21 is uart0 tx: the boot log comes out here, hence r4</text>
+<text class="r" x="60" y="1270">i2c bus: sensors and display (the mcp23017 below is on the same bus)</text>
+<path class="dsh" d="M60 1280 H1100" style="stroke:#bbbbbb"/>
+<path class="nw" d="M60 1370 L100 1370"/>
+<text class="n" x="54" y="1374" text-anchor="end">scl</text>
+<path class="nw" d="M60 1410 L100 1410"/>
+<text class="n" x="54" y="1414" text-anchor="end">sda</text>
+<path class="w" d="M100 1370 L1000 1370"/>
+<path class="w" d="M100 1410 L1000 1410"/>
+<text class="p" x="1006" y="1374">→ u3</text>
+<text class="p" x="1006" y="1414">→ u3</text>
+<circle class="sld" cx="150" cy="1370" r="3.2"/>
+<rect class="bx" x="143" y="1315" width="14" height="50"/>
+<text class="v" x="164" y="1344">r2 4.7 kΩ</text>
+<path class="w" d="M150 1370 L150 1365"/>
+<path class="nw" d="M150 1315 L150 1307"/>
+<text class="n" x="150" y="1301" text-anchor="middle">+3v3</text>
+<circle class="sld" cx="210" cy="1410" r="3.2"/>
+<rect class="bx" x="203" y="1425" width="14" height="50"/>
+<text class="v" x="224" y="1454">r3 4.7 kΩ</text>
+<path class="w" d="M210 1410 L210 1425"/>
+<path class="nw" d="M210 1475 L210 1483"/>
+<text class="n" x="210" y="1499" text-anchor="middle">+3v3</text>
+<circle class="sld" cx="330" cy="1370" r="3.2"/>
+<circle class="sld" cx="345" cy="1410" r="3.2"/>
+<path class="w" d="M330 1370 L330 1480 L360 1480"/>
+<path class="w" d="M345 1410 L345 1510 L360 1510"/>
+<rect class="bx" x="360" y="1458" width="130" height="134"/>
+<text class="p" x="360" y="1448">j5</text>
+<text class="r" x="382" y="1448">sht40, xh 4</text>
+<text class="r" x="374" y="1484">3 scl</text>
+<text class="r" x="374" y="1514">4 sda</text>
+<text class="r" x="374" y="1544">1 +3v3</text>
+<text class="r" x="374" y="1574">2 gnd</text>
+<path class="nw" d="M320 1540 L360 1540"/>
+<text class="n" x="314" y="1544" text-anchor="end">+3v3</text>
+<path class="nw" d="M320 1570 L360 1570"/>
+<text class="n" x="314" y="1574" text-anchor="end">gnd</text>
+<text class="p" x="425" y="1620" text-anchor="middle">in the chamber</text>
+<circle class="sld" cx="560" cy="1370" r="3.2"/>
+<circle class="sld" cx="575" cy="1410" r="3.2"/>
+<path class="w" d="M560 1370 L560 1480 L590 1480"/>
+<path class="w" d="M575 1410 L575 1510 L590 1510"/>
+<rect class="bx" x="590" y="1458" width="130" height="134"/>
+<text class="p" x="590" y="1448">j7</text>
+<text class="r" x="612" y="1448">aht20, xh 4</text>
+<text class="r" x="604" y="1484">3 scl</text>
+<text class="r" x="604" y="1514">4 sda</text>
+<text class="r" x="604" y="1544">1 +3v3</text>
+<text class="r" x="604" y="1574">2 gnd</text>
+<path class="nw" d="M550 1540 L590 1540"/>
+<text class="n" x="544" y="1544" text-anchor="end">+3v3</text>
+<path class="nw" d="M550 1570 L590 1570"/>
+<text class="n" x="544" y="1574" text-anchor="end">gnd</text>
+<text class="p" x="655" y="1620" text-anchor="middle">bay, optional</text>
+<circle class="sld" cx="790" cy="1370" r="3.2"/>
+<circle class="sld" cx="805" cy="1410" r="3.2"/>
+<path class="w" d="M790 1370 L790 1480 L820 1480"/>
+<path class="w" d="M805 1410 L805 1510 L820 1510"/>
+<rect class="bx" x="820" y="1458" width="130" height="134"/>
+<text class="p" x="820" y="1448">j8</text>
+<text class="r" x="842" y="1448">sh1106 oled, xh 4</text>
+<text class="r" x="834" y="1484">3 scl</text>
+<text class="r" x="834" y="1514">4 sda</text>
+<text class="r" x="834" y="1544">1 +3v3</text>
+<text class="r" x="834" y="1574">2 gnd</text>
+<path class="nw" d="M780 1540 L820 1540"/>
+<text class="n" x="774" y="1544" text-anchor="end">+3v3</text>
+<path class="nw" d="M780 1570 L820 1570"/>
+<text class="n" x="774" y="1574" text-anchor="end">gnd</text>
+<text class="p" x="885" y="1620" text-anchor="middle">front panel</text>
+<text class="p" x="60" y="1650">r2, r3 are the only i2c pull-ups needed: if a module has its own, the total should not drop below about 2 kΩ</text>
+<text class="r" x="60" y="1680">i/o expander: filament sensors, button, buzzer, feeder enable and direction</text>
+<path class="dsh" d="M60 1690 H1100" style="stroke:#bbbbbb"/>
+<rect class="bx" x="380" y="1760" width="180" height="560"/>
+<text class="p" x="380" y="1750">u3</text>
+<text class="r" x="402" y="1750">mcp23017-e/so</text>
+<text class="p" x="530" y="1778" text-anchor="middle">vdd</text>
+<path class="w" d="M530 1760 L530 1730 L680 1730"/>
+<circle class="sld" cx="640" cy="1730" r="3.2"/>
+<path class="nw" d="M680 1730 L700 1730"/>
+<text class="n" x="706" y="1734">+3v3</text>
+<path class="w" d="M628 1746 H652 M628 1754 H652"/>
+<path class="w" d="M640 1735 L640 1746"/>
+<path class="w" d="M640 1754 L640 1765"/>
+<text class="v" x="656" y="1754">c7 100 nF</text>
+<path class="w" d="M640 1730 L640 1735"/>
+<use href="#gnd" x="640" y="1765"/>
+<text class="p" x="470" y="2294" text-anchor="middle">vss</text>
+<path class="w" d="M470 2320 L470 2334"/>
+<use href="#gnd" x="470" y="2334"/>
+<text class="p" x="390" y="1804">scl</text>
+<path class="nw" d="M330 1800 L380 1800"/>
+<text class="n" x="324" y="1804" text-anchor="end">scl</text>
+<text class="p" x="390" y="1834">sda</text>
+<path class="nw" d="M330 1830 L380 1830"/>
+<text class="n" x="324" y="1834" text-anchor="end">sda</text>
+<text class="p" x="390" y="1894">reset</text>
+<path class="w" d="M380 1890 L260 1890 L260 1880"/>
+<rect class="bx" x="253" y="1830" width="14" height="50"/>
+<text class="v" x="274" y="1859">r5 10 kΩ</text>
+<path class="nw" d="M260 1830 L260 1822"/>
+<text class="n" x="260" y="1816" text-anchor="middle">+3v3</text>
+<text class="p" x="390" y="1954">a0</text>
+<path class="w" d="M380 1950 L340 1950"/>
+<text class="p" x="390" y="1984">a1</text>
+<path class="w" d="M380 1980 L340 1980"/>
+<text class="p" x="390" y="2014">a2</text>
+<path class="w" d="M380 2010 L340 2010"/>
+<path class="w" d="M340 1950 L340 2030"/>
+<circle class="sld" cx="340" cy="1980" r="3.2"/>
+<circle class="sld" cx="340" cy="2010" r="3.2"/>
+<use href="#gnd" x="340" y="2030"/>
+<text class="p" x="390" y="2074">inta</text>
+<text class="p" x="390" y="2104">intb</text>
+<text class="p" x="372" y="2074" text-anchor="end">nc</text>
+<text class="p" x="372" y="2104" text-anchor="end">nc</text>
+<text class="p" x="390" y="2170">addr 0x20</text>
+<text class="p" x="390" y="2190">gpa7, gpb0–7: nc</text>
+<text class="p" x="550" y="1834" text-anchor="end">gpa0</text>
+<text class="p" x="550" y="1974" text-anchor="end">gpa1</text>
+<text class="p" x="550" y="2114" text-anchor="end">gpa2</text>
+<text class="p" x="550" y="2224" text-anchor="end">gpa3</text>
+<text class="p" x="550" y="2254" text-anchor="end">gpa4</text>
+<text class="p" x="550" y="2284" text-anchor="end">gpa5</text>
+<text class="p" x="550" y="2314" text-anchor="end">gpa6</text>
+<path class="w" d="M560 1830 L780 1830"/>
+<rect class="bx" x="780" y="1748" width="120" height="104"/>
+<text class="p" x="780" y="1738">j13</text>
+<text class="r" x="809" y="1738">lane a sensor, xh 3</text>
+<text class="r" x="794" y="1774">1 +3v3</text>
+<text class="r" x="794" y="1804">2 gnd</text>
+<text class="r" x="794" y="1834">3 s</text>
+<text class="v" x="914" y="1768">k1c runout sensor</text>
+<text class="v" x="914" y="1786">(2-roll only)</text>
+<path class="w" d="M560 1970 L780 1970"/>
+<rect class="bx" x="780" y="1888" width="120" height="104"/>
+<text class="p" x="780" y="1878">j14</text>
+<text class="r" x="809" y="1878">lane b sensor, xh 3</text>
+<text class="r" x="794" y="1914">1 +3v3</text>
+<text class="r" x="794" y="1944">2 gnd</text>
+<text class="r" x="794" y="1974">3 s</text>
+<text class="v" x="914" y="1908">k1c runout sensor</text>
+<text class="v" x="914" y="1926">(2-roll only)</text>
+<path class="w" d="M560 2110 L780 2110"/>
+<rect class="bx" x="780" y="2028" width="120" height="134"/>
+<text class="p" x="780" y="2018">j15</text>
+<text class="r" x="809" y="2018">btt sfs v2, xh 4</text>
+<text class="r" x="794" y="2054">1 +3v3</text>
+<text class="r" x="794" y="2084">2 gnd</text>
+<text class="r" x="794" y="2114">3 runout</text>
+<text class="r" x="794" y="2144">4 motion</text>
+<text class="v" x="914" y="2048">after the y-merger</text>
+<text class="v" x="914" y="2066">(1-roll: at the exit)</text>
+<path class="nw" d="M720 2140 L780 2140"/>
+<text class="n" x="714" y="2144" text-anchor="end">motion</text>
+<path class="w" d="M560 2220 L780 2220"/>
+<rect class="bx" x="780" y="2198" width="120" height="74"/>
+<text class="p" x="780" y="2188">j9</text>
+<text class="r" x="802" y="2188">button, xh 2</text>
+<text class="r" x="794" y="2224">1 btn</text>
+<text class="r" x="794" y="2254">2 gnd</text>
+<text class="v" x="914" y="2218">front panel</text>
+<path class="nw" d="M740 1770 L780 1770"/>
+<text class="n" x="734" y="1774" text-anchor="end">+3v3</text>
+<path class="nw" d="M740 1910 L780 1910"/>
+<text class="n" x="734" y="1914" text-anchor="end">+3v3</text>
+<path class="nw" d="M740 2050 L780 2050"/>
+<text class="n" x="734" y="2054" text-anchor="end">+3v3</text>
+<path class="nw" d="M740 1800 L780 1800"/>
+<text class="n" x="734" y="1804" text-anchor="end">gnd</text>
+<path class="nw" d="M740 1940 L780 1940"/>
+<text class="n" x="734" y="1944" text-anchor="end">gnd</text>
+<path class="nw" d="M740 2080 L780 2080"/>
+<text class="n" x="734" y="2084" text-anchor="end">gnd</text>
+<path class="nw" d="M740 2250 L780 2250"/>
+<text class="n" x="734" y="2254" text-anchor="end">gnd</text>
+<path class="nw" d="M560 2250 L610 2250"/>
+<text class="n" x="616" y="2254">buzzer</text>
+<path class="nw" d="M560 2280 L610 2280"/>
+<text class="n" x="616" y="2284">feed_en</text>
+<path class="nw" d="M560 2310 L610 2310"/>
+<text class="n" x="616" y="2314">feed_dir</text>
+<text class="p" x="60" y="2380">the mcp23017's internal pull-ups are switched on for gpa0–gpa3</text>
+<text class="r" x="60" y="2420">buzzer</text>
+<path class="dsh" d="M60 2430 H1100" style="stroke:#bbbbbb"/>
+<path class="nw" d="M100 2540 L140 2540"/>
+<text class="n" x="94" y="2544" text-anchor="end">buzzer</text>
+<rect class="bx" x="165" y="2533" width="50" height="14"/>
+<text class="v" x="190" y="2528" text-anchor="middle">100 Ω</text>
+<text class="p" x="190" y="2564" text-anchor="middle">r14</text>
+<path class="w" d="M140 2540 L165 2540"/>
+<path class="w" d="M215 2540 L300 2540"/>
+<circle class="sld" cx="260" cy="2540" r="3.2"/>
+<rect class="bx" x="253" y="2555" width="14" height="50"/>
+<text class="v" x="274" y="2584">r15 10 kΩ</text>
+<path class="w" d="M260 2540 L260 2555"/>
+<use href="#gnd" x="260" y="2605"/>
+<use href="#nmos" x="300" y="2510"/>
+<text class="r" x="356" y="2544">q4 ao3400a</text>
+<path class="w" d="M346 2570 L346 2580"/>
+<use href="#gnd" x="346" y="2580"/>
+<rect class="bx" x="336" y="2464" width="20" height="26"/>
+<path class="w" d="M362 2469 q6 8 0 16 M368 2465 q9 12 0 24"/>
+<text class="r" x="386" y="2474">bz1 kxg1205c</text>
+<text class="v" x="386" y="2492">active, 5 v, 12 mm</text>
+<text class="p" x="330" y="2470">+</text>
+<path class="w" d="M346 2510 L346 2490"/>
+<path class="nw" d="M346 2464 L346 2452"/>
+<text class="n" x="346" y="2446" text-anchor="middle">+5v</text>
+<text class="r" x="60" y="2660">feeder drivers: tmc2209 stepstick modules in sockets, standalone, 1/8 step</text>
+<path class="dsh" d="M60 2670 H1100" style="stroke:#bbbbbb"/>
+<rect class="dsh" x="40" y="2680" width="1080" height="360" style="stroke:#999999"/>
+<text class="p" x="1104" y="2700" text-anchor="end">2-roll build only</text>
+<rect class="bx" x="170" y="2740" width="170" height="270"/>
+<text class="p" x="170" y="2730">u10</text>
+<text class="r" x="199" y="2730">tmc2209 stepstick</text>
+<text class="p" x="255.0" y="3000" text-anchor="middle">fitted by us</text>
+<text class="p" x="180" y="2774">en</text>
+<path class="w" d="M170 2770 L130 2770"/>
+<circle class="sld" cx="130" cy="2770" r="3.2"/>
+<rect class="bx" x="123" y="2710" width="14" height="50"/>
+<text class="v" x="116" y="2740" text-anchor="end">r6 10 kΩ</text>
+<path class="w" d="M130 2770 L130 2760"/>
+<path class="nw" d="M130 2710 L130 2702"/>
+<text class="n" x="130" y="2696" text-anchor="middle">+3v3</text>
+<path class="nw" d="M90 2770 L130 2770"/>
+<text class="n" x="84" y="2774" text-anchor="end">feed_en</text>
+<text class="p" x="180" y="2804">ms1</text>
+<path class="nw" d="M130 2800 L170 2800"/>
+<text class="n" x="124" y="2804" text-anchor="end">gnd</text>
+<text class="p" x="180" y="2834">ms2</text>
+<path class="nw" d="M130 2830 L170 2830"/>
+<text class="n" x="124" y="2834" text-anchor="end">gnd</text>
+<text class="p" x="180" y="2864">pdn/uart</text>
+<text class="p" x="162" y="2864" text-anchor="end">nc</text>
+<text class="p" x="180" y="2894">pdn/uart</text>
+<text class="p" x="162" y="2894" text-anchor="end">nc</text>
+<text class="p" x="180" y="2924">clk</text>
+<text class="p" x="162" y="2924" text-anchor="end">nc</text>
+<text class="p" x="180" y="2954">step</text>
+<path class="nw" d="M130 2950 L170 2950"/>
+<text class="n" x="124" y="2954" text-anchor="end">step_a</text>
+<text class="p" x="180" y="2984">dir</text>
+<path class="nw" d="M130 2980 L170 2980"/>
+<text class="n" x="124" y="2984" text-anchor="end">feed_dir</text>
+<text class="p" x="330" y="2774" text-anchor="end">vm</text>
+<text class="p" x="330" y="2804" text-anchor="end">gnd</text>
+<text class="p" x="330" y="2834" text-anchor="end">1a</text>
+<text class="p" x="330" y="2864" text-anchor="end">1b</text>
+<text class="p" x="330" y="2894" text-anchor="end">2a</text>
+<text class="p" x="330" y="2924" text-anchor="end">2b</text>
+<text class="p" x="330" y="2954" text-anchor="end">vio</text>
+<text class="p" x="330" y="2984" text-anchor="end">gnd</text>
+<path class="w" d="M340 2770 L400 2770"/>
+<circle class="sld" cx="400" cy="2770" r="3.2"/>
+<path class="nw" d="M400 2770 L430 2770"/>
+<text class="n" x="436" y="2774">+12v</text>
+<path class="w" d="M388 2782 H412 M388 2793 Q400 2787 412 2793"/>
+<text class="p" x="416" y="2778">+</text>
+<path class="w" d="M400 2771 L400 2782"/>
+<path class="w" d="M400 2789 L400 2801"/>
+<text class="v" x="416" y="2790"></text>
+<path class="w" d="M400 2770 L400 2771"/>
+<use href="#gnd" x="400" y="2801"/>
+<text class="p" x="418" y="2796">c10</text>
+<text class="p" x="418" y="2810">100 µF</text>
+<path class="w" d="M340 2800 L362 2800 L362 2806"/>
+<use href="#gnd" x="362" y="2806"/>
+<path class="w" d="M340 2830 L480 2830"/>
+<path class="w" d="M340 2860 L480 2860"/>
+<path class="w" d="M340 2890 L480 2890"/>
+<path class="w" d="M340 2920 L480 2920"/>
+<path class="nw" d="M340 2950 L370 2950"/>
+<text class="n" x="376" y="2954">+3v3</text>
+<path class="nw" d="M340 2980 L370 2980"/>
+<text class="n" x="376" y="2984">gnd</text>
+<rect class="bx" x="480" y="2808" width="90" height="134"/>
+<text class="p" x="480" y="2798">j16</text>
+<text class="r" x="509" y="2798">motor a, xh 4</text>
+<text class="r" x="494" y="2834">1 1a</text>
+<text class="r" x="494" y="2864">2 1b</text>
+<text class="r" x="494" y="2894">3 2a</text>
+<text class="r" x="494" y="2924">4 2b</text>
+<text class="p" x="525" y="2970" text-anchor="middle">k1c extruder motor</text>
+<rect class="bx" x="660" y="2740" width="170" height="270"/>
+<text class="p" x="660" y="2730">u11</text>
+<text class="r" x="689" y="2730">tmc2209 stepstick</text>
+<text class="p" x="745.0" y="3000" text-anchor="middle">fitted by us</text>
+<text class="p" x="670" y="2774">en</text>
+<path class="nw" d="M620 2770 L660 2770"/>
+<text class="n" x="614" y="2774" text-anchor="end">feed_en</text>
+<text class="p" x="670" y="2804">ms1</text>
+<path class="nw" d="M620 2800 L660 2800"/>
+<text class="n" x="614" y="2804" text-anchor="end">gnd</text>
+<text class="p" x="670" y="2834">ms2</text>
+<path class="nw" d="M620 2830 L660 2830"/>
+<text class="n" x="614" y="2834" text-anchor="end">gnd</text>
+<text class="p" x="670" y="2864">pdn/uart</text>
+<text class="p" x="652" y="2864" text-anchor="end">nc</text>
+<text class="p" x="670" y="2894">pdn/uart</text>
+<text class="p" x="652" y="2894" text-anchor="end">nc</text>
+<text class="p" x="670" y="2924">clk</text>
+<text class="p" x="652" y="2924" text-anchor="end">nc</text>
+<text class="p" x="670" y="2954">step</text>
+<path class="nw" d="M620 2950 L660 2950"/>
+<text class="n" x="614" y="2954" text-anchor="end">step_b</text>
+<text class="p" x="670" y="2984">dir</text>
+<path class="nw" d="M620 2980 L660 2980"/>
+<text class="n" x="614" y="2984" text-anchor="end">feed_dir</text>
+<text class="p" x="820" y="2774" text-anchor="end">vm</text>
+<text class="p" x="820" y="2804" text-anchor="end">gnd</text>
+<text class="p" x="820" y="2834" text-anchor="end">1a</text>
+<text class="p" x="820" y="2864" text-anchor="end">1b</text>
+<text class="p" x="820" y="2894" text-anchor="end">2a</text>
+<text class="p" x="820" y="2924" text-anchor="end">2b</text>
+<text class="p" x="820" y="2954" text-anchor="end">vio</text>
+<text class="p" x="820" y="2984" text-anchor="end">gnd</text>
+<path class="w" d="M830 2770 L890 2770"/>
+<circle class="sld" cx="890" cy="2770" r="3.2"/>
+<path class="nw" d="M890 2770 L920 2770"/>
+<text class="n" x="926" y="2774">+12v</text>
+<path class="w" d="M878 2782 H902 M878 2793 Q890 2787 902 2793"/>
+<text class="p" x="906" y="2778">+</text>
+<path class="w" d="M890 2771 L890 2782"/>
+<path class="w" d="M890 2789 L890 2801"/>
+<text class="v" x="906" y="2790"></text>
+<path class="w" d="M890 2770 L890 2771"/>
+<use href="#gnd" x="890" y="2801"/>
+<text class="p" x="908" y="2796">c11</text>
+<text class="p" x="908" y="2810">100 µF</text>
+<path class="w" d="M830 2800 L852 2800 L852 2806"/>
+<use href="#gnd" x="852" y="2806"/>
+<path class="w" d="M830 2830 L970 2830"/>
+<path class="w" d="M830 2860 L970 2860"/>
+<path class="w" d="M830 2890 L970 2890"/>
+<path class="w" d="M830 2920 L970 2920"/>
+<path class="nw" d="M830 2950 L860 2950"/>
+<text class="n" x="866" y="2954">+3v3</text>
+<path class="nw" d="M830 2980 L860 2980"/>
+<text class="n" x="866" y="2984">gnd</text>
+<rect class="bx" x="970" y="2808" width="90" height="134"/>
+<text class="p" x="970" y="2798">j17</text>
+<text class="r" x="999" y="2798">motor b, xh 4</text>
+<text class="r" x="984" y="2834">1 1a</text>
+<text class="r" x="984" y="2864">2 1b</text>
+<text class="r" x="984" y="2894">3 2a</text>
+<text class="r" x="984" y="2924">4 2b</text>
+<text class="p" x="1015" y="2970" text-anchor="middle">k1c extruder motor</text>
+<text class="p" x="60" y="3070">r6 holds feed_en high: both drivers stay off at boot and while printing, so the k1c extruder pulls freely through the idle gears</text>
+<path class="w" d="M60 3110 H1100" style="stroke:#999999"/>
+<text class="r" x="60" y="3134">notes</text>
+<text class="v" x="60" y="3158">1. one board for both dryers. 1-roll build: leave off u10, u11, c10, c11, j12, j13, j14, j16, j17. a 1-roll box uses this same pin map.</text>
+<text class="v" x="60" y="3178">2. the heater path tb1 → tb2 → q1 carries 12.5 a: wide copper pours, 2 oz copper, a copper area under q1's tab.</text>
+<text class="v" x="60" y="3198">3. u4 drives q1's gate at 12 v. r9 holds the driver input low until the firmware takes gpio4, so the heater stays off at boot.</text>
+<text class="v" x="60" y="3218">4. r8, r11, r13, r15 hold the mosfet gates low at boot. q2–q4 ao3400a in sot-23: pin 1 gate, 2 source, 3 drain.</text>
+<text class="v" x="60" y="3238">5. u1 and u10/u11 are modules we fit ourselves in 2.54 mm sockets. measure the super mini's header row spacing (footprint: 15.24 mm).</text>
+<text class="v" x="60" y="3258">6. tmc2209 pins 4–6 (pdn/uart, clk) differ between makers, so they're left unconnected. check your module.</text>
+<text class="v" x="60" y="3278">7. u2 values from the ap63205 datasheet, table 3: 4.7 µH, 10 µF in, 2 × 22 µF out, 100 nF bootstrap.</text>
+<text class="v" x="60" y="3298">8. crossing wires are not connected unless a dot is shown. blue labels with the same name are the same net.</text>
+<text class="v" x="60" y="3318">9. part numbers and lcsc codes: pcb/jlcpcb/bom-2-roll.csv. same nets as the kicad schematic pcb/dryer-controller.kicad_sch.</text>
+</svg>

@@ -4,6 +4,7 @@ One controller board for both dryer versions. The 2-roll build fits everything; 
 
 | File | What |
 | --- | --- |
+| `schematic.svg`, `schematic.pdf` | The board with every wire drawn, for reading (from `tools/gen_schematic_svg.py`; PDF via `node tools/svg_to_pdf.js`) |
 | `dryer-controller.kicad_sch` | Schematic (open in KiCad 7 or newer) |
 | `dryer.kicad_sym`, `dryer.pretty/` | Project library: ESP32-C3 SuperMini socket, TMC2209 StepStick, UCC27517 |
 | `export/dryer-controller.pdf`, `.svg`, `.net` | Schematic PDF/SVG and netlist |

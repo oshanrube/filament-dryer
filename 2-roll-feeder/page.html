@@ -4,7 +4,7 @@
   <p class="meta">Plan as of 2026-11-23 · parts about US${{BOM_PER_BOX}} per box plus about 1.5 kg of ABS/ASA; the shared 12 V supply's wiring adds about US${{BOM_SHARED}} once.</p>
   <div class="links">
     <a href="https://github.com/oshanrube/filament-dryer">Repository</a>
-    <a href="schematic.svg">Schematic (SVG)</a>
+    <a href="../pcb/schematic.pdf">Board schematic (PDF)</a>
     <a href="bom.csv">Parts list (CSV)</a>
   </div>
 </header>
@@ -184,7 +184,7 @@
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
-<figure><a href="schematic.svg"><img src="schematic.svg" alt="Schematic: power in, ESP32-C3 SuperMini, I2C sensors and MCP23017, heater and fan switches, HX711 weighing, TMC2209 feeders." loading="lazy"></a><figcaption>Schematic (open full size). Nets with the same label are connected.</figcaption></figure>
+<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in and 5 V buck, ESP32-C3 SuperMini, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scale connectors and two TMC2209 feeder drivers." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). The 2-roll build fits every part. Blue labels with the same name are the same net. <a href="schematic.svg">Module-level drawing</a> for a hand-wired build without the PCB.</figcaption></figure>
 <div class="table-wrap"><table>
   <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
   <tbody>

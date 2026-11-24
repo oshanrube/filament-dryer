@@ -82,7 +82,8 @@
   <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and an ESP32-C3 SuperMini running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
   <p class="meta">Plan as of 2026-11-23 · parts about US$170 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
   <div class="links">
-    <a href="schematic.svg">Schematic (SVG)</a>
+    <a href="../pcb/schematic.pdf">Board schematic (PDF)</a>
+    <a href="schematic.svg">Hand-wired schematic (SVG)</a>
     <a href="bom.csv">Parts list (CSV)</a>
   </div>
 </header>
@@ -177,8 +178,11 @@
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
-<figure><a href="schematic.svg"><img src="schematic.svg" alt="Schematic: power in, ESP32-C3 SuperMini, I2C sensors, heater and fan switches, HX711 weighing, BTT motion sensor and button." loading="lazy"></a><figcaption>Schematic (open full size). Nets with the same label are connected.</figcaption></figure>
-<p>No I/O expander is needed: every signal fits on the C3's own pins. <strong>If you build it on the shared controller PCB</strong> (see the Overview), use the 2-roll pin map instead: the BTT runout switch, button and buzzer then go through the board's MCP23017.</p>
+<h3>On the controller board</h3>
+<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in and 5 V buck, ESP32-C3 SuperMini, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scale connectors; the feeder drivers are in a dashed box." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). The 1-roll build leaves off U10, U11, C10, C11, J12, J13, J14, J16 and J17. On the board the BTT runout switch, button and buzzer go through the MCP23017, so the 1-roll box uses the 2-roll pin map.</figcaption></figure>
+<h3>Hand-wired, without the PCB</h3>
+<figure><a href="schematic.svg"><img src="schematic.svg" alt="Module-level schematic: power in, ESP32-C3 SuperMini, I2C sensors, heater and fan switches, HX711 weighing, BTT motion sensor and button." loading="lazy"></a><figcaption>Module-level drawing for a hand-wired box (open full size). Nets with the same label are connected.</figcaption></figure>
+<p>No I/O expander is needed when hand-wired: every signal fits on the C3's own pins, as in the table below.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
   <tbody>
