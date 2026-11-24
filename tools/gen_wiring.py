@@ -22,8 +22,9 @@ LEGEND = [("red", "+12 V (14 AWG on heater and feed)"), ("black", "GND, or a fan
 
 # Connector definitions: id -> (title, kind, gauge, [(pin signal, colour)], destination, where, notes)
 CONN = {
-    "TB1": ("12 V in", "screw terminal, 2-way", "14 AWG",
-            [("+12V (from F1)", "red"), ("GND", "black")], "XT60 J1 on the base, through inline fuse F1 15 A", "base wall", ""),
+    "J1": ("12 V in", "XT60 (XT60PW-M on the board, XT60-F on the lead)", "14 AWG",
+            [("+12V", "red"), ("GND", "black")], "Shared supply's fuse block (15 A per box); F1 15 A on the board", "through the base wall",
+            "J1 sits at the board edge and pokes through the base wall; nothing to wire inside the box"),
     "TB2": ("Heater", "screw terminal, 2-way", "14 AWG",
             [("+12V out → TH1 → TF1 → HT1", "red"), ("HEATER− (Q1 drain)", "black")], "PTC heater HT1, with TH1 KSD301 and TF1 92 °C in series on the red wire", "chamber",
             "TH1 and TF1 sit high on the back wall in the chamber air"),
@@ -31,8 +32,8 @@ CONN = {
            "The fan's black lead goes to the MOSFET, not GND"),
     "J4": ("Exhaust fan", "JST-XH 2", "22 AWG", [("+12V", "red"), ("FAN− (Q3 drain)", "black")], "4010 fan M2 in the lid", "lid",
            "Leave a slack loop at the hinge"),
-    "J5": ("Chamber sensor", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "Sensor board S1 (SHT40), wires soldered to its pads", "chamber", "Silicone wire: the chamber reaches 70 °C"),
-    "J6": ("Heater outlet sensor", "JST-XH 3", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("DQ", "blue")], "Sensor board S2 (DS18B20Z) in the heater outlet, wires soldered to its pads", "chamber",
+    "J5": ("Chamber sensor", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "Sensor board SB1 (SHT40), wires soldered to its pads", "chamber", "Silicone wire: the chamber reaches 70 °C"),
+    "J6": ("Heater outlet sensor", "JST-XH 3", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("DQ", "blue")], "Sensor board SB2 (DS18B20Z) in the heater outlet, wires soldered to its pads", "chamber",
            "Silicone wire; the board sits in the outlet air, not on the heater"),
     "J8": ("OLED", "JST-XH 4", "22 AWG", [("+3V3", "white"), ("GND", "black"), ("SCL", "yellow"), ("SDA", "blue")], "SH1106 OLED U6", "front panel", ""),
     "J9": ("Button", "JST-XH 2", "22 AWG", [("BTN", "green"), ("GND", "black")], "Push button SW1", "front panel", ""),
@@ -57,7 +58,7 @@ VERSIONS = {
         "board": ["U1 ESP32-C3-WROOM-02, J2 USB-C", "U2 12→5 V buck, U12 3.3 V", "U3 MCP23017 I/O expander",
                   "U4 + Q1 heater, Q2-Q4 fans", "U13 bay SHT40, BZ1 buzzer", "U7, U8 HX711 scales",
                   "U10, U11 TMC2209 feeder drivers"],
-        "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J8", "J9", "J11", "J12", "J13", "J14", "J15", "J16", "J17"],
+        "conns": ["J1", "TB2", "J3", "J4", "J5", "J6", "J8", "J9", "J11", "J12", "J13", "J14", "J15", "J16", "J17"],
         "right_zone": "Feeder pod (outside the heat)",
     },
     "1-roll": {
@@ -65,7 +66,7 @@ VERSIONS = {
         "board": ["U1 ESP32-C3-WROOM-02, J2 USB-C", "U2 12→5 V buck, U12 3.3 V", "U3 MCP23017 I/O expander",
                   "U4 + Q1 heater, Q2-Q4 fans", "U13 bay SHT40, BZ1 buzzer", "U7 HX711 scale",
                   "(feeder parts left off)"],
-        "conns": ["TB1", "TB2", "J3", "J4", "J5", "J6", "J8", "J9", "J11", "J15"],
+        "conns": ["J1", "TB2", "J3", "J4", "J5", "J6", "J8", "J9", "J11", "J15"],
         "right_zone": "Right wall, outside (filament exit)",
     },
 }
@@ -156,7 +157,7 @@ def diagram(version, spec):
     bx, by, bw, bh = 560, 560, 320, 500
     # ---- cables first (boxes drawn over their ends)
     # power in
-    d.cable([(130, 620), (560, 620)], cols("TB1"), "TB1  12 V in", (300, 606))
+    d.cable([(130, 620), (560, 620)], cols("J1"), "J1  12 V in (XT60)", (300, 606))
     # chamber cables (from board top)
     d.cable([(590, 560), (590, 380), (380, 380), (380, 330)], cols("TB2"), "TB2", (596, 520))
     d.cable([(640, 560), (640, 340), (580, 340), (580, 300)], cols("J3"), "J3", (646, 540))
@@ -190,7 +191,7 @@ def diagram(version, spec):
     for i, line in enumerate(spec["board"]):
         d.text(bx + 44, by + 150 + i * 22, line, 12, fill=INK)
     # connector tags on the board edge
-    tags = [("TB1", bx + 6, 624, "start"), ("TB2", 590, by + 16, "middle"), ("J3", 640, by + 16, "middle"),
+    tags = [("J1", bx + 6, 624, "start"), ("TB2", 590, by + 16, "middle"), ("J3", 640, by + 16, "middle"),
             ("J5", 740, by + 16, "middle"), ("J6", 800, by + 16, "middle"), ("J4", 860, by + 16, "middle"),
             ("J11", bx + 6, 704, "start"), ("J8", 640, by + bh - 6, "middle"),
             ("J9", 800, by + bh - 6, "middle")]
@@ -200,13 +201,11 @@ def diagram(version, spec):
     for t, x, y, a in tags:
         d.text(x, y, t, 10.5, a, QUIET, "600")
 
-    d.box(40, 595, 90, 50, "J1 XT60", "base wall")
-    d.rect(156, 612, 40, 16, "white", INK, 1.2, 3)
-    d.text(176, 606, "F1 15 A", 10.5, "middle", QUIET)
-    d.text(40, 680, "12 V feed from the shared", 11, fill=QUIET)
-    d.text(40, 696, "supply: 14 AWG red/black", 11, fill=QUIET)
-    d.text(40, 712, "XT60 lead, 15 A fuse at the", 11, fill=QUIET)
-    d.text(40, 728, "supply's fuse block too", 11, fill=QUIET)
+    d.box(40, 595, 90, 50, "12 V lead", "XT60-F plug")
+    d.text(40, 680, "From the shared supply:", 11, fill=QUIET)
+    d.text(40, 696, "14 AWG red/black, 15 A", 11, fill=QUIET)
+    d.text(40, 712, "fuse at its fuse block.", 11, fill=QUIET)
+    d.text(40, 728, "F1 15 A is on the board", 11, fill=QUIET)
 
     # heater circuit
     d.rect(280, 130, 200, 200, "white", "#bf8700", 1.4, 8)
@@ -216,8 +215,8 @@ def diagram(version, spec):
         if i < 2:
             d.o.append(f"<path d='M380 {204 + i * 54}V{216 + i * 54}' stroke='{COL['red']}' stroke-width='2.2'/>")
     d.box(520, 250, 120, 50, "M1 blower", "5015 12 V")
-    d.box(680, 250, 120, 50, "S1 SHT40 board", "chamber air")
-    d.box(840, 250, 120, 50, "S2 DS18B20 board", "heater outlet")
+    d.box(680, 250, 120, 50, "SB1 SHT40 board", "chamber air")
+    d.box(840, 250, 120, 50, "SB2 DS18B20 board", "heater outlet")
     d.box(1020, 126, 120, 50, "M2 exhaust fan", "4010 12 V, lid")
     d.text(1080, 120, "slack loop at the hinge", 10.5, "middle", QUIET)
 

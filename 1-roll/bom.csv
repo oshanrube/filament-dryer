@@ -11,11 +11,11 @@ Heating and air,Exhaust fan,1 (buy 2),4010 fan 12V dual ball bearing,5,Vents whi
 Heating and air,Bimetal thermostat,2,KSD301 85 normally closed 16A,1.5,Auto-reset hardware cut-out
 Heating and air,Thermal fuse,10-pack,thermal fuse 92C 15A,1.5,One-shot last-resort cut-out
 Heating and air,Aluminium sheet,1,aluminium sheet 1mm 100x200,3,Heater channel and heat shield
-Heating and air,Inline blade fuse holder + fuses,1,mini blade fuse holder 14AWG,2,15 A on the box's 12 V input
 Power,Shared: server supply breakout board,1,HP 1200W 1600W server power supply breakout board,10,"Switches the supply on, screw terminals for 12 V"
 Power,Shared: fuse block,1,12 way blade fuse box with negative bus,10,"One 15 A fuse per box, room for all seven"
 Power,Shared: trunk cable,1 m red + 1 m black,6AWG silicone wire,10,"Supply to fuse block, up to about 95 A"
-Power,Per box: power connector,1 pair,XT60 panel mount,2,"Rated far above 13 A, keyed"
+Power,Per box: XT60-F plug for the supply lead,1 (buy 2),LCSC C98734 (Amass XT60-F),0.5,"Mates with J1, the XT60PW-M on the board"
+Power,Per box: 15 A ATO blade fuse for F1,2 (one spare),LCSC C142684 (Littelfuse 0287015.PXCN),0.3,Goes in the fuse holder on the board
 Power,Per box: supply lead,up to 3 m red + black,14AWG silicone wire,5,About 0.6 V drop at 13 A over 3 m
 Wiring and connectors,Heater-path wire,2 m red + 2 m black,14AWG silicone wire,4,"Silicone insulation, rated to 200 C"
 Wiring and connectors,Signal wire,set,22AWG silicone wire 6 colours,5,"Sensors, fans, steppers"

@@ -176,13 +176,17 @@ def CONN(ref, nets, at, variant="all", value=None):
 
 
 # --- 1. power in and 5 V buck
-part("TB1", "Connector:Screw_Terminal_01x02", "12V IN", TERM, "C474952", (30.48, 58.42), {"1": "+12V", "2": "GND"},
-     mpn="KF128-5.08-2P-AA", note="24 A terminal; 12 V feed from the XT60 and inline 15 A fuse")
-CP("C1", (45.72, 60.96), "+12V", "GND")
-C("C2", "100nF", "C14663", (58.42, 60.96), "+12V", "GND")
+part("J1", "Connector_Generic:Conn_01x02", "XT60PW-M", "Connector_AMASS:AMASS_XT60PW-M_1x02_P7.20mm_Horizontal", "C98732", (33.02, 66.04),
+     {"1": "GND", "2": "+12V_IN"}, mpn="XT60PW-M",
+     note="12 V in at the board edge, through the base wall; the lead from the supply has an XT60-F plug. Pad 1 = -, pad 2 = + (footprint silkscreen)")
+part("F1", "Device:Fuse", "ATO fuse holder", "Fuse:FuseHolder_Blade_ATO_Littelfuse_FLR_178.6165", "C207061", (40.64, 45.72),
+     {"1": "+12V_IN", "2": "+12V"}, mpn="178.6165.0002",
+     note="ATO blade fuse holder; fit a 15 A ATO fuse (Littelfuse 0287015.PXCN, LCSC C142684), ordered loose")
+CP("C1", (55.88, 60.96), "+12V", "GND")
+C("C2", "100nF", "C14663", (68.58, 60.96), "+12V", "GND")
 part("U2", "Regulator_Switching:AP63205WU", "AP63205WU-7", "Package_TO_SOT_SMD:TSOT-23-6", "C2071056", (106.68, 60.96),
      {"1": "+5V", "2": "+12V", "3": "+12V", "4": "GND", "5": "SW5V", "6": "BST5V"}, mpn="AP63205WU-7")
-C("C3", "10uF 25V", "C15850", (71.12, 60.96), "+12V", "GND")
+C("C3", "10uF 25V", "C15850", (81.28, 60.96), "+12V", "GND")
 C("C4", "100nF", "C14663", (129.54, 45.72), "BST5V", "SW5V")
 part("L1", "Device:L", "4.7uH", "Inductor_SMD:L_Changjiang_FNR4030S", "C5289366", (132.08, 60.96), {"1": "SW5V", "2": "+5V"},
      mpn="XRNR4030-4.7uH/M", note="4x4 mm; check pads against the XRNR4030 drawing")
@@ -281,17 +285,17 @@ C("C38", "100nF", "C14663", (391.16, 106.68), "+3V3", "GND")
 
 # --- 9. sensor boards: small boards broken off the main panel, wired back to J5 and J6
 part("U14", "Sensor_Humidity:SHT4x", "SHT40-AD1B-R2", "Sensor_Humidity:Sensirion_DFN-4_1.5x1.5mm_P0.8mm_SHT4x_NoCentralPad", "C2909890",
-     (45.72, 388.62), {"1": "S1_SDA", "2": "S1_SCL", "3": "S1_3V3", "4": "S1_GND"}, mpn="SHT40-AD1B-R2",
-     note="Sensor board S1 (chamber air), address 0x44")
-C("C37", "100nF", "C14663", (68.58, 388.62), "S1_3V3", "S1_GND")
-part("J18", "Connector_Generic:Conn_01x04", "S1 WIRES", "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical", "", (93.98, 388.62),
-     {"1": "S1_3V3", "2": "S1_GND", "3": "S1_SCL", "4": "S1_SDA"}, note="Wire pads, same order as J5", bom=False)
+     (45.72, 388.62), {"1": "SB1_SDA", "2": "SB1_SCL", "3": "SB1_3V3", "4": "SB1_GND"}, mpn="SHT40-AD1B-R2",
+     note="Sensor board SB1 (chamber air), address 0x44")
+C("C37", "100nF", "C14663", (68.58, 388.62), "SB1_3V3", "SB1_GND")
+part("J18", "Connector_Generic:Conn_01x04", "SB1 WIRES", "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical", "", (93.98, 388.62),
+     {"1": "SB1_3V3", "2": "SB1_GND", "3": "SB1_SCL", "4": "SB1_SDA"}, note="Wire pads, same order as J5", bom=False)
 part("U15", "Sensor_Temperature:DS18B20Z", "DS18B20Z", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", "C695837", (139.7, 388.62),
-     {"1": None, "2": None, "3": "S2_3V3", "4": "S2_DQ", "5": "S2_GND", "6": None, "7": None, "8": None}, mpn="DS18B20Z(UMW)",
-     note="Sensor board S2 (heater outlet air)")
-C("C39", "100nF", "C14663", (167.64, 388.62), "S2_3V3", "S2_GND")
-part("J19", "Connector_Generic:Conn_01x03", "S2 WIRES", "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical", "", (193.04, 388.62),
-     {"1": "S2_3V3", "2": "S2_GND", "3": "S2_DQ"}, note="Wire pads, same order as J6", bom=False)
+     {"1": None, "2": None, "3": "SB2_3V3", "4": "SB2_DQ", "5": "SB2_GND", "6": None, "7": None, "8": None}, mpn="DS18B20Z(UMW)",
+     note="Sensor board SB2 (heater outlet air)")
+C("C39", "100nF", "C14663", (167.64, 388.62), "SB2_3V3", "SB2_GND")
+part("J19", "Connector_Generic:Conn_01x03", "SB2 WIRES", "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical", "", (193.04, 388.62),
+     {"1": "SB2_3V3", "2": "SB2_GND", "3": "SB2_DQ"}, note="Wire pads, same order as J6", bom=False)
 
 # --- 7. scales: HX711 on the board, load cells straight into J11/J12
 for u, q, rs, cs, k, dt, x, y, var in (("U7", "Q5", ("R20", "R21"), ("C17", "C18", "C19", "C20", "C21"), "A", "HXA_DT", 452.12, 246.38, "all"),
@@ -340,11 +344,11 @@ POWER = [("+12V", "power:+12V", (30.48, 330.2)), ("+5V", "power:+5V", (55.88, 33
          ("+3V3", "power:+3V3", (81.28, 330.2)), ("GND", "power:GND", (106.68, 340.36))]
 FLAGS = ["+12V", "+5V", "GND"]
 
-BLOCKS = [("1  12 V in, 5 V buck", 22, 30), ("2  Controller (ESP32-C3-WROOM-02)", 170, 30), ("3  I/O expander", 262, 30),
+BLOCKS = [("1  12 V in (XT60, fuse), 5 V buck", 22, 30), ("2  Controller (ESP32-C3-WROOM-02)", 170, 30), ("3  I/O expander", 262, 30),
           ("4  Heater switch, 12 V gate drive", 22, 130), ("5  Fans and buzzer (low-side)", 170, 130),
           ("6  Sensor, panel and load-cell connectors", 322, 130), ("7  Scales: HX711 (U8 parts: 2-roll only)", 425, 205),
           ("8  Feeder drivers (2-roll build only)", 425, 30), ("2b  USB (data only) and 3.3 V", 280, 250),
-          ("9  Sensor boards S1, S2 (break off; wired to J5, J6)", 22, 370), ("6b  Bay sensor", 345, 92),
+          ("9  Sensor boards SB1, SB2 (break off; wired to J5, J6)", 22, 370), ("6b  Bay sensor", 345, 92),
           ("Power rails", 22, 315)]
 
 
@@ -413,9 +417,9 @@ def write_schematic():
         body.append([S("text"), title, [S("at"), x, y, 0], [S("effects"), [S("font"), [S("size"), 2.54, 2.54], S("bold")], [S("justify"), S("left"), S("bottom")]], [S("uuid"), uid()]])
     notes = ["One board for both dryers, every part assembled by JLCPCB. The 1-roll BOM leaves off the 2-roll-only parts (field Build).",
              "U1 antenna at the board edge: no copper, parts or traces under it. USB is data only: plug in 12 V while flashing.",
-             "S1 (U14, C37, J18) and S2 (U15, C39, J19) are small boards on break-off tabs: their nets reach the board only through the harness.",
+             "SB1 (U14, C37, J18) and SB2 (U15, C39, J19) are small boards on break-off tabs: their nets (SB1_*, SB2_*) reach the board only through the harness.",
              "U10/U11: 39k/10k on VREF = 1.0 V -> about 0.72 A RMS with 0.11 R sense resistors. Exposed pad to GND with vias.",
-             "Heater path TB1 -> TB2 -> Q1 carries 12.5 A: wide pours, 2 oz copper, copper area under Q1."]
+             "Heater path J1 -> F1 -> TB2 -> Q1 carries 12.5 A: wide pours, 2 oz copper, copper area under Q1."]
     for i, t in enumerate(notes):
         body.append([S("text"), t, [S("at"), 260, 330.2 + i * 6, 0], [S("effects"), [S("font"), [S("size"), 1.8, 1.8]], [S("justify"), S("left"), S("bottom")]], [S("uuid"), uid()]])
 

@@ -93,7 +93,7 @@
 <h2 id="power">Power: 12 V feed</h2>
 <ul>
   <li><strong>Load:</strong> heater 12.5 A, fans about 0.4 A, electronics about 0.15 A: about 13.5 A peak.</li>
-  <li><strong>Connector and fusing:</strong> XT60, a 15 A fuse per box at the shared supply's fuse block and another inside the box; 14 AWG leads up to 3 m.</li>
+  <li><strong>Connector and fusing:</strong> XT60 straight onto the controller board (J1, through the base wall), a 15 A fuse per box at the shared supply's fuse block and a 15 A blade fuse on the board (F1); 14 AWG leads up to 3 m.</li>
   <li><strong>Inside the box:</strong> the controller board takes the 12 V feed and makes its own 5 V and 3.3 V.</li>
 </ul>
 
@@ -110,7 +110,7 @@
     <tr><td>4</td><td>Heater gate driver input (UCC27517)</td><td>10 kΩ pull-down: heater off while booting</td></tr>
     <tr><td>5</td><td>Blower MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: off while booting</td></tr>
     <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 5</td></tr>
-    <tr><td>7</td><td>I2C SCL</td><td>Chamber SHT40 (sensor board S1, 0x44), bay SHT40 (on the board, 0x45), OLED, MCP23017</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>Chamber SHT40 (sensor board SB1, 0x44), bay SHT40 (on the board, 0x45), OLED, MCP23017</td></tr>
     <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
     <tr><td>9</td><td>BOOT button</td><td>10 kΩ pull-up; not used by the firmware</td></tr>
     <tr><td>18, 19</td><td>USB D−, D+</td><td>USB-C for flashing and logs</td></tr>
