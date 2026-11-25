@@ -8,6 +8,8 @@ A hand-built version of the 1-roll controller from modules and through-hole part
 
 ## Parts at Tronic.lk (prices and stock checked 2026-11-25)
 
+To re-check prices and stock before buying: `python3 tools/tronic_search.py "HX711" "IRF3205" "AHT20" ...` (prints name, price, stock and link for each match).
+
 | Part | Qty per box | Tronic item | Rs. each | In stock |
 | --- | --- | --- | --- | --- |
 | ESP32-C3 SuperMini | 1 | [SuperMini ESP32-C3](https://tronic.lk/product/supermini-esp32-c3-dev-board-type-c-wifi-bluetooth-iot) (you have spares) | 850 | 31 |
