@@ -300,3 +300,31 @@ def power_tracks(board, fps):
     # MOSFET source -> XT60 minus, under the top-end parts (the ground pours add to it)
     y = 20.9
     track(board, [src, (src[0], y), (j1g[0], y), j1g], "GND", 1.5, (F,))
+
+
+# ------------------------------------------------------------------ the 1-roll board: 70 x 100 mm
+def use_1roll():
+    """Same top end as the 2-roll board; the middle and the bottom end shrink to what the 1-roll needs."""
+    global H, FIXED, HOLES, REGIONS, SENSOR_BOARDS
+    H = 100.0
+    top = {k: v for k, v in FIXED.items() if k in ("J1", "F1", "TB2", "J2", "Q1", "J5", "J6", "J3", "J4")}
+    FIXED = {**top,
+             # bottom end, one row at the edge
+             "J11": (10.0, 95.9, 0), "J15": (25.0, 95.9, 0), "J8": (40.0, 95.9, 0), "J9": (55.0, 95.9, 0),
+             # bay sensor at the right edge
+             "U13": (67.6, 77.0, 0), "C38": (67.6, 80.6, 90),
+             # sensor boards SB1, SB2 on the right edge, beside the ESP32
+             "U14": (61.6, 42.4, 0), "C37": (61.6, 46.4, 0), "J18": (67.3, 41.6, 0),
+             "U15": (62.4, 65.2, 90), "C39": (62.4, 59.8, 0), "J19": (67.3, 60.4, 0)}
+    HOLES = [(3.5, 32.5), (66.5, 32.5), (3.5, 87.0), (66.5, 87.0)]
+    SENSOR_BOARDS = [(58.4, 38.6, 70.0, 52.4), (58.4, 57.0, 70.0, 71.0)]
+    REGIONS = [
+        ((17.6, 8.9, 27.6, 19.6), ["C1"]),
+        ((27.6, 8.9, 41.0, 19.8), ["U2", "L1", "C3", "C2", "C4", "C5", "C6"], 1.0),
+        ((53.2, 10.6, 69.4, 22.2), ["U4", "C8", "C9", "R7", "R8", "R9", "R18", "R19"]),
+        ((25.3, 21.8, 46.6, 29.6), ["Q2", "Q3", "D1", "D2", "R10", "R11", "R12", "R13"], 1.2),
+        ((7.6, 29.4, 62.4, 36.8), ["U12", "C12", "C13", "R1", "R2", "R3", "R4"]),
+        ((28.5, 38.0, 55.6, 62.5), ["BZ1", "Q4", "R14", "R15", "R32", "R33"]),
+        ((0.6, 67.5, 27.5, 82.0), ["SW2", "SW3", "C14", "C15", "R16", "C16", "R17"]),
+        ((28.5, 64.0, 56.0, 91.5), ["U7", "Q5", "C17", "C18", "C19", "C20", "C21", "R20", "R21"]),
+    ]

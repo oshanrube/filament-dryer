@@ -110,6 +110,11 @@ def main() -> None:
     pcb_out.mkdir()
     for f in [ROOT / "pcb" / "schematic.svg", ROOT / "pcb" / "schematic.pdf", ROOT / "pcb" / "easyeda" / "dryer-controller-kicad.zip"] + list((ROOT / "pcb" / "export").glob("*.pdf")) + list((ROOT / "pcb" / "export").glob("*.svg")) + list((ROOT / "pcb" / "jlcpcb").glob("*.csv")):
         shutil.copy2(f, pcb_out / f.name)
+    one = ROOT / "pcb" / "1-roll"
+    if one.exists():
+        (pcb_out / "1-roll").mkdir()
+        for f in [one / "easyeda" / "dryer-controller-1roll-kicad.zip", one / "export" / "dryer-controller-1roll.pdf"] + list((one / "jlcpcb").glob("*.csv")):
+            shutil.copy2(f, pcb_out / "1-roll" / f.name)
     print("wrote docs/pcb/")
 
     overview = (ROOT / "site" / "overview.html").read_text(encoding="utf-8")

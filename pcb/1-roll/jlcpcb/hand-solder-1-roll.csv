@@ -1,0 +1,8 @@
+Comment,Designator,Footprint,LCSC Part #,Qty,MPN,Note
+KXG1205C,BZ1,Buzzer_12x9.5RM7.6,C1122355,1,KXG1205C,"5 V active buzzer, through-hole"
+ATO fuse holder,F1,FuseHolder_Blade_ATO_Littelfuse_FLR_178.6165,C207061,1,178.6165.0002,"ATO blade fuse holder; fit a 15 A ATO fuse (Littelfuse 0287015.PXCN, LCSC C142684), ordered loose"
+XT60PW-M,J1,AMASS_XT60PW-M_1x02_P7.20mm_Horizontal,C98732,1,XT60PW-M,"12 V in at the board edge, through the base wall; the lead from the supply has an XT60-F plug. Pad 1 = -, pad 2 = + (footprint silkscreen)"
+B3B-XH-A(LF)(SN),J6,JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,C144394,1,B3B-XH-A(LF)(SN),
+B2B-XH-A(LF)(SN),"J3,J4,J9",JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical,C158012,3,B2B-XH-A(LF)(SN),
+B4B-XH-A(LF)(SN),"J5,J8,J11,J15",JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,C144395,4,B4B-XH-A(LF)(SN),
+HEATER,TB2,"TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",C474952,1,KF128-5.08-2P-AA,Heater + via KSD301 and thermal fuse (in the harness)

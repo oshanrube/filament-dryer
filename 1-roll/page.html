@@ -98,34 +98,34 @@
 </ul>
 
 <h2 id="electronics">Electronics and pin map</h2>
-<figure><a href="../pcb/schematic.svg"><img src="../pcb/schematic.svg" alt="Wired schematic of the controller board: 12 V in, 5 V buck and 3.3 V regulator, ESP32-C3-WROOM-02 module with USB-C, reset and boot buttons, heater gate driver and MOSFET, fan and buzzer switches, I2C sensors, MCP23017, HX711 scales; the 2-roll-only parts are in dashed boxes." loading="lazy"></a><figcaption>Controller board schematic, every wire drawn (open full size, or the <a href="../pcb/schematic.pdf">PDF</a>). It is the same board as the 2-roll box's: the 1-roll BOM leaves off the parts in the dashed boxes (second scale, feeder drivers) and J12-J14. Blue labels with the same name are the same net.</figcaption></figure>
-<p>Every part is assembled by JLCPCB, so nothing plugs into the board but the harness. A USB-C port (data only: plug in the 12 V feed while flashing) loads the first firmware; updates after that go over Wi-Fi. The load cell's own four leads crimp straight into J11. On this board the BTT runout switch, the button and the buzzer go through the MCP23017.</p>
+<p><strong>The 1-roll box has its own board</strong> (70 × 100 mm, every part assembled by JLCPCB): the shared board without the feeder drivers, the second scale, the lane-sensor connectors and the MCP23017. With those gone the ESP32-C3 has pins to spare, so the BTT runout switch, the button and the buzzer connect to it directly. A USB-C port (data only: plug in the 12 V feed while flashing) loads the first firmware; updates after that go over Wi-Fi. The load cell's own four leads crimp straight into J11.</p>
+<div class="links">
+  <a href="../pcb/1-roll/dryer-controller-1roll.pdf">1-roll board schematic (PDF)</a>
+  <a href="../pcb/1-roll/bom-1-roll.csv">JLCPCB BOM</a>
+  <a href="../pcb/1-roll/bom-1-roll-smt-only.csv">JLCPCB BOM without through-hole parts</a>
+  <a href="../pcb/1-roll/hand-solder-1-roll.csv">Through-hole parts to solder yourself</a>
+  <a href="../pcb/1-roll/dryer-controller-1roll-kicad.zip">KiCad project zip (EasyEDA Pro import)</a>
+</div>
 <div class="table-wrap"><table>
   <thead><tr><th>GPIO</th><th>Use</th><th>Notes</th></tr></thead>
   <tbody>
     <tr><td>0</td><td>HX711 SCK (U7)</td><td></td></tr>
     <tr><td>1</td><td>HX711 DOUT (U7)</td><td></td></tr>
     <tr><td>2</td><td>DS18B20 1-wire</td><td>Strapping pin; the 4.7 kΩ pull-up keeps it high at boot</td></tr>
-    <tr><td>3, 10, 20</td><td>Unused on the 1-roll</td><td>Second scale and feeder STEP lines, not fitted</td></tr>
+    <tr><td>3</td><td>BTT runout switch (J15 pin 3)</td><td>10 kΩ pull-up (R32)</td></tr>
     <tr><td>4</td><td>Heater gate driver input (UCC27517)</td><td>10 kΩ pull-down: heater off while booting</td></tr>
     <tr><td>5</td><td>Blower MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down: off while booting</td></tr>
     <tr><td>6</td><td>Exhaust fan MOSFET gate</td><td>Same as GPIO 5</td></tr>
-    <tr><td>7</td><td>I2C SCL</td><td>Chamber SHT40 (sensor board SB1, 0x44), bay SHT40 (on the board, 0x45), OLED, MCP23017</td></tr>
+    <tr><td>7</td><td>I2C SCL</td><td>Chamber SHT40 (sensor board SB1, 0x44), bay SHT40 (on the board, 0x45), OLED</td></tr>
     <tr><td>8</td><td>I2C SDA</td><td>Strapping pin; the I2C pull-up keeps it high</td></tr>
     <tr><td>9</td><td>BOOT button</td><td>10 kΩ pull-up; not used by the firmware</td></tr>
+    <tr><td>10</td><td>Buzzer MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down</td></tr>
     <tr><td>18, 19</td><td>USB D−, D+</td><td>USB-C for flashing and logs</td></tr>
+    <tr><td>20</td><td>Front-panel button (J9)</td><td>10 kΩ pull-up (R33); UART RX only during boot</td></tr>
     <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here; ESPHome counts the pulses</td></tr>
   </tbody>
 </table></div>
-<div class="table-wrap"><table>
-  <thead><tr><th>MCP23017</th><th>Use</th><th>Notes</th></tr></thead>
-  <tbody>
-    <tr><td>GPA2</td><td>Runout switch of the BTT SFS V2</td><td>Internal pull-up</td></tr>
-    <tr><td>GPA3</td><td>Push button</td><td>Internal pull-up</td></tr>
-    <tr><td>GPA4</td><td>Buzzer (through an AO3400A)</td><td></td></tr>
-    <tr><td>GPA0, GPA1, GPA5, GPA6</td><td>Unused on the 1-roll</td><td>Lane sensors and feeder EN/DIR</td></tr>
-  </tbody>
-</table></div>
+<p>A 1-roll box can also run on the shared 2-roll board with the feeder parts left off; it then uses the 2-roll pin map, with the runout switch, button and buzzer on the MCP23017.</p>
 
 <h2 id="wiring">Wiring</h2>
 <p>The physical harness: every cable from its connector on the controller board to the part, with wire colours and gauges. Use one colour per job throughout (the 6-colour 22 AWG silicone set covers it), so a cable can be traced at a glance. Crimp JST-XH 2.54 mm connectors on every cable that goes to a sensor, fan or motor, so parts can be swapped without soldering.</p>
