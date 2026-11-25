@@ -34,7 +34,7 @@ FIXED = {
     "U13": (67.6, 44.0, 0), "C38": (67.6, 47.6, 90),
     # sensor board SB1 (chamber SHT40) and SB2 (outlet DS18B20), break-off at the right edge
     "U14": (61.6, 66.0, 0), "C37": (61.6, 70.0, 0), "J18": (67.3, 65.2, 0),
-    "U15": (62.4, 87.8, 90), "C39": (62.4, 82.4, 0), "J19": (67.3, 83.0, 0),
+    "U15": (62.4, 89.4, 90), "C39": (62.4, 84.0, 0), "J19": (67.3, 84.6, 0),
 }
 # the ESP32 module: antenna end on the left board edge, placed by code (see below)
 U1_Y = (37.4, 66.0)
@@ -44,22 +44,23 @@ HOLES = [(3.5, 32.5), (66.5, 32.5), (3.5, 130.0), (66.5, 130.0)]
 # ------------------------------------------------------------------ packing regions
 # (x0, y0, x1, y1), parts packed in order, biggest first
 REGIONS = [
-    ((17.6, 8.9, 27.8, 17.4), ["C1"]),
-    ((27.8, 9.2, 41.0, 18.6), ["U2", "L1", "C3", "C2", "C4", "C5", "C6"]),
-    ((53.0, 10.4, 70.0, 22.0), ["U4", "C8", "C9", "R7", "R8", "R9", "R18", "R19"]),
-    ((25.5, 22.2, 46.6, 29.6), ["Q2", "Q3", "D1", "D2", "R10", "R11", "R12", "R13"]),
-    ((7.6, 29.3, 62.6, 36.9), ["U12", "C12", "C13", "R1", "R2", "R3", "R4"]),
-    ((0.0, 66.0, 27.0, 76.5), ["SW2", "SW3", "C14", "C15", "R16", "C16", "R17"]),
-    ((28.0, 37.0, 56.5, 62.0), ["U3", "C7", "R5", "R6"]),
-    ((0.0, 77.0, 56.0, 99.0), ["BZ1", "Q4", "R14", "R15"]),
-    ((0.0, 100.0, 17.0, 126.0), ["U7", "Q5", "C17", "C18", "C19", "C20", "C21", "R20", "R21"]),
-    ((17.0, 100.0, 34.0, 133.8), ["U8", "Q6", "C22", "C23", "C24", "C25", "C26", "R22", "R23"]),
-    ((34.5, 96.0, 52.2, 133.8), ["C10", "U10", "C27", "C28", "C29", "C30", "C31", "R24", "R25", "R26", "R27"]),
-    ((52.4, 96.0, 70.0, 125.8), ["C11", "U11", "C32", "C33", "C34", "C35", "C36", "R28", "R29", "R30", "R31"]),
+    ((17.6, 8.9, 27.6, 19.6), ["C1"]),
+    ((27.6, 8.9, 41.0, 19.8), ["U2", "L1", "C3", "C2", "C4", "C5", "C6"], 1.0),   # buck: keep its loops short
+    ((53.2, 10.6, 69.4, 22.2), ["U4", "C8", "C9", "R7", "R8", "R9", "R18", "R19"]),
+    ((25.3, 21.8, 46.6, 29.6), ["Q2", "Q3", "D1", "D2", "R10", "R11", "R12", "R13"], 1.2),
+    ((7.6, 29.4, 62.4, 36.8), ["U12", "C12", "C13", "R1", "R2", "R3", "R4"]),
+    ((28.5, 38.0, 56.5, 62.5), ["U3", "C7", "R5", "R6"]),
+    ((0.6, 67.5, 27.5, 79.5), ["SW2", "SW3", "C14", "C15", "R16", "C16", "R17"]),
+    ((30.0, 64.0, 56.0, 95.5), ["BZ1", "Q4", "R14", "R15"]),
+    ((0.6, 81.0, 16.6, 126.4), ["U7", "Q5", "C17", "C18", "C19", "C20", "C21", "R20", "R21"]),
+    ((17.4, 81.0, 33.4, 133.6), ["U8", "Q6", "C22", "C23", "C24", "C25", "C26", "R22", "R23"]),
+    ((34.4, 97.0, 52.0, 133.6), ["U10", "C10", "C27", "C28", "C29", "C30", "C31", "R24", "R25", "R26", "R27"]),
+    ((52.6, 99.0, 69.4, 126.4), ["U11", "C11", "C32", "C33", "C34", "C35", "C36", "R28", "R29", "R30", "R31"]),
 ]
+GAP = 1.6         # minimum space between courtyards inside a region; leftover room is spread evenly
 
 # sensor boards: (x0, y0, x1, y1) of each break-off board, flush with the right edge
-SENSOR_BOARDS = [(58.4, 62.2, 70.0, 76.0), (58.4, 79.2, 70.0, 93.6)]
+SENSOR_BOARDS = [(58.4, 62.2, 70.0, 76.0), (58.4, 80.8, 70.0, 95.2)]
 SLOT = 1.6        # routed slot width around the sensor boards
 BRIDGE = 2.4      # solid bridge left in the slot, with mouse-bite holes
 
@@ -111,30 +112,9 @@ def layout(board):
     blocked = [(hx - 3.6, hy - 3.6, hx + 3.6, hy + 3.6) for hx, hy in HOLES]
     blocked += [(x0 - SLOT - 0.3, y0 - SLOT - 0.3, W, y1 + SLOT + 0.3) for x0, y0, x1, y1 in SENSOR_BOARDS]
 
-    for (x0, y0, x1, y1), refs in REGIONS:
-        for ref in refs:
-            fp = fps[ref]
-            placed = False
-            for rot in (0, 90):
-                put(fp, 0, 0, rot)
-                c = court(fp)
-                w, h = c[2] - c[0], c[3] - c[1]
-                yy = y0
-                while yy + h <= y1 + 1e-6 and not placed:
-                    xx = x0
-                    while xx + w <= x1 + 1e-6:
-                        cand = (xx, yy, xx + w, yy + h)
-                        if all(not overlap(cand, t, MARGIN) for _, t in taken) and all(not overlap(cand, b) for b in blocked):
-                            fp.Move(pcbnew.VECTOR2I(mm(xx - c[0]), mm(yy - c[1])))
-                            taken.append((ref, court(fp)))
-                            placed = True
-                            break
-                        xx += 0.25
-                    yy += 0.25
-                if placed:
-                    break
-            if not placed:
-                raise SystemExit(f"place_pcb: no room for {ref} in region {(x0, y0, x1, y1)}")
+    for region, refs, *gap in REGIONS:
+        for ref, c in pack(fps, region, refs, blocked, taken, gap[0] if gap else GAP):
+            taken.append((ref, c))
 
     missing = [r for r in fps if r not in {t[0] for t in taken}]
     if missing:
@@ -146,6 +126,50 @@ def layout(board):
     settings(board)
     power_tracks(board, fps)
     return taken
+
+
+def pack(fps, region, refs, blocked, taken, GAP=GAP):
+    """Shelf-pack the parts in rows (biggest first), then spread the rows over the region's height
+    and the parts over each row's width, so the leftover room becomes routing channels."""
+    x0, y0, x1, y1 = region
+    items = []
+    for ref in refs:
+        fp = fps[ref]
+        put(fp, 0, 0, 0)
+        c = court(fp)
+        if c[2] - c[0] > x1 - x0:                     # too wide lying down: stand it up
+            put(fp, 0, 0, 90)
+            c = court(fp)
+        items.append((ref, fp, c[2] - c[0], c[3] - c[1]))
+    rows, row, rx = [], [], 0.0
+    for it in items:
+        if row and rx + it[2] > x1 - x0:
+            rows.append(row); row, rx = [], 0.0
+        row.append(it); rx += it[2] + GAP
+    if row:
+        rows.append(row)
+    heights = [max(it[3] for it in r) for r in rows]
+    spare_y = (y1 - y0) - sum(heights) - GAP * (len(rows) - 1)
+    if spare_y < 0:
+        raise SystemExit(f"place_pcb: region {region} too small for {refs}")
+    out, y = [], y0 + spare_y / (2 * len(rows))
+    for r, h in zip(rows, heights):
+        spare_x = (x1 - x0) - sum(it[2] for it in r) - GAP * (len(r) - 1)
+        x = x0 + spare_x / (2 * len(r))
+        for ref, fp, w, hh in r:
+            c = court(fp)
+            fp.Move(pcbnew.VECTOR2I(mm(x - c[0]), mm(y + (h - hh) / 2 - c[1])))
+            nc = court(fp)
+            for other, oc in taken + out:
+                if overlap(nc, oc, 0.2):
+                    raise SystemExit(f"place_pcb: {ref} hits {other}")
+            for b in blocked:
+                if overlap(nc, b):
+                    raise SystemExit(f"place_pcb: {ref} hits a hole or slot")
+            out.append((ref, nc))
+            x += w + GAP + spare_x / len(r)
+        y += h + GAP + spare_y / len(rows)
+    return out
 
 
 # ------------------------------------------------------------------ outline, holes, break-off boards
@@ -186,7 +210,7 @@ def holes(board):
 _MB = [0]
 
 
-def mouse_bites(board, x, y, horizontal, n=3, pitch=0.65, d=0.5):
+def mouse_bites(board, x, y, horizontal, n=3, pitch=0.8, d=0.5):
     """A row of small NPTH holes across a bridge, so the sensor board snaps off cleanly.
     One footprint per bridge, numbered MB1, MB2, ... (EasyEDA refuses duplicate designators)."""
     _MB[0] += 1
@@ -234,7 +258,8 @@ def settings(board):
     ds.m_TrackMinWidth = mm(0.15)
     ds.m_MinClearance = mm(0.15)
     ds.m_ViasMinSize = mm(0.45)
-    ds.m_MinThroughDrill = mm(0.25)
+    ds.m_MinThroughDrill = mm(0.3)
+    ds.m_HoleToHoleMin = mm(0.25)
     ds.m_CopperEdgeClearance = mm(0.3)
 
 

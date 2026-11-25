@@ -212,7 +212,7 @@ part("SW3", "Switch:SW_Push", "BOOT", "Button_Switch_SMD:SW_Push_1P1T_XKB_TS-118
 
 # --- 2b. USB (data only) and 3.3 V
 part("J2", "Connector:USB_C_Receptacle_USB2.0_16P", "USB-C", "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12", "C165948", (294.64, 271.78),
-     {"A1": "GND", "A12": "GND", "B1": "GND", "B12": "GND", "A4": None, "A9": None, "B4": None, "B9": None,
+     {"A1": "GND", "A12": "GND", "B1": "GND", "B12": "GND", "A4": "USB_VBUS", "A9": "USB_VBUS", "B4": "USB_VBUS", "B9": "USB_VBUS",
       "A5": "CC1", "B5": "CC2", "A6": "USB_DP", "B6": "USB_DP", "A7": "USB_DN", "B7": "USB_DN", "A8": None, "B8": None, "S1": "GND"},
      mpn="TYPE-C-31-M-12", note="Programming and logs (USB serial/JTAG). Data only: VBUS is not connected, so plug in 12 V while flashing")
 R("R18", "5.1k", "C23186", (330.2, 279.4), "CC1", "GND")
@@ -549,6 +549,11 @@ def write_pcb():
             for k, v in (("LCSC", p["lcsc"]), ("Supplier Part", p["lcsc"]), ("MPN", p["mpn"])):
                 fp.SetProperty(k, v)
         for pad in fp.Pads():
+            # JLCPCB's standard minimum drill is 0.3 mm: open up the 0.2 mm thermal vias in U1, U10, U11
+            if pad.GetAttribute() == pcbnew.PAD_ATTRIB_PTH and pad.GetDrillSize().x < pcbnew.FromMM(0.3):
+                pad.SetDrillSize(pcbnew.VECTOR2I(pcbnew.FromMM(0.3), pcbnew.FromMM(0.3)))
+                if pad.GetSize().x < pcbnew.FromMM(0.6):
+                    pad.SetSize(pcbnew.VECTOR2I(pcbnew.FromMM(0.6), pcbnew.FromMM(0.6)))
             net = pin_net.get((p["ref"], pad.GetNumber()))
             if net:
                 pad.SetNet(nets[net])
