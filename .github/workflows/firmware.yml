@@ -1,0 +1,109 @@
+name: firmware
+
+# Same scheme as the gate controller: tags only (plus manual runs). Every build that leaves here
+# is a release build stamped with its tag, so a binary's VERSION is never a guess.
+# Tag with fw-v<version>, e.g. fw-v0.1.0.
+on:
+  push:
+    tags: ['fw-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed by the release step
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The tag is the single source of truth for the version; this overwrites the fallback in
+      # the checkout only. A silent no-op would ship firmware reporting the wrong version, so the
+      # line count is checked.
+      - name: Stamp the version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="${GITHUB_REF_NAME#fw-v}"
+          file=src/main.cpp
+          found=$(grep -c '^#define VERSION ' "$file" || true)
+          if [ "$found" -ne 1 ]; then
+            echo "::error file=firmware/$file::expected exactly one '#define VERSION' line, found $found"
+            exit 1
+          fi
+          sed -i -E "s|^#define VERSION .*|#define VERSION \"$version\"|" "$file"
+          echo "stamped $(grep -n '^#define VERSION ' "$file")"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('firmware/platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}-
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      # The control logic (modes, PID, safety cut-outs, scale maths) is tested on the runner
+      # before anything is built for the board.
+      - name: Test the control logic
+        run: pio test -e native
+
+      - name: Build
+        run: pio run -e dryer-1roll
+
+      # dryer-1roll.bin is the app only: what /update takes over Wi-Fi. dryer-1roll-full.bin adds
+      # the bootloader, partition table and boot_app0, and flashes a blank board at 0x0.
+      - name: Make the images
+        run: |
+          build=.pio/build/dryer-1roll
+          pkgs=~/.platformio/packages
+          cp "$build/firmware.bin" dryer-1roll.bin
+          python "$pkgs/tool-esptoolpy/esptool.py" --chip esp32c3 merge_bin \
+            -o dryer-1roll-full.bin \
+            --flash_mode keep --flash_freq keep --flash_size 4MB \
+            0x0     "$build/bootloader.bin" \
+            0x8000  "$build/partitions.bin" \
+            0xe000  "$pkgs/framework-arduinoespressif32/tools/partitions/boot_app0.bin" \
+            0x10000 "$build/firmware.bin"
+
+      - name: Report flash headroom
+        run: |
+          size=$(stat -c%s dryer-1roll.bin)
+          limit=1310720           # app0 in default.csv
+          pct=$(( size * 100 / limit ))
+          echo "firmware: ${size} bytes, ${pct}% of the ${limit} byte app partition"
+          if [ "$pct" -ge 90 ]; then
+            echo "::warning::Firmware is at ${pct}% of the app partition."
+          fi
+
+      # Manual runs only: a tag's release already carries the images. The .elf is for
+      # esp32_exception_decoder and must come from the same build as the running firmware.
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: dryer-firmware
+          path: |
+            firmware/dryer-1roll.bin
+            firmware/dryer-1roll-full.bin
+            firmware/.pio/build/dryer-1roll/firmware.elf
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Attach the images to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dryer-1roll.bin dryer-1roll-full.bin \
+              --generate-notes \
+            || gh release upload "$GITHUB_REF_NAME" dryer-1roll.bin dryer-1roll-full.bin --clobber

@@ -291,7 +291,7 @@ def schematic():
         "4. 2n2222a fan switches: 500 Ω base (two 1 k in parallel) gives about 5 ma base current, enough for fans up to about 0.2 a.",
         "5. the ksd301 85 °c thermostat and 92 °c thermal fuse stay in series with the heater, in the harness, as in the main design.",
         "6. pin map = 1-roll pcb: gpio0/1 hx711, 2 ds18b20, 3 runout, 4 heater, 5/6 fans, 7/8 i2c, 10 buzzer, 20 button, 21 motion.",
-        "7. chamber sensor here is an aht20 (0x38) instead of the pcb's sht40: use esphome's aht10 component with variant aht20.",
+        "7. chamber sensor here is an aht20 (0x38) instead of the pcb's sht40: the firmware (firmware/, build dryer-1roll) detects which one is fitted.",
     ]
     d.o.append(f'<path class="dsh" d="M40 1500 H1120"/>')
     d.text(40, 1530, "notes", "t")

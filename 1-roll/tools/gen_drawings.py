@@ -66,7 +66,7 @@ def architecture():
     box(388, 168, 160, "Reel", "on rollers, 608ZZ", main=True)
     box(212, 304, 160, "MOSFET switches", "heater and fans")
     box(388, 304, 160, "Load cell", "HX711, 5 kg")
-    box(212, 376, 336, "ESP32-C3 controller board, ESPHome", "PID, safety cut-outs, weight, filament motion")
+    box(212, 376, 336, "ESP32-C3 controller board, dryer firmware", "PID, safety cut-outs, weight, filament motion")
     box(24, 304, 140, "12 V supply", "shared server PSU")
     box(596, 96, 140, "Motion sensor", "BTT V2, at the exit")
     box(596, 168, 140, "Printer", "one PTFE tube in")

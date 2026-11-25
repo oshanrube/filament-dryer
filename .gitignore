@@ -3,3 +3,10 @@ __pycache__/
 *-backups/
 *.kicad_prl
 fp-info-cache
+
+# PlatformIO
+firmware/.pio/
+firmware/.vscode/
+# Compiled firmware: built by CI and attached to releases
+*.bin
+*.elf

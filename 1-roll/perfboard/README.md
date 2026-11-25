@@ -1,6 +1,6 @@
 # 1-roll controller on perfboard (parts from Tronic.lk)
 
-A hand-built version of the 1-roll controller from modules and through-hole parts in stock at [Tronic.lk](https://tronic.lk), for a first box while the PCB is routed and ordered. **Same pin map as the 1-roll PCB**, so one ESPHome config runs on both (apart from the chamber sensor, see below).
+A hand-built version of the 1-roll controller from modules and through-hole parts in stock at [Tronic.lk](https://tronic.lk), for a first box while the PCB is routed and ordered. **Same pin map as the 1-roll PCB**, so the same firmware image runs on both (`firmware/`, build `dryer-1roll`; it detects which chamber sensor is fitted).
 
 - `schematic.svg`: every wire, module level
 - `layout.svg`: where everything sits on a 120 × 80 mm FR4 dot board, plus the wire list
@@ -53,7 +53,7 @@ About **Rs. 3,600 per box** for the controller (board, modules, sensors, passive
 | Fan and buzzer switches | AO3400A | 2N2222A with 500 Ω / 1 kΩ base resistors |
 | 5 V | AP63205 on the board | MP1584 module, set to 5.0 V before connecting |
 | 3.3 V | AMS1117 | The SuperMini's own regulator |
-| Chamber sensor | SHT40 (0x44) on sensor board SB1 | AHT20 probe (0x38): ESPHome `aht10` component with `variant: AHT20` |
+| Chamber sensor | SHT40 (0x44) on sensor board SB1 | AHT20 probe (0x38): the firmware finds it on its own |
 | Bay sensor | SHT40-BD1B | Left out |
 | Connectors | JST XH | 5.08 mm screw terminals, female headers for I2C |
 

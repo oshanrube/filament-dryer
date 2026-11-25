@@ -1,6 +1,6 @@
 <header>
   <h1>Two-Reel Filament Dryer</h1>
-  <p class="lead">One top-loading, two-reel dryer box per printer, printed in ABS/ASA. Both reels drop onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. When the printer reports a filament runout, the box feeds the second reel in and the print resumes on its own. A JLCPCB-assembled controller board with an ESP32-C3 running ESPHome weighs both reels and reports to the Printer Control Center over Wi-Fi.</p>
+  <p class="lead">One top-loading, two-reel dryer box per printer, printed in ABS/ASA. Both reels drop onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. When the printer reports a filament runout, the box feeds the second reel in and the print resumes on its own. A JLCPCB-assembled controller board with an ESP32-C3 running the dryer firmware weighs both reels and reports to the Printer Control Center over Wi-Fi.</p>
   <p class="meta">Plan as of 2026-11-23 · parts about US${{BOM_PER_BOX}} per box plus about 1.5 kg of ABS/ASA; the shared 12 V supply's wiring adds about US${{BOM_SHARED}} once.</p>
   <div class="links">
     <a href="https://github.com/oshanrube/filament-dryer">Repository</a>
@@ -201,7 +201,7 @@
     <tr><td>9</td><td>BOOT button</td><td>10 kΩ pull-up; not used by the firmware</td></tr>
     <tr><td>10</td><td>Feeder A STEP</td><td></td></tr>
     <tr><td>20</td><td>Feeder B STEP</td><td>UART RX only during boot</td></tr>
-    <tr><td>21</td><td>Filament motion (BTT SFS V2)</td><td>Through 1 kΩ, because the boot log comes out here; ESPHome counts the pulses</td></tr>
+    <tr><td>21</td><td>Filament motion (BTT SFS V2)</td><td>Through 1 kΩ, because the boot log comes out here; the firmware counts the pulses</td></tr>
     <tr><td>18, 19</td><td>USB D−, D+</td><td>USB-C for flashing and logs (the C3's built-in USB serial)</td></tr>
   </tbody>
 </table></div>
@@ -228,7 +228,7 @@
 {{BOM_TABLES}}
 
 <h2 id="integration">Firmware and control center</h2>
-<p>The box runs ESPHome (<code>firmware/dryer.yaml</code> in this repo). The Printer Control Center keeps one live connection per dryer, links it to the printer it feeds and shows both reels on that printer's card. The safety rules run on the ESP32 itself, so the box stays safe if Wi-Fi or the Pi is down.</p>
+<p>The box runs its own firmware (<code>firmware/</code> in this repo: PlatformIO and Arduino, released like the gate controller). The 1-roll build exists; the feeder and second-scale parts for this box are still to be added. The Printer Control Center keeps one live connection per dryer, links it to the printer it feeds and shows both reels on that printer's card. The safety rules run on the ESP32 itself, so the box stays safe if Wi-Fi or the Pi is down.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Rule</th><th>When</th><th>Alert</th></tr></thead>
   <tbody>
@@ -247,7 +247,7 @@
 <h2 id="build">Build plan</h2>
 <ol>
   <li><strong>Order parts</strong> (2-4 weeks shipping). Meanwhile measure a real eSUN reel and finish the CAD.</li>
-  <li><strong>Bench electronics:</strong> the assembled board with both load cells and the SHT40 on ESPHome. Calibrate both cradles; leave 1 kg on each overnight to measure drift.</li>
+  <li><strong>Bench electronics:</strong> the assembled board with both load cells and the SHT40, running the firmware. Calibrate both cradles; leave 1 kg on each overnight to measure drift.</li>
   <li><strong>Heater test in the open:</strong> confirm the PID holds, the firmware cut-outs trip, and the KSD301 opens at about 85 °C.</li>
   <li><strong>Feeder bench test:</strong> both feeders, the Y-merger and a tube into an idle printer's extruder; check B follows A end to end.</li>
   <li><strong>Print and assemble</strong> the housing; fit insulation, gasket, feeder pod and wiring.</li>

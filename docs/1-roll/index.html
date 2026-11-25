@@ -79,7 +79,7 @@
 <nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html">2-roll feeder</a><a href="../1-roll/index.html" aria-current="page">1 roll</a></nav>
 <header>
   <h1>Single-Reel Filament Dryer</h1>
-  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and a JLCPCB-assembled controller board with an ESP32-C3 running ESPHome weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
+  <p class="lead">One top-loading, single-reel dryer box per printer, printed in ABS/ASA. The reel drops onto bearing rollers and a 12 V 150 W PTC heater holds 40-70 °C. A BIGTREETECH motion sensor at the exit checks the extruder is really pulling filament, and a JLCPCB-assembled controller board with an ESP32-C3 running the dryer firmware weighs the reel and reports to the Printer Control Center over Wi-Fi.</p>
   <p class="meta">Plan as of 2026-11-23 · parts about US$174 per box plus about 1 kg of ABS/ASA; the shared 12 V supply's wiring adds about US$30 once.</p>
   <div class="links">
     <a href="../pcb/schematic.pdf">Board schematic (PDF)</a>
@@ -201,7 +201,7 @@
     <tr><td>10</td><td>Buzzer MOSFET gate</td><td>100 Ω series + 10 kΩ pull-down</td></tr>
     <tr><td>18, 19</td><td>USB D−, D+</td><td>USB-C for flashing and logs</td></tr>
     <tr><td>20</td><td>Front-panel button (J9)</td><td>10 kΩ pull-up (R33); UART RX only during boot</td></tr>
-    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here; ESPHome counts the pulses</td></tr>
+    <tr><td>21</td><td>BTT motion output</td><td>Through 1 kΩ, because the boot log comes out here; the firmware counts the pulses</td></tr>
   </tbody>
 </table></div>
 <p>A 1-roll box can also run on the shared 2-roll board with the feeder parts left off; it then uses the 2-roll pin map, with the runout switch, button and buzzer on the MCP23017.</p>
@@ -284,7 +284,7 @@
 </tbody></table></div>
 
 <h2 id="integration">Firmware and control center</h2>
-<p>ESPHome on the box; the Printer Control Center links the box to its printer and shows the reel on that printer's card. The safety rules run on the ESP32 itself.</p>
+<p>The box runs its own firmware (<a href="https://github.com/oshanrube/filament-dryer/tree/main/firmware">firmware/</a> in this repo: PlatformIO and Arduino, built and released like the gate controller). It serves a status page, a REST API and a WebSocket feed; the Printer Control Center keeps one live connection per dryer, links the box to its printer and shows the reel on that printer's card. The safety rules run on the ESP32 itself, so the box stays safe if Wi-Fi or the Pi is down. Flash <code>dryer-1roll-full.bin</code> at 0x0 the first time, then update over Wi-Fi.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Rule</th><th>When</th><th>Alert</th></tr></thead>
   <tbody>
@@ -301,7 +301,7 @@
 <h2 id="build">Build plan</h2>
 <ol>
   <li><strong>Order parts</strong>; meanwhile measure a real eSUN reel and finish the CAD.</li>
-  <li><strong>Bench electronics:</strong> the assembled board with the load cell, SHT40 and BTT sensor on ESPHome; calibrate and check overnight drift.</li>
+  <li><strong>Bench electronics:</strong> the assembled board with the load cell, SHT40 and BTT sensor, running the firmware (follow its bench checks before connecting the heater); calibrate and check overnight drift.</li>
   <li><strong>Heater test in the open:</strong> PID holds, firmware cut-outs trip, the KSD301 opens at about 85 °C.</li>
   <li><strong>Print and assemble;</strong> then a 12 h soak at 70 °C.</li>
   <li><strong>Control center integration</strong> and a watched test print.</li>
