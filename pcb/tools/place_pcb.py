@@ -183,23 +183,33 @@ def holes(board):
         board.Add(fp)
 
 
+_MB = [0]
+
+
 def mouse_bites(board, x, y, horizontal, n=3, pitch=0.65, d=0.5):
-    """A row of small NPTH holes across a bridge, so the sensor board snaps off cleanly."""
+    """A row of small NPTH holes across a bridge, so the sensor board snaps off cleanly.
+    One footprint per bridge, numbered MB1, MB2, ... (EasyEDA refuses duplicate designators)."""
+    _MB[0] += 1
+    fp = pcbnew.FOOTPRINT(board)
+    fp.SetReference(f"MB{_MB[0]}")
+    fp.SetValue("mouse bites")
+    fp.SetAttributes(pcbnew.FP_BOARD_ONLY | pcbnew.FP_EXCLUDE_FROM_BOM | pcbnew.FP_EXCLUDE_FROM_POS_FILES)
+    fp.Reference().SetVisible(False); fp.Value().SetVisible(False)
+    fp.SetPosition(vec(x, y))
     for i in range(n):
         off = (i - (n - 1) / 2) * pitch
-        fp = pcbnew.FOOTPRINT(board)
-        fp.SetReference("MB")
-        fp.SetAttributes(pcbnew.FP_BOARD_ONLY | pcbnew.FP_EXCLUDE_FROM_BOM | pcbnew.FP_EXCLUDE_FROM_POS_FILES)
-        fp.Reference().SetVisible(False); fp.Value().SetVisible(False)
+        dx, dy = (off, 0) if horizontal else (0, off)
         pad = pcbnew.PAD(fp)
+        pad.SetNumber("")
         pad.SetAttribute(pcbnew.PAD_ATTRIB_NPTH)
         pad.SetShape(pcbnew.PAD_SHAPE_CIRCLE)
         pad.SetSize(pcbnew.VECTOR2I(mm(d), mm(d)))
         pad.SetDrillSize(pcbnew.VECTOR2I(mm(d), mm(d)))
         pad.SetLayerSet(pcbnew.PAD.UnplatedHoleMask())
+        pad.SetPos0(pcbnew.VECTOR2I(mm(dx), mm(dy)))
+        pad.SetPosition(vec(x + dx, y + dy))
         fp.Add(pad)
-        fp.SetPosition(vec(x + (off if horizontal else 0), y + (0 if horizontal else off)))
-        board.Add(fp)
+    board.Add(fp)
 
 
 def sensor_board_cuts(board):
