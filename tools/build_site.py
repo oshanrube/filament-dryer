@@ -104,6 +104,10 @@ def main() -> None:
         for name in ("bom.csv", "wiring.svg"):
             shutil.copy2(src / name, out / name)
         shutil.copytree(src / "images", out / "images")
+        if (src / "perfboard").exists():
+            (out / "perfboard").mkdir()
+            for f in (src / "perfboard").glob("*.svg"):
+                shutil.copy2(f, out / "perfboard" / f.name)
         print(f"wrote docs/{folder}/ (per box ≈ US${per_box:.0f}, shared ≈ US${shared:.0f})")
 
     pcb_out = DOCS / "pcb"

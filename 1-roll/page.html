@@ -127,6 +127,11 @@
 </table></div>
 <p>A 1-roll box can also run on the shared 2-roll board with the feeder parts left off; it then uses the 2-roll pin map, with the runout switch, button and buzzer on the MCP23017.</p>
 
+<h3 id="perfboard">Perfboard version (parts from Tronic.lk)</h3>
+<p>For a first box before the PCB arrives: the same circuit from modules and through-hole parts in stock at Tronic.lk, on a 120 × 80 mm FR4 dot board, with the same pin map as the PCB. The heater switch is a PC817 driving an IRF3205 from 12 V, the fans and buzzer use 2N2222A transistors, and the chamber sensor is an AHT20 probe. Controller parts come to about Rs. 3,600 per box. Full parts list with Tronic links, and build notes: <a href="https://github.com/oshanrube/filament-dryer/tree/main/1-roll/perfboard">1-roll/perfboard</a>.</p>
+<figure><a href="perfboard/schematic.svg"><img src="perfboard/schematic.svg" alt="Perfboard schematic: SuperMini, MP1584 buck, HX711, PC817 and IRF3205 heater switch, 2N2222A fan and buzzer switches, sensors and screw terminals." loading="lazy"></a><figcaption>Perfboard schematic (open full size).</figcaption></figure>
+<figure><a href="perfboard/layout.svg"><img src="perfboard/layout.svg" alt="Perfboard layout: where each module sits on a 120 x 80 mm dot board, terminals on the two short ends, and the wire list." loading="lazy"></a><figcaption>Board layout and wire list (open full size).</figcaption></figure>
+
 <h2 id="wiring">Wiring</h2>
 <p>The physical harness: every cable from its connector on the controller board to the part, with wire colours and gauges. Use one colour per job throughout (the 6-colour 22 AWG silicone set covers it), so a cable can be traced at a glance. Crimp JST-XH 2.54 mm connectors on every cable that goes to a sensor, fan or motor, so parts can be swapped without soldering.</p>
 <figure><a href="wiring.svg"><img src="wiring.svg" alt="Wiring diagram: the controller board in the electronics bay with each cable running to the chamber, front panel, scales and motion sensor." loading="lazy"></a><figcaption>Wiring diagram (open full size).</figcaption></figure>
