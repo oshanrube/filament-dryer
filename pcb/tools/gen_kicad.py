@@ -340,10 +340,12 @@ for k, (u, step, j, cb, m, y, rr, cc) in enumerate((
              {"1": net, "2": "GND"}, "2roll", mpn="1206W4F110LT5E", note="Sense resistor: sets the current range")
     CONN(j, [f"{m}_1A", f"{m}_1B", f"{m}_2A", f"{m}_2B"], (556.26, y), "2roll", value=f"MOTOR_{'AB'[k]}")
 
-# --- power nets: one power symbol + PWR_FLAG per rail, tied to the same-named labels
+# --- power nets: one power symbol per rail, tied to the same-named labels.
+# No PWR_FLAG symbols: EasyEDA treats every power symbol as a global net named by its value,
+# so several "PWR_FLAG"s would short their rails together on import.
 POWER = [("+12V", "power:+12V", (30.48, 330.2)), ("+5V", "power:+5V", (55.88, 330.2)),
          ("+3V3", "power:+3V3", (81.28, 330.2)), ("GND", "power:GND", (106.68, 340.36))]
-FLAGS = ["+12V", "+5V", "GND"]
+FLAGS = []
 
 BLOCKS = [("1  12 V in (XT60, fuse), 5 V buck", 22, 30), ("2  Controller (ESP32-C3-WROOM-02)", 170, 30), ("3  I/O expander", 262, 30),
           ("4  Heater switch, 12 V gate drive", 22, 130), ("5  Fans and buzzer (low-side)", 170, 130),
@@ -359,7 +361,7 @@ ROOT_UUID = uid()
 
 def write_schematic():
     root_uuid = ROOT_UUID
-    used = sorted({p["lib_id"] for p in PARTS} | {lib for _, lib, _ in POWER} | {"power:PWR_FLAG"})
+    used = sorted({p["lib_id"] for p in PARTS} | {lib for _, lib, _ in POWER} | ({"power:PWR_FLAG"} if FLAGS else set()))
     lib_syms = {lid: lib_symbol(lid) for lid in used}
     body = []
 
