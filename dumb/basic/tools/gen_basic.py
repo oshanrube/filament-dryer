@@ -89,7 +89,7 @@ def wiring(esp01=False):
         d.term(440, 230, "3V3"); d.term(440, 255, "GND")
         d.term(620, 230, "GPIO3 (RX) fan", "end")
     else:
-        d.box(420, 170, 220, 260, "Wemos D1 Mini", "ESP8266, Wi-Fi switched off", "mod")
+        d.box(420, 170, 220, 260, "Wemos D1 Mini", "ESP8266, reports over Wi-Fi", "mod")
         d.term(440, 230, "5V"); d.term(440, 255, "G")
         d.term(620, 230, "D6 (GPIO12) fan", "end")
     d.wire([(385, 230), (440, 230)], ORANGE, 2)

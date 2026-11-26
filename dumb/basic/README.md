@@ -9,7 +9,7 @@ A small controller for the dumb box in place of the STC-3028 + W1209: one temper
   - With no good reading for 10 s, the heater stays off.
   - At power-up the heater stays off until there's a reading.
   - The KSD301 and thermal fuse cut the heater in hardware if all of that fails.
-- **No Wi-Fi** (switched off in firmware), no display, no buttons. The D1 Mini's on-board LED shows the state:
+- **Wi-Fi reporting on the D1 Mini** for the Printer Control Center (below). No display, no buttons. The on-board LED shows the state:
 
   | LED | State |
   |---|---|
@@ -25,6 +25,39 @@ Files:
 - `firmware/`: PlatformIO project.
   - `src/main.cpp`: pins, probe drivers, LED and log.
   - `lib/BasicControl/`: the decisions, tested on a PC with `pio test -e native`.
+
+## Wi-Fi and the Printer Control Center (D1 Mini)
+
+The D1 Mini reports over Wi-Fi with **the same API as the smart dryer** (`firmware/README.md`), so one control-center integration reads both. `"model":"basic"` tells them apart. **The control stays on the board:** the heater and fan decisions don't depend on Wi-Fi, the Pi or the API, and a lost network changes nothing.
+
+**First boot:**
+1. With no saved network, it opens a hotspot `FilamentDryer-XXXX`.
+2. Join it from your phone. The setup page opens; pick RubeHomeAP (or RubeHomeIOT) and enter the password.
+3. It joins the network as `filament-dryer-xxxx` (the last 4 hex digits of its MAC).
+
+If the saved network can't be reached at power-up, the hotspot opens for 3 min, then it goes back to trying the saved network.
+
+**What it serves:**
+- **`http://filament-dryer-xxxx.local/`**: a small status page with temperature, humidity, state, and Auto/Off buttons.
+- **`GET /api/state`**:
+
+  ```json
+  {"version":"0.1.0","name":"filament-dryer-ab12","model":"basic","mode":"auto","drying":true,
+   "setpoint_c":65,"stop_rh":15,"start_rh":17,"fault":"none",
+   "chamber":{"ok":true,"c":58.4,"rh":19.2,"sensor":"am2301"},
+   "heater":{"duty":1.00,"on":true},"blower":true,"uptime_s":3600,"wifi_rssi":-61}
+  ```
+
+  `fault` is `none`, `chamber_sensor` (no good reading for 10 s) or `chamber_over_temp` (70 °C lockout).
+- **`POST /api/mode`** with `{"mode":"auto"}` or `{"mode":"off"}`. Off stops the heater and fan; it's kept across power cuts.
+- **WebSocket on port 81**: the state on connect and every second, and it takes `{"cmd":"mode","mode":"off"}`.
+- **mDNS:** `_filament-dryer._tcp` on 81 (TXT `model=basic`), the same service as the smart dryer, for discovery.
+- **Firmware update over Wi-Fi:** `http://filament-dryer-xxxx.local/update`; upload `basic-dryer-d1mini.bin`.
+- **`POST /api/wifi/reset`** forgets the network and reopens the hotspot.
+
+No login, like the smart dryer: keep it on the home network.
+
+**Control-center support for dryers isn't built yet**, for either model. The API is ready for it.
 
 ## Probe: not a DHT11
 
