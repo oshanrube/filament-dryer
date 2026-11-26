@@ -1,4 +1,4 @@
-# Basic dryer controller (Wemos D1 Mini)
+# Basic dryer controller (Wemos D1 Mini or ESP-01S)
 
 A small controller for the dumb box in place of the STC-3028 + W1209: one temperature + humidity probe, a fan and the heater.
 
@@ -21,7 +21,7 @@ A small controller for the dumb box in place of the STC-3028 + W1209: one temper
   The USB serial port (115200 baud) logs the temperature, humidity, heater % and fan every 10 s.
 
 Files:
-- `wiring.svg`: the circuit, drawn by `tools/gen_basic.py` (`python3 dumb/basic/tools/gen_basic.py` from the repo root).
+- `wiring.svg` (D1 Mini) and `wiring-esp01.svg` (ESP-01S): the circuits, drawn by `tools/gen_basic.py` (`python3 dumb/basic/tools/gen_basic.py` from the repo root).
 - `firmware/`: PlatformIO project.
   - `src/main.cpp`: pins, probe drivers, LED and log.
   - `lib/BasicControl/`: the decisions, tested on a PC with `pio test -e native`.
@@ -65,21 +65,47 @@ Heater and safety parts (shared with the dumb box's list, `../bom.csv`):
 - **KSD301 85 °C, normally closed:** AliExpress. ITEC has a [95 °C one at Rs 520](https://itecelectronic.lk/product/ksd301-thermostat-95c-16a-normally-closed-n-c-temperature-switch/) if you need it today; it trips later but still well before ABS/ASA softens.
 - **92 °C thermal fuse:** AliExpress.
 
+## ESP-01S instead of the D1 Mini
+
+The same firmware runs on an ESP-01S (build `basic-esp01`, image `basic-dryer-esp01.bin`), wired as in `wiring-esp01.svg`. It has just enough pins:
+
+| ESP-01S pin | Job | Why there |
+|---|---|---|
+| GPIO0 | Heater, **active low**: 3V3 → R1 470 Ω → PC817 LED → GPIO0, with R8 10 kΩ to 3V3 | GPIO0 must be high at boot, and high = heater off, so a booting or crashed board can't heat |
+| GPIO2 | AM2301 / DHT22 data, R5 4.7 kΩ to 3V3 | Must be high at boot; the probe's pull-up does that |
+| GPIO3 (RX) | Fan, through R4 500 Ω to the 2N2222A; R9 10 kΩ base → GND | RX isn't needed: the log only transmits |
+| GPIO1 (TX) | Serial log, 115200 baud | |
+
+Compared with the D1 Mini:
+
+- **Cost:** Rs 490 instead of Rs 830 per board. You also need a [USB ESP-01 adapter](https://tronic.lk/product/usb-to-esp8266-esp-01-interface-module) (Rs 350, 36 in stock) once, to flash it.
+- **Power:** set the MP1584 to **3.3 V**, not 5 V, and check it with a meter **before** plugging the ESP-01S in: above 3.6 V it's destroyed. Fit 100 µF + 100 nF across its 3V3 and GND at the socket.
+- **Probe:** AM2301 or DHT22 only. The AHT20 needs two I2C pins that aren't left.
+- **Status:** no status LED (the on-board LED shares GPIO2 with the probe and flickers on each reading). The state is only in the serial log, through the adapter.
+- **Board:** mount the ESP-01S in a 2×4 female header, so you can pull it out to flash it.
+- **ESP-01 (not "S"):** it doesn't pull EN up on the board. Add 10 kΩ from EN to 3V3.
+
+**Flashing an ESP-01S:**
+1. Plug it into the USB adapter with the adapter's GPIO0 jumper (or switch) set to ground, then plug the adapter in.
+2. Flash `basic-dryer-esp01.bin` at `0x0`, as below.
+3. Set the jumper back and replug the adapter to run it.
+
 ## Flashing
 
-The release image is one file, flashed at address 0. Plug the D1 Mini into USB; Windows needs the CH340 driver.
+The release images are one file each, flashed at address 0: `basic-dryer-d1mini.bin` or `basic-dryer-esp01.bin`. Plug the D1 Mini (or the ESP-01 adapter) into USB; Windows needs the CH340 driver.
 
 - **From a browser** (Chrome/Edge): open https://espressif.github.io/esptool-js/, click Connect and pick the CH340 port. Set the flash address to `0x0`, choose `basic-dryer-d1mini.bin`, then click Program.
 - **Or with esptool:**
 
   ```bash
   esptool.py --chip esp8266 --baud 460800 write_flash 0x0 basic-dryer-d1mini.bin
+  esptool.py --chip esp8266 --baud 115200 write_flash 0x0 basic-dryer-esp01.bin
   ```
 
 - **Or build it:**
 
   ```bash
-  cd dumb/basic/firmware && pio run -e basic-d1mini -t upload
+  cd dumb/basic/firmware && pio run -e basic-d1mini -t upload   # or -e basic-esp01
   ```
 
 Then open the serial monitor at 115200 baud: it prints `probe: AM2301/DHT21` (or `AHT20`), and a line every 10 s.

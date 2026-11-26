@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Wiring drawing for the basic dryer controller (Wemos D1 Mini, one T + RH probe, fan, heater).
+"""Wiring drawings for the basic dryer controller (Wemos D1 Mini or ESP-01S, one T + RH probe, fan, heater).
 
-Writes dumb/basic/wiring.svg.  Run from the repo root:
+Writes dumb/basic/wiring.svg (D1 Mini) and dumb/basic/wiring-esp01.svg (ESP-01S).  Run from the repo root:
     python3 dumb/basic/tools/gen_basic.py
 """
 import sys
@@ -11,7 +11,6 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent.parent / "tools"))
 from gen_dumb import Svg, RED, BLACK, ORANGE, YELLOW, BLUE, GREY  # noqa: E402
 
-OUT = HERE.parent / "wiring.svg"
 GREEN, PURPLE, BROWN = "#2e7d32", "#6a1b9a", "#8d6e63"
 
 
@@ -50,14 +49,20 @@ class Draw(Svg):
         self.o.append(f'<circle cx="{x}" cy="{y}" r="5" fill="#fff" stroke="#111" stroke-width="1.4"/>')
         self.text(x, y + 20, label, "p", "middle")
 
+    def flag(self, x, y, label, color):
+        """Net label pointing up from (x, y)."""
+        self.wire([(x, y), (x, y - 14)], color, 2)
+        self.wire([(x - 8, y - 14), (x + 8, y - 14)], color, 2)
+        self.text(x, y - 20, label, "p", "middle")
+
     def pin_bottom(self, x, y, label):
         self.o.append(f'<circle cx="{x}" cy="{y}" r="5" fill="#fff" stroke="#111" stroke-width="1.4"/>')
         self.text(x, y - 10, label, "p", "middle")
 
 
-def wiring():
+def wiring(esp01=False):
     d = Draw(1360, 900)
-    d.text(30, 36, "Basic dryer controller: wiring", "t")
+    d.text(30, 36, "Basic dryer controller (ESP-01S): wiring" if esp01 else "Basic dryer controller (Wemos D1 Mini): wiring", "t")
     d.text(30, 58, "Fan and heater run while the box is above 15 % RH. The heater tapers from full power at 60 °C to off at 65 °C. "
                    "Crossing wires are not joined unless a dot is shown.", "v")
     TOP = 110
@@ -72,26 +77,35 @@ def wiring():
     d.wire([(150, 130), (170, 130), (170, 150)], BLACK, 3); d.gnd(170, 150)
 
     # MP1584 buck: 12 V -> 5 V
-    d.box(255, 170, 130, 110, "MP1584 buck", "set to 5.0 V first")
+    d.box(255, 170, 130, 110, "MP1584 buck", "set to 3.3 V first" if esp01 else "set to 5.0 V first")
     d.wire([(255, TOP), (255, 230)], RED, 2); d.dot(255, TOP, RED)
     d.wire([(255, 255), (235, 255), (235, 300)], BLACK, 2); d.gnd(235, 300)
     d.term(255, 230, "IN+"); d.term(255, 255, "IN−")
     d.term(385, 230, "OUT+", "end"); d.term(385, 255, "OUT−", "end")
 
     # D1 Mini
-    d.box(420, 170, 220, 260, "Wemos D1 Mini", "ESP8266, Wi-Fi switched off", "mod")
-    d.term(440, 230, "5V"); d.term(440, 255, "G")
-    d.term(620, 230, "D6 (GPIO12) fan", "end")
+    if esp01:
+        d.box(420, 170, 220, 260, "ESP-01S", "ESP8266, Wi-Fi switched off", "mod")
+        d.term(440, 230, "3V3"); d.term(440, 255, "GND")
+        d.term(620, 230, "GPIO3 (RX) fan", "end")
+    else:
+        d.box(420, 170, 220, 260, "Wemos D1 Mini", "ESP8266, Wi-Fi switched off", "mod")
+        d.term(440, 230, "5V"); d.term(440, 255, "G")
+        d.term(620, 230, "D6 (GPIO12) fan", "end")
     d.wire([(385, 230), (440, 230)], ORANGE, 2)
-    d.text(412, 222, "5 V", "p", "middle")
+    d.text(412, 222, "3.3 V" if esp01 else "5 V", "p", "middle")
     d.wire([(385, 255), (440, 255)], BLACK, 2)
     d.dot(412, 255, BLACK); d.wire([(412, 255), (412, 300)], BLACK, 2); d.gnd(412, 300)
-    d.pin_bottom(460, 430, "3V3"); d.pin_bottom(520, 430, "D7"); d.pin_bottom(600, 430, "D5")
-    d.text(530, 300, "on-board LED (D4):", "p", "middle")
-    d.text(530, 316, "on = heating", "p", "middle")
-    d.text(530, 332, "slow blink = fan only", "p", "middle")
-    d.text(530, 348, "short flash = dry, idle", "p", "middle")
-    d.text(530, 364, "fast blink = probe fault / too hot", "p", "middle")
+    if esp01:
+        d.pin_bottom(460, 430, "3V3"); d.pin_bottom(520, 430, "GPIO2"); d.pin_bottom(600, 430, "GPIO0")
+        lines = ["TX (GPIO1): serial log, 115200 baud", "no status LED: the on-board", "LED shares GPIO2 with the probe",
+                 "EN and RST: pulled up on the", "ESP-01S (a plain ESP-01 needs", "10 kΩ from EN to 3V3)"]
+    else:
+        d.pin_bottom(460, 430, "3V3"); d.pin_bottom(520, 430, "D7"); d.pin_bottom(600, 430, "D5")
+        lines = ["on-board LED (D4):", "on = heating", "slow blink = fan only", "short flash = dry, idle",
+                 "fast blink = probe fault / too hot"]
+    for i, s_ in enumerate(lines):
+        d.text(530, 290 + i * 16, s_, "p", "middle")
 
     # probe: AM2301 (DHT21) or DHT22
     d.box(400, 590, 160, 100, "", "")
@@ -107,14 +121,24 @@ def wiring():
     d.wire([(480, 690), (480, 715)], BLACK, 2); d.gnd(480, 715)
     d.text(470, 706, "GND", "p", "end")
 
-    # AHT20 alternative
-    d.box(30, 380, 340, 170, "Or an AHT20 probe (I2C)", "the firmware uses whichever probe answers", "mod")
-    for i, s in enumerate(["VCC → 3V3,  GND → G",
-                           "SDA → D2 (GPIO4),  SCL → D1 (GPIO5)",
-                           "R6, R7: 4.7 kΩ from SDA and SCL to 3V3",
-                           "(leave R5 and D7 unconnected)",
-                           "Not a DHT11: it can't read below 20 % RH or 50 °C."]):
-        d.text(50, 450 + i * 20, s, "v")
+    if esp01:
+        d.box(30, 380, 340, 190, "Power and flashing", "", "safe")
+        info = ["Set the MP1584 to 3.3 V BEFORE fitting the",
+                "ESP-01S: above 3.6 V it is destroyed.",
+                "100 µF + 100 nF across 3V3 and GND at its socket.",
+                "Flash it out of the board, in the USB ESP-01",
+                "adapter with GPIO0 to GND (the adapter's jumper).",
+                "Probe: AM2301 or DHT22 only (no I2C pins left).",
+                "Not a DHT11: it can't read below 20 % RH or 50 °C."]
+    else:
+        d.box(30, 380, 340, 170, "Or an AHT20 probe (I2C)", "the firmware uses whichever probe answers", "mod")
+        info = ["VCC → 3V3,  GND → G",
+                "SDA → D2 (GPIO4),  SCL → D1 (GPIO5)",
+                "R6, R7: 4.7 kΩ from SDA and SCL to 3V3",
+                "(leave R5 and D7 unconnected)",
+                "Not a DHT11: it can't read below 20 % RH or 50 °C."]
+    for i, s_ in enumerate(info):
+        d.text(50, (430 if esp01 else 450) + i * 20, s_, "v")
 
     # fan: Q2 low-side, flyback diode
     FX = 760
@@ -125,19 +149,37 @@ def wiring():
     d.wire([(840, 370), (FX, 370)], BLACK, 2); d.dot(FX, 370, BLACK)
     d.wire([(FX, 336), (FX, 420)], BLACK, 3)
     d.box(735, 420, 50, 60, "Q2", "")
-    d.text(792, 434, "C", "p"); d.text(792, 478, "E", "p"); d.text(728, 470, "B", "p", "end")
+    d.text(792, 434, "C", "p"); d.text(792, 478, "E", "p")
+    if esp01:   # RX can sit high-ish at boot: R9 holds the base down
+        d.dot(723, 450, GREEN)
+        d.res_v(723, 450, 530, "R9 10 kΩ", GREEN, right=False); d.gnd(723, 530)
+    else:
+        d.text(728, 470, "B", "p", "end")
     d.text(800, 458, "2N2222A", "p")
     d.wire([(FX, 480), (FX, 495)], BLACK, 2); d.gnd(FX, 495)
     d.wire([(620, 230), (660, 230), (660, 450), (672, 450)], GREEN, 2)
-    d.res_h(672, 735, 450, "R4 500 Ω", GREEN)
+    d.res_h(672, 712 if esp01 else 735, 450, "R4 500 Ω", GREEN)
+    if esp01:
+        d.wire([(712, 450), (735, 450)], GREEN, 2)
 
-    # heater switch: D5 -> R1 -> PC817 -> IRF3205 gate from 12 V
-    d.wire([(600, 430), (600, 560), (880, 560)], PURPLE, 2)
-    d.res_h(880, 950, 560, "R1 500 Ω", PURPLE)
-    d.box(950, 520, 100, 110, "PC817", "")
-    d.term(950, 560, "1"); d.term(950, 600, "2")
+    if esp01:
+        # heater switch, active low: 3V3 -> R1 -> PC817 LED -> GPIO0; R8 keeps GPIO0 high at boot
+        d.wire([(600, 430), (600, 600), (950, 600)], PURPLE, 2)
+        d.dot(600, 500, PURPLE); d.res_h(600, 645, 500, "", PURPLE); d.flag(645, 500, "3V3", ORANGE)
+        d.text(608, 524, "R8 10 kΩ", "p")
+        d.wire([(855, 560), (880, 560)], ORANGE, 2); d.flag(855, 560, "3V3", ORANGE)
+        d.res_h(880, 950, 560, "R1 470 Ω", ORANGE)
+        d.box(950, 520, 100, 110, "PC817", "")
+        d.term(950, 560, "1"); d.term(950, 600, "2")
+        d.text(905, 620, "low = heat", "p", "middle")
+    else:
+        # heater switch: D5 -> R1 -> PC817 -> IRF3205 gate from 12 V
+        d.wire([(600, 430), (600, 560), (880, 560)], PURPLE, 2)
+        d.res_h(880, 950, 560, "R1 500 Ω", PURPLE)
+        d.box(950, 520, 100, 110, "PC817", "")
+        d.term(950, 560, "1"); d.term(950, 600, "2")
+        d.wire([(950, 600), (925, 600), (925, 625)], BLACK, 2); d.gnd(925, 625)
     d.term(1050, 560, "4", "end"); d.term(1050, 600, "3", "end")
-    d.wire([(950, 600), (925, 600), (925, 625)], BLACK, 2); d.gnd(925, 625)
     d.wire([(1050, 560), (1080, 560)], RED, 2)
     d.res_v(1080, 560, TOP, "R2 1 kΩ", RED, right=False); d.dot(1080, TOP, RED)
     d.wire([(1050, 600), (1130, 600), (1130, 520), (1170, 520)], YELLOW, 2)
@@ -166,19 +208,27 @@ def wiring():
     d.text(HX + 36, 494, "D", "p"); d.text(HX + 36, 556, "S", "p");     d.text(HX + 36, 580, "on a TO-220 heatsink", "p")
     d.wire([(HX, 560), (HX, 600)], BLACK, 3); d.gnd(HX, 600)
 
+    ctl = "the ESP-01S locks up with GPIO0 low" if esp01 else "the D1 Mini locks up with D5 high"
+    boot = ("At power-up GPIO0 floats high (R8): the PC817 stays dark and R3 holds Q1's gate low, so the heater stays off until the firmware has a good reading."
+            if esp01 else
+            "At power-up every pin floats: the PC817 stays dark and R3 holds Q1's gate low, so the heater stays off until the firmware has a good reading.")
+    board = "ESP-01S" if esp01 else "D1 Mini"
+    pair = "R4 is" if esp01 else "R1 and R4 are"
     notes = [
         "Heater: two aluminium-housed 50 W resistors (RX24, 3 Ω) in parallel, 96 W at 12 V (8 A), on one finned heatsink in the blower's airflow. "
         "Heater path in 16 AWG silicone wire.",
         "The KSD301 and thermal fuse sit in the chamber air near the lid: they stop the heater if the probe fails, falls out of the airflow, "
-        "or the D1 Mini locks up with D5 high.",
-        "At power-up every pin floats: the PC817 stays dark and R3 holds Q1's gate low, so the heater stays off until the firmware has a good reading.",
-        "R1 and R4 are two 1 kΩ in parallel. Grounds marked ⏚ all go to the XT60's black wire; take the heater's ground from Q1's source "
-        "straight to the XT60, not through the D1 Mini's wiring.",
+        f"or {ctl}.",
+        boot,
+        f"{pair} two 1 kΩ in parallel. Grounds marked ⏚ all go to the XT60's black wire; take the heater's ground from Q1's source "
+        f"straight to the XT60, not through the {board}'s wiring.",
     ]
     for i, n in enumerate(notes):
         d.text(30, 790 + i * 20, n, "v")
-    d.save(OUT, "Basic dryer controller wiring")
+    d.save(HERE.parent / ("wiring-esp01.svg" if esp01 else "wiring.svg"),
+           "Basic dryer controller wiring, " + ("ESP-01S" if esp01 else "D1 Mini"))
 
 
 if __name__ == "__main__":
     wiring()
+    wiring(esp01=True)
