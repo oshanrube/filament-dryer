@@ -1,0 +1,26 @@
+section,ref,part,qty,where,link,each_lkr,total_lkr,note
+Controller,U1,Wemos D1 Mini (ESP8266),1,Tronic,https://tronic.lk/product/nodemcu-d1-mini-lua-wemos-esp8266-dev-board-microusb-ch,830,830,Any D1 Mini works (micro-USB or USB-C)
+Controller,PROBE,AM2301 (DHT21) temperature + humidity probe,1,Tronic,https://tronic.lk/product/am2301-dht21-digital-temperature-humidity-sensor,1360,1360,"Or DHT22 module Rs 450 (1 in stock), or AHT20 Rs 1,450, or the M452's own AM2301 probe. Not a DHT11"
+Controller,U2,MP1584 buck module (set to 5.0 V),1,Tronic,https://tronic.lk/product/mp1584-4-5-28v-to-0-8v-18v-3a-dc-to-dc-adjustable-step-,230,230,Set the output before connecting the D1 Mini
+Controller,Q1,IRF3205 MOSFET (heater switch),1,Tronic,https://tronic.lk/product/original-irf3205-hexfet-power-mosfet-55v-110a,160,160,
+Controller,HS1,TO-220 heatsink 19x15x10 mm,1,Tronic,https://tronic.lk/product/aluminum-heat-sink-19x15x10mm-to220-black,70,70,For Q1
+Controller,OK1,PC817 optocoupler,1,Tronic,https://tronic.lk/product/pc817-optocoupler,10,10,Drives Q1's gate from 12 V
+Controller,Q2,2N2222A transistor (fan switch),1,Tronic,https://tronic.lk/product/original-2n2222a-npn-transistor-to-92,5,5,
+Controller,D1,1N5819 diode (fan flyback),1,Tronic,https://tronic.lk/product/original-1n5819-40v-1a-diode,10,10,
+Controller,"R1, R2, R4",1 kΩ resistors (5 used: R1 and R4 are two in parallel each),1 pack,Tronic,https://tronic.lk/product/1k-14w-resistor-pack-carbon-film-tht-5-approx-40pcs,50,50,Pack of about 40
+Controller,R3,10 kΩ resistor,1 pack,Tronic,https://tronic.lk/product/10k-14w-resistor-pack-carbon-film-tht-5-approx-40pcs,50,50,Pack of about 40
+Controller,"R5 (R6, R7)",4.7 kΩ resistors (R5 probe pull-up; R6/R7 only for an AHT20),1 pack,Tronic,https://tronic.lk/product/4-7k-14w-resistor-pack-carbon-film-tht-5-approx-40pcs,50,50,Pack of about 40
+Controller,PCB,Dot board FR4 12x8 cm,1,Tronic,https://tronic.lk/product/vero-board-dot-epoxy-fr4-12x8cm,170,170,Half of it is enough
+Controller,"J1-J3",Screw terminal 2-pin 5.08 mm,3,Tronic,https://tronic.lk/product/5-08mm-pitch-2-pin-2-way-screw-terminal-block-pcb-mount,20,60,"12 V in, heater, fan"
+Controller,J4,Screw terminal 3-pin 5.08 mm,1,Tronic,https://tronic.lk/product/5-08mm-pitch-3-pin-3-way-screw-terminal-block-pcb-mount,30,30,Probe
+Controller,,Female header strip 40-pin 2.54 mm,1,Tronic,https://tronic.lk/product/40-pin-single-row-female-headers-2-54mm,30,30,Socket for the D1 Mini
+Power,F1,15 A ATO blade fuse,1,Tronic,https://tronic.lk/product/atcato-blade-fuse-auto-car-fuse-15a,30,30,
+Power,F1,ATO inline fuse holder,1,Tronic,https://tronic.lk/product/atcato-blade-fuse-holder,80,80,Check it's the wire-lead type
+Heating,FAN,4010 blower 12 V,1,Tronic,https://tronic.lk/product/cooling-fan-4010-blower-40x40x10mm-12v,440,440,
+Heating,,Aluminium heatsink 200x56x30 mm,1/2,Tronic,https://tronic.lk/product/aluminum-heat-sink-200x56x30mm-for-amplifier-ics,1000,500,Cut in half: one half per box
+Heating,"HEATER A, B",RX24 50 W 3 Ω aluminium-housed resistor,2,AliExpress,"search: RX24 50W 3R aluminium housed resistor",~600,~1200,96 W together at 12 V
+Safety,TS1,KSD301 85 °C normally closed 10 A,1,AliExpress,"search: KSD301 85C normally closed",~150,~150,"Today: ITEC KSD301 95 °C, Rs 520 (https://itecelectronic.lk/product/ksd301-thermostat-95c-16a-normally-closed-n-c-temperature-switch/)"
+Safety,TF1,Thermal fuse 92 °C 10 A,2,AliExpress,"search: thermal fuse 92C 10A",~50,~100,One spare
+Wiring,,XT60 male + female pair,1,AliExpress,"search: XT60 pair",~150,~150,From the shared 12 V supply
+Wiring,,16 AWG silicone wire red + black,2 m,AliExpress,"search: 16AWG silicone wire",~600,~600,Heater path (8 A)
+Wiring,,22 AWG silicone wire,2 m,AliExpress,"search: 22AWG silicone wire",~300,~300,"Fan, probe, signals"

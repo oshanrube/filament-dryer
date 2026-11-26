@@ -21,6 +21,7 @@ A small controller for the dumb box in place of the STC-3028 + W1209: one temper
   The USB serial port (115200 baud) logs the temperature, humidity, heater % and fan every 10 s.
 
 Files:
+- `bom.csv`: the whole parts list for one box's electronics and heater, with Tronic links and prices (about Rs 4,200 at Tronic + about Rs 2,500 from AliExpress).
 - `wiring.svg` (D1 Mini) and `wiring-esp01.svg` (ESP-01S): the circuits, drawn by `tools/gen_basic.py` (`python3 dumb/basic/tools/gen_basic.py` from the repo root).
 - `firmware/`: PlatformIO project.
   - `src/main.cpp`: pins, probe drivers, LED and log.
@@ -72,6 +73,8 @@ The probe has to read below 15 % RH and above 65 °C. A **DHT11 can't**: it only
 The M452's own probe works too if you'd rather not buy one: it's an AM2301. Note that 65 °C is near the top of these probes' range, so mount the probe in the chamber air, not in the heater outlet.
 
 ## Parts (Tronic.lk unless marked)
+
+The complete list, heater and wiring included, is in [`bom.csv`](bom.csv). The controller part:
 
 Prices checked 2026-11-26; re-check with `python3 tools/tronic_search.py "D1 mini" "AM2301" ...`.
 

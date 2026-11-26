@@ -108,7 +108,7 @@ def main() -> None:
         shutil.copytree(src / "images", out / "images")
         if (src / "basic" / "wiring.svg").exists():
             (out / "basic").mkdir()
-            for f in (src / "basic").glob("wiring*.svg"):
+            for f in list((src / "basic").glob("wiring*.svg")) + list((src / "basic").glob("bom.csv")):
                 shutil.copy2(f, out / "basic" / f.name)
         if (src / "perfboard").exists():
             (out / "perfboard").mkdir()
