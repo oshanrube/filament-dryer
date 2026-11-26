@@ -5,8 +5,8 @@ __pycache__/
 fp-info-cache
 
 # PlatformIO
-firmware/.pio/
-firmware/.vscode/
+**/.pio/
+**/.vscode/
 # Compiled firmware: built by CI and attached to releases
 *.bin
 *.elf
