@@ -1,0 +1,83 @@
+<header>
+  <h1>Dumb Filament Dryer</h1>
+  <p class="lead">The cheapest box that keeps a reel dry: a single-reel housing, a 96 W heater and an off-the-shelf STC-3028 humidity + temperature controller. No microcontroller, no firmware, no scale, no Wi-Fi. The heater runs only while the box is too humid and below a temperature cap, and a W1209 thermostat drops half the heater for the last 5 °C so it doesn't overshoot.</p>
+  <p class="meta">Plan as of 2026-11-26 · parts about US${{BOM_PER_BOX}} per box, including about 0.8 kg of ABS/ASA for the housing; it runs from the same shared 12 V supply as the other boxes.</p>
+  <div class="links">
+    <a href="wiring.svg">Wiring (SVG)</a>
+    <a href="bom.csv">Parts list (CSV)</a>
+  </div>
+</header>
+
+<h2 id="compare">What it gives up</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>1-roll (smart)</th><th>Dumb</th></tr></thead>
+  <tbody>
+    <tr><td>Parts per box</td><td>about US$174</td><td>about US${{BOM_PER_BOX}}</td></tr>
+    <tr><td>Controller</td><td>ESP32-C3 board and firmware</td><td>STC-3028 + W1209, set with buttons</td></tr>
+    <tr><td>Temperature control</td><td>PID, about ±0.5 °C</td><td>Two-step on/off, about ±2 °C</td></tr>
+    <tr><td>Energy</td><td colspan="2">About the same: the insulation decides how much heat is lost. The dumb box can use less, because it only heats while the air is humid instead of running timed cycles.</td></tr>
+    <tr><td>Drying</td><td>Timed cycles per material, vent pulses</td><td>Holds a humidity target; desiccant and a passive vent carry the moisture away</td></tr>
+    <tr><td>Weight, filament left, runout, motion</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Dashboard, alerts</td><td>Yes</td><td>No: the STC-3028's display shows temperature and humidity on the front</td></tr>
+    <tr><td>Overheat protection</td><td>Firmware cut-outs + KSD301 + thermal fuse</td><td>KSD301 + thermal fuse</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="how">How it works</h2>
+<p>The STC-3028 has one probe (temperature and humidity, on a cable) and two relays. Their contacts are wired <strong>in series</strong> in front of the heater:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Box is…</th><th>Humidity relay (dehumidify)</th><th>Temperature relay (heat)</th><th>Blower</th><th>Heater</th></tr></thead>
+  <tbody>
+    <tr><td>Dry enough</td><td>open</td><td>(either)</td><td>off</td><td>off</td></tr>
+    <tr><td>Humid, well under the cap</td><td>closed</td><td>closed</td><td>on</td><td>96 W (both halves)</td></tr>
+    <tr><td>Humid, within 5 °C of the cap</td><td>closed</td><td>closed</td><td>on</td><td>48 W (the W1209 drops half B)</td></tr>
+    <tr><td>Humid, at the cap</td><td>closed</td><td>open</td><td>on</td><td>off</td></tr>
+  </tbody>
+</table></div>
+<figure><img src="images/heat-steps.svg" alt="Chart of heater power against chamber temperature: 96 W up to 5 degrees under the cap, 48 W for the last 5 degrees, off at the cap." loading="lazy"><figcaption>Two heat steps instead of one: a single on/off heater (grey) keeps pushing full power until the cap and overshoots by more.</figcaption></figure>
+<p><strong>Relative humidity falls as air warms,</strong> so the humidity setpoint decides how hard the box works. With a low setpoint (about 10 %) the heater holds near the temperature cap until the air is really dry: that's drying. With a higher one (about 25 %) the heater only warms the box a little when it gets damp: that's storage. The desiccant does most of the work in storage; the small passive vent in the lid lets moisture out while drying.</p>
+
+<h2 id="wiring">Wiring</h2>
+<figure><a href="wiring.svg"><img src="wiring.svg" alt="Wiring: 12 V through a 15 A fuse; the STC-3028 humidity relay feeds the blower and the temperature relay; the temperature relay feeds the KSD301 and thermal fuse, then heater A directly and heater B through the W1209 relay." loading="lazy"></a><figcaption>Wiring (open full size). Crossing wires are not joined unless a dot is shown.</figcaption></figure>
+<ul>
+  <li><strong>Heater:</strong> two aluminium-housed 50 W resistors (RX24, 3 Ω, 48 W each at 12 V) on one finned heatsink, with thermal paste, in the blower's airflow.</li>
+  <li><strong>The KSD301 (85 °C) and thermal fuse (92 °C) protect both halves.</strong> They sit in the chamber air near the lid. A dumb controller has one probe; if it fails or falls out of the airflow, they are what stops the heater.</li>
+  <li><strong>Probes:</strong> the STC-3028 probe and the W1209's NTC probe side by side in the chamber air, away from the heater outlet.</li>
+  <li><strong>Wire:</strong> 16 AWG silicone in the heater path (about 8 A), 22 AWG for the rest. Every relay switches 12 V DC well inside its 10 A rating.</li>
+</ul>
+
+<h2 id="settings">Settings</h2>
+<p>Menu names differ a little between STC-3028 batches; the steps below match the usual manual. Set the controller to <strong>heating</strong> for temperature and <strong>dehumidifying</strong> for humidity, both with no start-up delay.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Use</th><th>STC-3028 temperature cap</th><th>STC-3028 humidity setpoint</th><th>W1209 setpoint</th></tr></thead>
+  <tbody>
+    <tr><td>Dry PLA / PLA+</td><td>50 °C, difference 1 °C</td><td>10 %, difference 3 %</td><td>45 °C</td></tr>
+    <tr><td>Dry TPU</td><td>55 °C</td><td>10 %</td><td>50 °C</td></tr>
+    <tr><td>Dry PETG</td><td>65 °C</td><td>10 %</td><td>60 °C</td></tr>
+    <tr><td>Dry ABS / ASA / Nylon / PC</td><td>70 °C</td><td>10 %</td><td>65 °C</td></tr>
+    <tr><td>Store any filament</td><td>45 °C</td><td>25 %, difference 5 %</td><td>40 °C</td></tr>
+  </tbody>
+</table></div>
+<p><strong>W1209:</strong> press SET and use +/− for the setpoint. Hold SET for the parameters: P0 = <code>H</code> (heating), P1 = 1.0 (hysteresis), P2 = 80 (upper limit), P3 = 0, P4 = 0 (offset), P5 = 0 (no delay), P6 = OFF (no alarm). Check the STC-3028's probe range on its label or manual: the common ones read to 80 °C, enough for a 70 °C cap.</p>
+
+<h2 id="housing">Housing</h2>
+<p>The 1-roll housing without the electronics bay's scale: one reel on an 8 mm axle, a heater duct with the blower and the heatsink, a desiccant cassette, and a lid on a printed hinge.</p>
+<ul>
+  <li><strong>Reel:</strong> a fixed 8 mm steel axle (cut from a 250 mm linear shaft) drops into open U-slots, so loading stays top-down. Two printed hub cones with a 608ZZ each spin on it and centre any hub from about 50 to 75 mm. A light felt pad on one cone stops the reel overrunning.</li>
+  <li><strong>Lid:</strong> printed hinge knuckles along the back edge with a full-length 8 mm pin (the second shaft), a silicone D-seal, and two toggle latches.</li>
+  <li><strong>Front:</strong> a 71 × 29 mm cut-out for the STC-3028, so its display shows temperature and humidity. The W1209 sits inside; its display can show through a small window, or stay hidden once it's set.</li>
+  <li><strong>Vent and exit:</strong> two 3 mm holes in the lid as a passive vent, and a PC4 fitting with PTFE tube to the printer.</li>
+</ul>
+
+<h2 id="parts">Parts</h2>
+<p>About US${{BOM_PER_BOX}} per box. Search terms are for AliExpress unless marked Tronic. Also available as <a href="bom.csv">bom.csv</a>.</p>
+{{BOM_TABLES}}
+
+<h2 id="build">Build and test</h2>
+<ol>
+  <li><strong>Bench, heater disconnected:</strong> power the STC-3028 and W1209 from 12 V and enter the settings. Breathe on the probe: the humidity relay should click and the blower start. Warm the probe in your hand past the W1209 setpoint and then past the cap: the relays should drop in that order.</li>
+  <li><strong>Safety parts:</strong> check the KSD301 opens with a hot-air gun (it clicks open at about 85 °C) before fitting it.</li>
+  <li><strong>First heat, lid open, attended:</strong> connect the heater and watch it reach the cap and switch down to half, then off.</li>
+  <li><strong>Lid closed:</strong> a full drying cycle with an empty reel, checking the box surfaces stay comfortable to touch.</li>
+</ol>
+{{WIRING_TABLE}}

@@ -23,6 +23,8 @@ VERSIONS = [
      "Two-reel dryer and feeder with automatic reel switch-over, per-reel weighing and motion sensing."),
     ("1-roll", "1 roll", "Single-Reel Filament Dryer",
      "Single-reel dryer with weighing, filament motion sensing and Printer Control Center integration."),
+    ("dumb", "Dumb (STC-3028)", "Dumb Filament Dryer",
+     "The cheapest box: a humidity-controlled heater with an STC-3028 and a W1209, no microcontroller."),
 ]
 
 

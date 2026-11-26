@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dumb Filament Dryer</title>
+<meta name="description" content="The cheapest box: a humidity-controlled heater with an STC-3028 and a W1209, no microcontroller.">
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f6f8fa; --text: #1f2328; --muted: #59636e;
+    --border: #d1d9e0; --accent: #0969da; --warn: #bc4c00; --code-bg: #eff2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --surface: #151b23; --text: #e6edf3; --muted: #9198a1;
+      --border: #3d444d; --accent: #4493f8; --warn: #f0883e; --code-bg: #1f2630;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117; --surface: #151b23; --text: #e6edf3; --muted: #9198a1;
+    --border: #3d444d; --accent: #4493f8; --warn: #f0883e; --code-bg: #1f2630;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 80px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 8px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 1.45rem; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; margin: 28px 0 8px; }
+  p, li { max-width: 72ch; }
+  a { color: var(--accent); }
+  .lead { font-size: 1.08rem; }
+  .meta { color: var(--muted); font-size: .92rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: .95rem; }
+  nav.toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 24px 0; }
+  nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+  nav.toc li { break-inside: avoid; }
+  @media (max-width: 600px) { nav.toc ol { columns: 1; } }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  .table-wrap { overflow-x: auto; margin: 12px 0 20px; border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  th { background: var(--surface); font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; white-space: nowrap; }
+  figure { margin: 20px 0 28px; }
+  figure img { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+  figcaption { color: var(--muted); font-size: .9rem; margin-top: 6px; }
+  .callout { border-left: 3px solid var(--warn); background: var(--surface); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; overflow-x: auto; }
+  ul.checks { list-style: none; padding-left: 0; }
+  ul.checks li::before { content: "☐  "; color: var(--muted); }
+  footer { margin-top: 64px; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--border); padding-top: 16px; }
+  .site { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .site .brand { font-weight: 700; color: var(--text); text-decoration: none; }
+  .site .repo { font-size: .9rem; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 0 28px; overflow-x: auto; }
+  .tabs a { padding: 10px 14px; text-decoration: none; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tabs a:hover { color: var(--text); }
+  .tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+  .card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--surface); }
+  .card h3 { margin-top: 0; }
+  .card img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); background: #fff; }
+  .pin { white-space: nowrap; }
+  .wire { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: .8rem; line-height: 1.5; border: 1px solid var(--border); margin-left: 4px; }
+  .wire::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; border: 1px solid #8c959f; }
+  .wire-red::before { background: #d1242f; } .wire-black::before { background: #24292f; } .wire-white::before { background: #ffffff; }
+  .wire-yellow::before { background: #d4a72c; } .wire-blue::before { background: #0969da; } .wire-green::before { background: #1a7f37; }
+  .wire-motor::before { background: #8250df; }
+</style>
+<body>
+<main>
+<div class="site"><a class="brand" href="../index.html">Filament Dryer</a><a class="repo" href="https://github.com/oshanrube/filament-dryer">GitHub repository</a></div>
+<nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html">2-roll feeder</a><a href="../1-roll/index.html">1 roll</a><a href="../dumb/index.html" aria-current="page">Dumb (STC-3028)</a></nav>
+<header>
+  <h1>Dumb Filament Dryer</h1>
+  <p class="lead">The cheapest box that keeps a reel dry: a single-reel housing, a 96 W heater and an off-the-shelf STC-3028 humidity + temperature controller. No microcontroller, no firmware, no scale, no Wi-Fi. The heater runs only while the box is too humid and below a temperature cap, and a W1209 thermostat drops half the heater for the last 5 °C so it doesn't overshoot.</p>
+  <p class="meta">Plan as of 2026-11-26 · parts about US$53 per box, including about 0.8 kg of ABS/ASA for the housing; it runs from the same shared 12 V supply as the other boxes.</p>
+  <div class="links">
+    <a href="wiring.svg">Wiring (SVG)</a>
+    <a href="bom.csv">Parts list (CSV)</a>
+  </div>
+</header>
+
+<h2 id="compare">What it gives up</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>1-roll (smart)</th><th>Dumb</th></tr></thead>
+  <tbody>
+    <tr><td>Parts per box</td><td>about US$174</td><td>about US$53</td></tr>
+    <tr><td>Controller</td><td>ESP32-C3 board and firmware</td><td>STC-3028 + W1209, set with buttons</td></tr>
+    <tr><td>Temperature control</td><td>PID, about ±0.5 °C</td><td>Two-step on/off, about ±2 °C</td></tr>
+    <tr><td>Energy</td><td colspan="2">About the same: the insulation decides how much heat is lost. The dumb box can use less, because it only heats while the air is humid instead of running timed cycles.</td></tr>
+    <tr><td>Drying</td><td>Timed cycles per material, vent pulses</td><td>Holds a humidity target; desiccant and a passive vent carry the moisture away</td></tr>
+    <tr><td>Weight, filament left, runout, motion</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Dashboard, alerts</td><td>Yes</td><td>No: the STC-3028's display shows temperature and humidity on the front</td></tr>
+    <tr><td>Overheat protection</td><td>Firmware cut-outs + KSD301 + thermal fuse</td><td>KSD301 + thermal fuse</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="how">How it works</h2>
+<p>The STC-3028 has one probe (temperature and humidity, on a cable) and two relays. Their contacts are wired <strong>in series</strong> in front of the heater:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Box is…</th><th>Humidity relay (dehumidify)</th><th>Temperature relay (heat)</th><th>Blower</th><th>Heater</th></tr></thead>
+  <tbody>
+    <tr><td>Dry enough</td><td>open</td><td>(either)</td><td>off</td><td>off</td></tr>
+    <tr><td>Humid, well under the cap</td><td>closed</td><td>closed</td><td>on</td><td>96 W (both halves)</td></tr>
+    <tr><td>Humid, within 5 °C of the cap</td><td>closed</td><td>closed</td><td>on</td><td>48 W (the W1209 drops half B)</td></tr>
+    <tr><td>Humid, at the cap</td><td>closed</td><td>open</td><td>on</td><td>off</td></tr>
+  </tbody>
+</table></div>
+<figure><img src="images/heat-steps.svg" alt="Chart of heater power against chamber temperature: 96 W up to 5 degrees under the cap, 48 W for the last 5 degrees, off at the cap." loading="lazy"><figcaption>Two heat steps instead of one: a single on/off heater (grey) keeps pushing full power until the cap and overshoots by more.</figcaption></figure>
+<p><strong>Relative humidity falls as air warms,</strong> so the humidity setpoint decides how hard the box works. With a low setpoint (about 10 %) the heater holds near the temperature cap until the air is really dry: that's drying. With a higher one (about 25 %) the heater only warms the box a little when it gets damp: that's storage. The desiccant does most of the work in storage; the small passive vent in the lid lets moisture out while drying.</p>
+
+<h2 id="wiring">Wiring</h2>
+<figure><a href="wiring.svg"><img src="wiring.svg" alt="Wiring: 12 V through a 15 A fuse; the STC-3028 humidity relay feeds the blower and the temperature relay; the temperature relay feeds the KSD301 and thermal fuse, then heater A directly and heater B through the W1209 relay." loading="lazy"></a><figcaption>Wiring (open full size). Crossing wires are not joined unless a dot is shown.</figcaption></figure>
+<ul>
+  <li><strong>Heater:</strong> two aluminium-housed 50 W resistors (RX24, 3 Ω, 48 W each at 12 V) on one finned heatsink, with thermal paste, in the blower's airflow.</li>
+  <li><strong>The KSD301 (85 °C) and thermal fuse (92 °C) protect both halves.</strong> They sit in the chamber air near the lid. A dumb controller has one probe; if it fails or falls out of the airflow, they are what stops the heater.</li>
+  <li><strong>Probes:</strong> the STC-3028 probe and the W1209's NTC probe side by side in the chamber air, away from the heater outlet.</li>
+  <li><strong>Wire:</strong> 16 AWG silicone in the heater path (about 8 A), 22 AWG for the rest. Every relay switches 12 V DC well inside its 10 A rating.</li>
+</ul>
+
+<h2 id="settings">Settings</h2>
+<p>Menu names differ a little between STC-3028 batches; the steps below match the usual manual. Set the controller to <strong>heating</strong> for temperature and <strong>dehumidifying</strong> for humidity, both with no start-up delay.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Use</th><th>STC-3028 temperature cap</th><th>STC-3028 humidity setpoint</th><th>W1209 setpoint</th></tr></thead>
+  <tbody>
+    <tr><td>Dry PLA / PLA+</td><td>50 °C, difference 1 °C</td><td>10 %, difference 3 %</td><td>45 °C</td></tr>
+    <tr><td>Dry TPU</td><td>55 °C</td><td>10 %</td><td>50 °C</td></tr>
+    <tr><td>Dry PETG</td><td>65 °C</td><td>10 %</td><td>60 °C</td></tr>
+    <tr><td>Dry ABS / ASA / Nylon / PC</td><td>70 °C</td><td>10 %</td><td>65 °C</td></tr>
+    <tr><td>Store any filament</td><td>45 °C</td><td>25 %, difference 5 %</td><td>40 °C</td></tr>
+  </tbody>
+</table></div>
+<p><strong>W1209:</strong> press SET and use +/− for the setpoint. Hold SET for the parameters: P0 = <code>H</code> (heating), P1 = 1.0 (hysteresis), P2 = 80 (upper limit), P3 = 0, P4 = 0 (offset), P5 = 0 (no delay), P6 = OFF (no alarm). Check the STC-3028's probe range on its label or manual: the common ones read to 80 °C, enough for a 70 °C cap.</p>
+
+<h2 id="housing">Housing</h2>
+<p>The 1-roll housing without the electronics bay's scale: one reel on an 8 mm axle, a heater duct with the blower and the heatsink, a desiccant cassette, and a lid on a printed hinge.</p>
+<ul>
+  <li><strong>Reel:</strong> a fixed 8 mm steel axle (cut from a 250 mm linear shaft) drops into open U-slots, so loading stays top-down. Two printed hub cones with a 608ZZ each spin on it and centre any hub from about 50 to 75 mm. A light felt pad on one cone stops the reel overrunning.</li>
+  <li><strong>Lid:</strong> printed hinge knuckles along the back edge with a full-length 8 mm pin (the second shaft), a silicone D-seal, and two toggle latches.</li>
+  <li><strong>Front:</strong> a 71 × 29 mm cut-out for the STC-3028, so its display shows temperature and humidity. The W1209 sits inside; its display can show through a small window, or stay hidden once it's set.</li>
+  <li><strong>Vent and exit:</strong> two 3 mm holes in the lid as a passive vent, and a PC4 fitting with PTFE tube to the printer.</li>
+</ul>
+
+<h2 id="parts">Parts</h2>
+<p>About US$53 per box. Search terms are for AliExpress unless marked Tronic. Also available as <a href="bom.csv">bom.csv</a>.</p>
+<h3>Control (≈ US$10)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Humidity + temperature controller</td><td>1</td><td>STC-3028 DC 12V temperature humidity controller (Tronic lists it at Rs. 2,540, out of stock)</td><td class="num">9</td><td>One probe, two relays: humidity (dehumidify mode) and temperature (heat mode), wired in series in front of the heater</td></tr>
+<tr><td>Second heat stage</td><td>1</td><td>Tronic: W1209 12 V thermostat (Rs. 420)</td><td class="num">1.4</td><td>Switches off half the heater 5 °C under the cap, so the box creeps up to temperature instead of overshooting</td></tr>
+</tbody></table></div>
+<h3>Heating and air (≈ US$8)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Heater halves</td><td>2</td><td>RX24 50W 3R aluminium housed resistor</td><td class="num">4</td><td>3 Ω at 12 V is 48 W each, 96 W together; screw both to the heatsink</td></tr>
+<tr><td>Heatsink</td><td>1/2</td><td>Tronic: aluminium heat sink 200x56x30 mm (Rs. 1,000), cut in half for two boxes</td><td class="num">1.7</td><td>Finned, in the blower&#x27;s airflow; thermal paste under the resistors</td></tr>
+<tr><td>Blower</td><td>1</td><td>Tronic: 4010 blower 12 V (Rs. 440)</td><td class="num">1.5</td><td>Moves chamber air over the heatsink; runs whenever the box is too humid</td></tr>
+<tr><td>Thermostat cut-out</td><td>1</td><td>KSD301 85C normally closed 10A</td><td class="num">0.5</td><td>Opens at 85 °C and closes again as it cools: catches a stuck relay or a probe that fell out</td></tr>
+<tr><td>Thermal fuse</td><td>2 (1 spare)</td><td>thermal fuse 92C 10A</td><td class="num">0.3</td><td>One-shot last resort, in series with the KSD301</td></tr>
+</tbody></table></div>
+<h3>Power and wiring (≈ US$4)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>12 V connector</td><td>1 pair</td><td>XT60 male female pair</td><td class="num">0.5</td><td>From the shared 12 V supply</td></tr>
+<tr><td>Fuse</td><td>1</td><td>Tronic: ATO blade fuse holder (Rs. 80) + 15 A ATO fuse (Rs. 30)</td><td class="num">0.4</td><td>On the + lead</td></tr>
+<tr><td>Heater wire</td><td>2 m</td><td>16 AWG silicone wire red black</td><td class="num">2</td><td>About 8 A in the heater path; silicone stays soft in the heat</td></tr>
+<tr><td>Signal and fan wire</td><td>2 m</td><td>22 AWG silicone wire</td><td class="num">1</td><td>Controllers, blower and probe extension</td></tr>
+</tbody></table></div>
+<h3>Mechanical (≈ US$15)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Reel axle and lid hinge pin</td><td>2</td><td>Tronic: 8 mm linear shaft 250 mm (Rs. 350)</td><td class="num">2.3</td><td>One cut to about 125 mm for the reel axle, one as the full-length hinge pin</td></tr>
+<tr><td>Bearings</td><td>2</td><td>Tronic: 608ZZ (Rs. 40)</td><td class="num">0.3</td><td>Pressed into the printed hub cones, spinning on the fixed axle</td></tr>
+<tr><td>Lid latches</td><td>2</td><td>mini stainless toggle latch</td><td class="num">3</td><td>Pull the lid onto the seal (or print a cam latch)</td></tr>
+<tr><td>Lid seal</td><td>3 m</td><td>silicone D seal strip self adhesive</td><td class="num">4</td><td>Stays soft at 70 °C</td></tr>
+<tr><td>Desiccant</td><td>150 g</td><td>indicating silica gel orange</td><td class="num">2</td><td>Holds the humidity down between heats</td></tr>
+<tr><td>Filament exit</td><td>1 m + 1</td><td>PTFE tube 2x4mm + PC4-M10 fitting</td><td class="num">2</td><td>From the box to the printer</td></tr>
+<tr><td>Screws and inserts</td><td>1 set</td><td>M3 heat set insert + M3 screw kit</td><td class="num">1</td><td>Shared with the other boxes</td></tr>
+</tbody></table></div>
+<h3>Printing (≈ US$16)</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>Part</th><th>Qty</th><th>AliExpress search</th><th>≈ US$</th><th>Why this one</th></tr></thead><tbody>
+<tr><td>Filament for the housing</td><td>~0.8 kg</td><td>ABS or ASA</td><td class="num">16</td><td>Not PLA: the box runs at up to 70 °C</td></tr>
+</tbody></table></div>
+
+<h2 id="build">Build and test</h2>
+<ol>
+  <li><strong>Bench, heater disconnected:</strong> power the STC-3028 and W1209 from 12 V and enter the settings. Breathe on the probe: the humidity relay should click and the blower start. Warm the probe in your hand past the W1209 setpoint and then past the cap: the relays should drop in that order.</li>
+  <li><strong>Safety parts:</strong> check the KSD301 opens with a hot-air gun (it clicks open at about 85 °C) before fitting it.</li>
+  <li><strong>First heat, lid open, attended:</strong> connect the heater and watch it reach the cap and switch down to half, then off.</li>
+  <li><strong>Lid closed:</strong> a full drying cycle with an empty reel, checking the box surfaces stay comfortable to touch.</li>
+</ol>
+
+
+<footer>Built from <code>dumb/page.html</code> and <code>dumb/bom.csv</code> by <code>tools/build_site.py</code>.</footer>
+</main>
+</body>
+</html>

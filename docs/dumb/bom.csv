@@ -1,0 +1,20 @@
+section,part,qty,aliexpress_search,approx_usd,why
+Control,Humidity + temperature controller,1,"STC-3028 DC 12V temperature humidity controller (Tronic lists it at Rs. 2,540, out of stock)",9,"One probe, two relays: humidity (dehumidify mode) and temperature (heat mode), wired in series in front of the heater"
+Control,Second heat stage,1,"Tronic: W1209 12 V thermostat (Rs. 420)",1.4,"Switches off half the heater 5 °C under the cap, so the box creeps up to temperature instead of overshooting"
+Heating and air,Heater halves,2,RX24 50W 3R aluminium housed resistor,4,"3 Ω at 12 V is 48 W each, 96 W together; screw both to the heatsink"
+Heating and air,Heatsink,1/2,"Tronic: aluminium heat sink 200x56x30 mm (Rs. 1,000), cut in half for two boxes",1.7,"Finned, in the blower's airflow; thermal paste under the resistors"
+Heating and air,Blower,1,"Tronic: 4010 blower 12 V (Rs. 440)",1.5,Moves chamber air over the heatsink; runs whenever the box is too humid
+Heating and air,Thermostat cut-out,1,KSD301 85C normally closed 10A,0.5,"Opens at 85 °C and closes again as it cools: catches a stuck relay or a probe that fell out"
+Heating and air,Thermal fuse,2 (1 spare),thermal fuse 92C 10A,0.3,"One-shot last resort, in series with the KSD301"
+Power and wiring,12 V connector,1 pair,XT60 male female pair,0.5,From the shared 12 V supply
+Power and wiring,Fuse,1,"Tronic: ATO blade fuse holder (Rs. 80) + 15 A ATO fuse (Rs. 30)",0.4,On the + lead
+Power and wiring,Heater wire,2 m,16 AWG silicone wire red black,2,"About 8 A in the heater path; silicone stays soft in the heat"
+Power and wiring,Signal and fan wire,2 m,22 AWG silicone wire,1,"Controllers, blower and probe extension"
+Mechanical,Reel axle and lid hinge pin,2,"Tronic: 8 mm linear shaft 250 mm (Rs. 350)",2.3,"One cut to about 125 mm for the reel axle, one as the full-length hinge pin"
+Mechanical,Bearings,2,"Tronic: 608ZZ (Rs. 40)",0.3,"Pressed into the printed hub cones, spinning on the fixed axle"
+Mechanical,Lid latches,2,mini stainless toggle latch,3,"Pull the lid onto the seal (or print a cam latch)"
+Mechanical,Lid seal,3 m,silicone D seal strip self adhesive,4,Stays soft at 70 °C
+Mechanical,Desiccant,150 g,indicating silica gel orange,2,Holds the humidity down between heats
+Mechanical,Filament exit,1 m + 1,PTFE tube 2x4mm + PC4-M10 fitting,2,From the box to the printer
+Mechanical,Screws and inserts,1 set,M3 heat set insert + M3 screw kit,1,Shared with the other boxes
+Printing,Filament for the housing,~0.8 kg,ABS or ASA,16,"Not PLA: the box runs at up to 70 °C"

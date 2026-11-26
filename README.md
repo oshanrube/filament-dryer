@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | 2-roll feeder | [`2-roll-feeder/`](2-roll-feeder/) | Two reels and a feeder pod; switches to the second reel automatically when the printer reports a runout |
 | 1 roll | [`1-roll/`](1-roll/) | One reel, no feeders; smaller and simpler |
+| Dumb (STC-3028) | [`dumb/`](dumb/) | The cheapest box: an STC-3028 humidity + temperature controller and a W1209 switch a 96 W heater in two steps. No microcontroller, scale or Wi-Fi |
 
 **Published plan:** GitHub Pages from `/docs` on `main` (Settings → Pages → Deploy from a branch → `main`, `/docs`). The site has an overview page and one tab per version.
 
@@ -27,7 +28,7 @@
 ## Rebuild
 
 ```bash
-python3 1-roll/tools/gen_drawings.py && python3 tools/gen_wiring.py
+python3 1-roll/tools/gen_drawings.py && python3 tools/gen_wiring.py && python3 dumb/tools/gen_dumb.py
 ```
 
 ```bash
