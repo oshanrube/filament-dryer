@@ -24,7 +24,7 @@ VERSIONS = [
     ("1-roll", "1 roll", "Single-Reel Filament Dryer",
      "Single-reel dryer with weighing, filament motion sensing and Printer Control Center integration."),
     ("1-roll-v2", "1 roll v2 (twin scale)", "Single-Reel Dryer v2: Twin Scale",
-     "Single-reel dryer with the axle on two load cells, a 2.42 inch OLED and a hand-built perfboard controller."),
+     "Single-reel dryer with the axle on two load cells, a 2.8 inch touch screen and a hand-built ESP32-S3 perfboard controller."),
     ("dumb", "Dumb (STC-3028)", "Dumb Filament Dryer",
      "The cheapest box: a humidity-controlled heater with an STC-3028 and a W1209, no microcontroller."),
 ]

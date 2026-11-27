@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drawings for the 1-roll v2 "twin scale" dryer (perfboard build).
+"""Drawings for the 1-roll v2 "twin scale" dryer (perfboard build, ESP32-S3, 2.8" touch screen).
 
 Writes 1-roll-v2/wiring.svg (the schematic), images/perfboard.svg and images/front-panel.svg.
 Run from the repo root:
@@ -31,10 +31,10 @@ class D(Draw):
 
 
 def schematic():
-    d = D(1560, 1160)
+    d = D(1740, 1170)
     d.text(30, 36, "1-roll v2 (twin scale): schematic, perfboard build", "t")
-    d.text(30, 58, "ESP32-C3 SuperMini, two load cells under the axle ends, 150 W PTC heater, blower, SHT40 chamber probe, "
-                   "DS18B20 heater-outlet probe, OLED, button, buzzer. Crossing wires are not joined unless a dot is shown.", "v")
+    d.text(30, 58, "ESP32-S3-DevKitC-1 N16R8, two load cells under the axle ends, 150 W PTC heater, blower, SHT40 chamber probe, "
+                   "DS18B20 heater-outlet probe, 2.8\" capacitive touch screen, buzzer. Crossing wires are not joined unless a dot is shown.", "v")
     TOP = 110
 
     # 12 V in
@@ -42,8 +42,8 @@ def schematic():
     d.wire([(150, TOP), (190, TOP)], RED, 4)
     d.o.append(f'<rect x="190" y="{TOP - 9}" width="46" height="18" rx="3" fill="#fff" stroke="#111" stroke-width="1.4"/>')
     d.text(213, TOP - 16, "F1 20 A", "p", "middle")
-    d.wire([(236, TOP), (1520, TOP)], RED, 3)
-    d.text(1520, TOP - 10, "+12 V", "v", "end")
+    d.wire([(236, TOP), (1700, TOP)], RED, 3)
+    d.text(1700, TOP - 10, "+12 V", "v", "end")
     d.wire([(150, 130), (170, 130), (170, 150)], BLACK, 4); d.gnd(170, 150)
 
     # MP1584
@@ -53,24 +53,33 @@ def schematic():
     d.term(255, 230, "IN+"); d.term(255, 255, "IN−")
     d.term(385, 230, "OUT+", "end"); d.term(385, 255, "OUT−", "end")
 
-    # SuperMini
-    UX, UY, UW, UH = 470, 170, 260, 530
+    # ESP32-S3 DevKitC
+    UX, UY, UW, UH = 470, 170, 440, 530
     d.o.append(f'<rect class="mod" x="{UX}" y="{UY}" width="{UW}" height="{UH}" rx="6"/>')
-    d.text(UX + UW / 2, UY + 22, "U1 ESP32-C3 SuperMini", "r", "middle")
-    d.text(UX + UW / 2, UY + 40, "USB-C: power + flashing", "p", "middle")
+    d.text(UX + UW / 2, UY + 22, "U1 ESP32-S3-DevKitC-1 N16R8", "r", "middle")
+    d.text(UX + UW / 2, UY + 40, "USB-C: power + flashing · 16 MB flash, 8 MB PSRAM", "p", "middle")
     d.wire([(385, 230), (470, 230)], ORANGE, 2); d.text(428, 222, "5 V", "p", "middle")
     d.wire([(385, 255), (470, 255)], BLACK, 2)
     d.dot(408, 255, BLACK); d.wire([(408, 255), (408, 300)], BLACK, 2); d.gnd(408, 300)
     d.term(470, 230, "5V"); d.term(470, 255, "GND")
     d.wire([(470, 320), (445, 320)], ORANGE, 2); d.flag(445, 320, "3V3", ORANGE); d.term(470, 320, "3V3 out")
-    for y, lab in ((370, "GPIO0  SCK L"), (400, "GPIO1  DT L"), (550, "GPIO3  SCK R"), (580, "GPIO6  DT R")):
+    for y, lab in ((370, "GPIO1  SCK L"), (400, "GPIO2  DT L"), (550, "GPIO38  SCK R"), (580, "GPIO39  DT R")):
         d.term(470, y, lab)
-    for y, lab in ((260, "blower  GPIO5"), (425, "buzzer  GPIO10"), (580, "heater  GPIO4")):
-        d.term(730, y, lab, "end")
-    for x, lab in ((500, "GPIO7"), (560, "GPIO8"), (640, "GPIO2"), (700, "GPIO20")):
+    RX = UX + UW
+    for y, lab in ((260, "blower  GPIO5"), (425, "buzzer  GPIO6"), (580, "heater  GPIO4")):
+        d.term(RX, y, lab, "end")
+    for x, lab in ((500, "GPIO9"), (560, "GPIO8"), (640, "GPIO7")):
         d.pin_bottom(x, 700, lab)
-    d.text(600, 470, "spare: GPIO9 (BOOT button),", "p", "middle")
-    d.text(600, 486, "GPIO21", "p", "middle")
+    disp = [("10", "CS"), ("11", "SDI/MOSI"), ("12", "SCK"), ("13", "DC/RS"), ("14", "RESET"), ("47", "LED"),
+            ("15", "CTP_SDA"), ("16", "CTP_SCL"), ("17", "CTP_INT"), ("18", "CTP_RST")]
+    DX0, DP = 700, 22
+    for k, (g, name) in enumerate(disp):
+        x = DX0 + k * DP
+        d.o.append(f'<circle cx="{x}" cy="700" r="5" fill="#fff" stroke="#111" stroke-width="1.4"/>')
+        d.o.append(f'<text class="p" x="{x + 4}" y="690" transform="rotate(-90 {x + 4} 690)">GPIO{g}</text>')
+    d.text(755, 640, "display (SPI)", "p", "middle"); d.text(865, 640, "touch (I2C 1)", "p", "middle")
+    d.text(690, 480, "spare: GPIO21, 40, 41, 42", "p", "middle")
+    d.text(690, 496, "(not 0, 3, 45, 46: strapping; 35-37: PSRAM)", "p", "middle")
 
     # load cells + HX711s
     for n, (y0, side) in enumerate(((330, "left"), (510, "right"))):
@@ -95,85 +104,88 @@ def schematic():
         d.flag(hx + 75, y0, "3V3", ORANGE)
         d.wire([(hx + 75, y0 + 110), (hx + 75, y0 + 120)], BLACK, 2); d.gnd(hx + 75, y0 + 120)
 
-    # I2C: SCL x=500, SDA x=560
-    d.wire([(500, 700), (500, 900)], BLUE, 2); d.wire([(560, 700), (560, 900)], GREEN, 2)
+    # sensor I2C: SCL x=500, SDA x=560, to the SHT40 probe
+    d.wire([(500, 700), (500, 850)], BLUE, 2); d.wire([(560, 700), (560, 870)], GREEN, 2)
     d.text(494, 722, "SCL", "p", "end"); d.text(566, 722, "SDA", "p")
     d.dot(560, 740, GREEN); d.res_h(560, 610, 740, "", GREEN); d.flag(610, 740, "3V3", ORANGE); d.text(585, 762, "R7 4.7k", "p", "middle")
     d.dot(500, 780, BLUE); d.res_h(500, 548, 780, "", BLUE); d.flag(548, 780, "3V3", ORANGE); d.text(524, 802, "R8 4.7k", "p", "middle")
-    # SHT40 probe
-    d.dot(500, 850, BLUE); d.wire([(500, 850), (290, 850), (290, 900)], BLUE, 2)
-    d.dot(560, 870, GREEN); d.wire([(560, 870), (340, 870), (340, 900)], GREEN, 2)
+    d.wire([(500, 850), (290, 850), (290, 900)], BLUE, 2)
+    d.wire([(560, 870), (340, 870), (340, 900)], GREEN, 2)
     d.plain(230, 900, 160, 90, [("P1 SHT40 probe", "r"), ("chamber air, I2C 0x44", "p")])
     d.pin_top(290, 900, "SCL"); d.pin_top(340, 900, "SDA")
     d.flag_down(270, 990, "3V3"); d.wire([(360, 990), (360, 1000)], BLACK, 2); d.gnd(360, 1000)
-    # OLED
-    d.plain(430, 900, 180, 90, [("DISP1 OLED, I2C 0x3C", "r"), ("2.42\" SSD1309 (or 1.3\" SH1106)", "p")])
-    d.pin_top(500, 900, "SCL"); d.pin_top(560, 900, "SDA")
-    d.flag_down(470, 990, "3V3"); d.wire([(590, 990), (590, 1000)], BLACK, 2); d.gnd(590, 1000)
     # DS18B20
     d.wire([(640, 700), (640, 900)], PURPLE, 2); d.text(646, 722, "1-wire", "p")
-    d.dot(640, 820, PURPLE); d.res_h(640, 688, 820, "", PURPLE); d.flag(688, 820, "3V3", ORANGE); d.text(664, 842, "R9 4.7k", "p", "middle")
-    d.plain(620, 900, 150, 90, [("P2 DS18B20 probe", "r"), ("heater outlet", "p")])
+    d.dot(640, 820, PURPLE); d.res_h(596, 640, 820, "", PURPLE); d.flag(596, 820, "3V3", ORANGE); d.text(618, 842, "R9 4.7k", "p", "middle")
+    d.plain(592, 900, 92, 90, [("P2 DS18B20", "r"), ("heater outlet", "p")])
     d.pin_top(640, 900, "DQ")
-    d.flag_down(660, 990, "3V3"); d.wire([(740, 990), (740, 1000)], BLACK, 2); d.gnd(740, 1000)
-    # button
-    d.wire([(700, 700), (700, 760), (850, 760)], BROWN, 2)
-    d.dot(770, 760, BROWN); d.res_v(770, 760, 708, "R10 10k", BROWN); d.flag(770, 708, "3V3", ORANGE)
-    d.box(850, 735, 110, 50, "SW1 button", "12 mm, front")
-    d.term(850, 760, "")
-    d.wire([(960, 760), (985, 760), (985, 775)], BLACK, 2); d.gnd(985, 775)
+    d.flag_down(612, 990, "3V3"); d.wire([(664, 990), (664, 1000)], BLACK, 2); d.gnd(664, 1000)
+    # touch screen
+    DY = 900
+    d.o.append(f'<rect class="mod" x="690" y="{DY}" width="240" height="110" rx="6"/>')
+    for k, (g, name) in enumerate(disp):
+        x = DX0 + k * DP
+        col = PURPLE if k < 6 else TEAL
+        d.wire([(x, 700), (x, DY)], col, 2)
+        d.o.append(f'<circle cx="{x}" cy="{DY}" r="5" fill="#fff" stroke="#111" stroke-width="1.4"/>')
+        d.o.append(f'<text class="p" x="{x + 4}" y="{DY + 12}" transform="rotate(90 {x + 4} {DY + 12})">{name}</text>')
+    d.text(810, DY + 84, "DISP1 2.8\" ILI9341 320x240", "r", "middle")
+    d.text(810, DY + 100, "+ FT6336 capacitive touch", "p", "middle")
+    d.flag_down(712, DY + 110, "VCC 3V3")
+    d.wire([(910, DY + 110), (910, DY + 118)], BLACK, 2); d.gnd(910, DY + 118)
 
     # blower: Q2 IRLZ44N low side
-    BX = 880
+    BX = 1030
     d.wire([(BX, TOP), (BX, 150)], RED, 3); d.dot(BX, TOP, RED)
-    d.box(830, 150, 100, 50, "blower", "5015 12 V")
+    d.box(BX - 50, 150, 100, 50, "blower", "5015 12 V")
     d.wire([(BX, 200), (BX, 230)], BLACK, 3)
-    d.dot(BX, 130, RED); d.wire([(BX, 130), (960, 130)], RED, 2)
-    d.diode_v(960, 130, 215, "D1 1N5819")
-    d.wire([(960, 215), (BX, 215)], BLACK, 2); d.dot(BX, 215, BLACK)
-    d.box(855, 230, 50, 60, "Q2", "")
-    d.text(912, 270, "IRLZ44N", "p")
-    d.text(912, 244, "D", "p"); d.text(912, 290, "S", "p")
+    d.dot(BX, 130, RED); d.wire([(BX, 130), (BX + 80, 130)], RED, 2)
+    d.diode_v(BX + 80, 130, 215, "D1 1N5819")
+    d.wire([(BX + 80, 215), (BX, 215)], BLACK, 2); d.dot(BX, 215, BLACK)
+    d.box(BX - 25, 230, 50, 60, "Q2", "")
+    d.text(BX + 32, 270, "IRLZ44N", "p")
+    d.text(BX + 32, 244, "D", "p"); d.text(BX + 32, 290, "S", "p")
     d.wire([(BX, 290), (BX, 300)], BLACK, 2); d.gnd(BX, 300)
-    d.wire([(730, 260), (752, 260)], GREEN, 2); d.res_h(752, 818, 260, "R4 100 Ω", GREEN)
-    d.wire([(818, 260), (855, 260)], GREEN, 2)
-    d.dot(838, 260, GREEN); d.res_v(838, 260, 335, "R5 10k", GREEN, right=False); d.gnd(838, 335)
+    d.wire([(RX, 260), (RX + 18, 260)], GREEN, 2); d.res_h(RX + 18, RX + 68, 260, "R4 100 Ω", GREEN)
+    d.wire([(RX + 68, 260), (BX - 25, 260)], GREEN, 2)
+    d.dot(RX + 82, 260, GREEN); d.res_v(RX + 82, 260, 335, "R5 10k", GREEN, right=False); d.gnd(RX + 82, 335)
 
     # buzzer: Q3 2N2222A
-    ZX = 1060
+    ZX = 1200
     d.flag(ZX, 345, "5V", ORANGE)
-    d.box(1015, 345, 90, 45, "BZ1 buzzer", "5 V active")
+    d.box(ZX - 45, 345, 90, 45, "BZ1 buzzer", "5 V active")
     d.wire([(ZX, 390), (ZX, 400)], BLACK, 2)
-    d.box(1035, 400, 50, 60, "Q3", "")
-    d.text(1092, 436, "2N2222A", "p")
+    d.box(ZX - 25, 400, 50, 60, "Q3", "")
+    d.text(ZX + 32, 436, "2N2222A", "p")
     d.wire([(ZX, 460), (ZX, 470)], BLACK, 2); d.gnd(ZX, 470)
-    d.wire([(730, 425), (880, 425)], YELLOW, 2); d.res_h(880, 960, 425, "R6 1 kΩ", YELLOW)
-    d.wire([(960, 425), (1035, 425)], YELLOW, 2)
+    d.wire([(RX, 425), (1060, 425)], YELLOW, 2); d.res_h(1060, 1140, 425, "R6 1 kΩ", YELLOW)
+    d.wire([(1140, 425), (ZX - 25, 425)], YELLOW, 2)
 
     # heater switch: PC817 -> IRF3205, gate from 12 V
-    d.wire([(730, 580), (1060, 580)], PURPLE, 2)
-    d.res_h(1060, 1150, 580, "R1 470 Ω", PURPLE)
-    d.box(1150, 545, 100, 110, "OK1 PC817", "")
-    d.term(1150, 580, "1"); d.term(1150, 620, "2")
-    d.wire([(1150, 620), (1125, 620), (1125, 645)], BLACK, 2); d.gnd(1125, 645)
-    d.term(1250, 580, "4", "end"); d.term(1250, 620, "3", "end")
-    d.wire([(1250, 580), (1280, 580)], RED, 2)
-    d.res_v(1280, 580, TOP, "R2 1 kΩ", RED, right=False); d.dot(1280, TOP, RED)
-    d.wire([(1250, 620), (1340, 620), (1340, 520), (1390, 520)], YELLOW, 2)
-    d.dot(1305, 620, YELLOW); d.res_v(1305, 620, 700, "R3 10k", YELLOW, right=False); d.gnd(1305, 700)
-    d.text(1348, 512, "G", "p")
+    PX = 1290
+    d.wire([(RX, 580), (1200, 580)], PURPLE, 2)
+    d.res_h(1200, PX, 580, "R1 470 Ω", PURPLE)
+    d.box(PX, 545, 100, 110, "OK1 PC817", "")
+    d.term(PX, 580, "1"); d.term(PX, 620, "2")
+    d.wire([(PX, 620), (PX - 25, 620), (PX - 25, 645)], BLACK, 2); d.gnd(PX - 25, 645)
+    d.term(PX + 100, 580, "4", "end"); d.term(PX + 100, 620, "3", "end")
+    d.wire([(PX + 100, 580), (PX + 130, 580)], RED, 2)
+    d.res_v(PX + 130, 580, TOP, "R2 1 kΩ", RED, right=False); d.dot(PX + 130, TOP, RED)
+    d.wire([(PX + 100, 620), (PX + 190, 620), (PX + 190, 520), (PX + 240, 520)], YELLOW, 2)
+    d.dot(PX + 155, 620, YELLOW); d.res_v(PX + 155, 620, 700, "R3 10k", YELLOW, right=False); d.gnd(PX + 155, 700)
+    d.text(PX + 198, 512, "G", "p")
 
     # heater chain, heavy wire
-    HX = 1420
+    HX = 1560
     d.wire([(HX, TOP), (HX, 150)], RED, 4); d.dot(HX, TOP, RED)
-    d.box(1355, 150, 130, 46, "TS1 KSD301", "85 °C, 16 A", "safe")
+    d.box(HX - 65, 150, 130, 46, "TS1 KSD301", "85 °C, 16 A", "safe")
     d.wire([(HX, 196), (HX, 216)], RED, 4)
-    d.box(1355, 216, 130, 46, "TF1 thermal fuse", "92 °C, 15 A", "safe")
+    d.box(HX - 65, 216, 130, 46, "TF1 thermal fuse", "92 °C, 15 A", "safe")
     d.wire([(HX, 262), (HX, 300)], RED, 4)
-    d.box(1360, 300, 120, 64, "H1 PTC heater", "12 V 150 W")
+    d.box(HX - 60, 300, 120, 64, "H1 PTC heater", "12 V 150 W")
     d.wire([(HX, 364), (HX, 480)], BROWN, 4)
     d.text(HX + 8, 410, "heater −", "p"); d.text(HX + 8, 426, "14 AWG", "p")
-    d.box(1390, 480, 60, 80, "Q1", "")
+    d.box(HX - 30, 480, 60, 80, "Q1", "")
     d.text(HX, 528, "IRF3205", "p", "middle")
     d.text(HX + 36, 494, "D", "p"); d.text(HX + 36, 556, "S", "p")
     d.wire([(HX, 560), (HX, 620)], BLACK, 4); d.gnd(HX, 620)
@@ -181,33 +193,33 @@ def schematic():
     d.text(HX + 14, 656, "Q1: 25 mm heatsink", "p")
 
     notes = [
-        "Heater path (red/brown/black thick lines): 150 W at 12 V is about 12.5 A. 20 A fuse, 14 AWG silicone wire soldered straight to Q1's drain and source legs, "
+        "Heater path (thick lines): 150 W at 12 V is about 12.5 A. 20 A fuse, 14 AWG silicone wire soldered straight to Q1's drain and source legs, "
         "not along perfboard tracks; KSD301 16 A and thermal fuse 15 A (the common 10 A ones are too small).",
-        "Q1 gate is driven from 12 V through the PC817 (about 11 V on). At power-up GPIO4 floats: the PC817 stays dark and R3 holds Q1 off; R5 holds the blower's Q2 off.",
-        "Strapping pins: R9 keeps GPIO2 and R7 keeps GPIO8 high at boot, as the ESP32-C3 needs. Each HX711 has its own clock pin.",
-        "Load cell wire colours vary between makers: if a cell reads backwards it still works (the calibration takes the sign), but swap A+/A− for tidiness.",
+        "Q1's gate is driven from 12 V through the PC817 (about 11 V on). At power-up GPIO4 floats: the PC817 stays dark and R3 holds Q1 off; R5 holds the blower's Q2 off.",
+        "Touch screen: SPI for the picture, its touch chip on a second I2C bus (address 0x38, the same as an AHT20). LED is the backlight's control input "
+        "(the module switches it with its own transistor); if yours lights only with LED on 3V3, wire it there.",
+        "Load cell wire colours vary between makers: a cell that reads backwards still works (the calibration takes the sign), but swap A+/A− for tidiness.",
         "On the board: C1 100 µF 25 V and C2 100 nF across the 12 V input, C3 100 nF across 3V3/GND near the HX711s. All grounds (⏚) meet at J1's black wire.",
     ]
     for i, n in enumerate(notes):
-        d.text(30, 1050 + i * 19, n, "v")
+        d.text(30, 1060 + i * 19, n, "v")
     d.save(ROOT / "wiring.svg", "1-roll v2 schematic")
 
 
 def perfboard():
-    """Top view of a 70 x 90 mm dot board (component side), 6 px per mm."""
-    S, OX, OY = 6, 60, 90
-    W, H = 70, 90
-    d = D(OX * 2 + W * S + 300, OY + H * S + 140)
-    d.text(30, 36, "1-roll v2: perfboard layout (70 × 90 mm dot board, component side)", "t")
-    d.text(30, 58, "Modules sit in female headers so they can be swapped. Sensor and fan leads use JST-XH sockets; only 12 V in uses a screw terminal.", "v")
+    """Top view of a 90 x 150 mm dot board (component side), 5 px per mm."""
+    S, OX, OY = 5, 60, 90
+    W, H = 90, 150
+    d = D(OX * 2 + W * S + 330, OY + H * S + 70)
+    d.text(30, 36, "1-roll v2: perfboard layout (90 × 150 mm dot board, component side)", "t")
+    d.text(30, 58, "Modules in female headers; probes, blower and cells on JST-XH sockets; the screen on a 14-pin header.", "v")
     d.o.append(f'<rect x="{OX}" y="{OY}" width="{W * S}" height="{H * S}" fill="#f1ead2" stroke="#8d6e63" stroke-width="2"/>')
-    # dot grid (every 2.54 mm)
     dots = []
     x = 2.0
     while x < W - 1:
         y = 2.0
         while y < H - 1:
-            dots.append(f'<circle cx="{OX + x * S:.1f}" cy="{OY + y * S:.1f}" r="1.1" fill="#c8b98f"/>')
+            dots.append(f'<circle cx="{OX + x * S:.1f}" cy="{OY + y * S:.1f}" r="1.0" fill="#c8b98f"/>')
             y += 2.54
         x += 2.54
     d.o.append("".join(dots))
@@ -218,38 +230,38 @@ def perfboard():
         if sub:
             d.text(OX + (x + w / 2) * S, OY + (y + h / 2) * S + 14, sub, "p", "middle")
 
-    part(2, 2, 10, 8, "J1", "12 V in", "safe")
-    part(2, 11, 9, 7, "C1 C2", "")
-    part(14, 2, 22, 17, "U2 MP1584", "5.0 V")
-    part(42, 2, 26, 24, "Q1 IRF3205", "on heatsink", "safe")
-    part(42, 29, 16, 13, "OK1 PC817", "R1–R3")
-    part(0, 24, 23, 18, "U1 SuperMini", "USB-C → left edge", "mod")
-    part(26, 22, 14, 10, "R7–R10", "pull-ups")
-    part(26, 34, 14, 16, "BZ1", "Q3, R6")
-    part(42, 45, 16, 13, "Q2 IRLZ44N", "D1 R4 R5")
-    part(60, 45, 8, 8, "J2", "blower")
-    part(60, 30, 8, 13, "J4", "OLED")
-    part(2, 45, 8, 12, "J3", "SHT40")
-    part(12, 45, 10, 9, "J5", "DS18B")
-    part(60, 55, 8, 6, "J6", "button")
-    part(1, 62, 33, 20, "U3 HX711 L", "", "mod")
-    part(36, 62, 33, 20, "U4 HX711 R", "", "mod")
-    part(6, 83, 13, 6, "J7", "cell L")
-    part(42, 83, 13, 6, "J8", "cell R")
-    part(25, 52, 14, 8, "C3", "100 nF")
-    # dimensions
-    d.text(OX + W * S / 2, OY + H * S + 24, "70 mm", "v", "middle")
-    d.text(OX - 12, OY + H * S / 2, "90 mm", "v", "end")
+    part(2, 2, 11, 9, "J1", "12 V in", "safe")
+    part(2, 13, 11, 8, "C1 C2", "")
+    part(15, 2, 22, 17, "U2 MP1584", "5.0 V")
+    part(40, 2, 20, 15, "OK1 PC817", "R1–R3")
+    part(62, 2, 26, 26, "Q1 IRF3205", "on heatsink", "safe")
+    part(40, 20, 20, 15, "Q2 IRLZ44N", "D1 R4 R5")
+    part(15, 22, 22, 14, "BZ1", "Q3 R6")
+    part(0, 40, 70, 26, "U1 ESP32-S3-DevKitC-1", "USB-C → left edge", "mod")
+    part(72, 40, 16, 14, "R7–R9", "C3")
+    part(4, 72, 52, 8, "J9 screen", "14-pin header")
+    part(62, 72, 26, 7, "J2", "blower")
+    part(62, 82, 26, 9, "J3", "SHT40 probe")
+    part(62, 94, 26, 8, "J5", "DS18B20")
+    part(4, 116, 36, 21, "U3 HX711 L", "", "mod")
+    part(50, 116, 36, 21, "U4 HX711 R", "", "mod")
+    part(10, 139, 22, 8, "J7", "cell L")
+    part(56, 139, 22, 8, "J8", "cell R")
+    d.text(OX + W * S / 2, OY + H * S + 24, "90 mm", "v", "middle")
+    d.text(OX - 12, OY + H * S / 2, "150 mm", "v", "end")
     notes = ["Heater current never runs on the board:",
              "14 AWG from TF1 to the heater, heater −",
              "soldered to Q1's drain leg, and Q1's",
              "source leg straight back to J1's black wire.",
              "",
-             "Keep the HX711s away from Q1 and the",
-             "MP1584: their switching adds scale noise.",
+             "The HX711s sit at the far end from Q1",
+             "and the MP1584: switching adds scale noise.",
              "",
              "Wire 3V3 and GND as two bare buses",
-             "along the board's underside."]
+             "along the board's underside.",
+             "",
+             "J9 to the screen: 14 short Dupont wires",
+             "(or a ribbon), under 20 cm for 40 MHz SPI."]
     for i, n in enumerate(notes):
         d.text(OX + W * S + 30, OY + 20 + i * 20, n, "v")
     d.save(ROOT / "images" / "perfboard.svg", "1-roll v2 perfboard layout")
@@ -259,35 +271,33 @@ def front_panel():
     """The 90 x 70 mm front, 6 px per mm."""
     S, OX, OY = 6, 60, 90
     W, H = 90, 70
-    d = D(OX * 2 + W * S + 320, OY + H * S + 110)
+    d = D(OX * 2 + W * S + 330, OY + H * S + 110)
     d.text(30, 36, "1-roll v2: front panel (90 × 70 mm)", "t")
-    d.text(30, 58, "2.42\" OLED module (about 73 × 43 mm) and a 12 mm push button. Measure your module before printing: sizes vary a little.", "v")
+    d.text(30, 58, "2.8\" touch screen module (about 86 × 50 mm). Measure your module before printing: sizes and the screen's offset vary.", "v")
     d.o.append(f'<rect x="{OX}" y="{OY}" width="{W * S}" height="{H * S}" rx="12" fill="#eceff1" stroke="#455a64" stroke-width="2"/>')
-    # module outline (behind), window, holes
-    mx, my, mw, mh = (W - 73.5) / 2, 4, 73.5, 43
+    mx, my, mw, mh = (W - 86) / 2, (H - 50) / 2, 86, 50
     d.o.append(f'<rect x="{OX + mx * S}" y="{OY + my * S}" width="{mw * S}" height="{mh * S}" fill="none" stroke="#90a4ae" stroke-dasharray="6 4" stroke-width="1.5"/>')
-    wx, wy, ww, wh = (W - 57) / 2, my + 7.5, 57, 30
+    ww, wh = 59, 45
+    wx, wy = (W - ww) / 2, (H - wh) / 2
     d.o.append(f'<rect x="{OX + wx * S}" y="{OY + wy * S}" width="{ww * S}" height="{wh * S}" fill="#111"/>')
-    d.text(OX + W * S / 2, OY + (wy + wh / 2) * S + 5, "window 57 × 30 mm", "r", "middle")
-    d.o[-1] = d.o[-1].replace('class="r"', 'class="r" fill="#fff" style="fill:#fff"')
-    for hx, hy in ((mx + 2.5, my + 2.5), (mx + mw - 2.5, my + 2.5), (mx + 2.5, my + mh - 2.5), (mx + mw - 2.5, my + mh - 2.5)):
-        d.o.append(f'<circle cx="{OX + hx * S}" cy="{OY + hy * S}" r="{1.4 * S}" fill="#fff" stroke="#455a64" stroke-width="1.4"/>')
-    bx, by = W / 2, 58
-    d.o.append(f'<circle cx="{OX + bx * S}" cy="{OY + by * S}" r="{6 * S}" fill="#fff" stroke="#455a64" stroke-width="2"/>')
-    d.text(OX + bx * S, OY + by * S + 4, "Ø 12", "p", "middle")
+    d.o.append(f'<text x="{OX + W * S / 2}" y="{OY + H * S / 2 + 5}" text-anchor="middle" style="font:14px Inter,Arial,sans-serif;fill:#fff">window 59 × 45 mm</text>')
+    for hx, hy in ((mx + 3, my + 3), (mx + mw - 3, my + 3), (mx + 3, my + mh - 3), (mx + mw - 3, my + mh - 3)):
+        d.o.append(f'<circle cx="{OX + hx * S}" cy="{OY + hy * S}" r="{1.6 * S}" fill="#fff" stroke="#455a64" stroke-width="1.4"/>')
     d.text(OX + W * S / 2, OY + H * S + 24, "90 mm", "v", "middle")
     d.text(OX - 12, OY + H * S / 2, "70 mm", "v", "end")
-    notes = ["Dashed: the OLED module behind the",
-             "panel, on M2.5 screws into printed",
-             "standoffs (holes 2.5 mm from its",
-             "corners on most modules).",
+    notes = ["Dashed: the screen module behind the",
+             "panel, on M3 screws into printed",
+             "standoffs at its corner holes.",
+             "The module is 86 mm wide: the panel",
+             "needs about 87 mm clear behind it.",
              "",
-             "Button: short press = next mode or",
-             "clear a fault; hold 3 s = tare;",
-             "hold 10 s = forget Wi-Fi; held while",
-             "powering up = switch display type.",
+             "The 59 × 45 mm window shows the",
+             "57.6 × 43.2 mm picture; the glass",
+             "touch surface sits in it.",
              "",
-             "The buzzer sits on the board inside."]
+             "No button: everything is on the screen.",
+             "The backlight goes off after 10 min;",
+             "a touch wakes it, and a fault does too."]
     for i, n in enumerate(notes):
         d.text(OX + W * S + 30, OY + 20 + i * 20, n, "v")
     d.save(ROOT / "images" / "front-panel.svg", "1-roll v2 front panel")

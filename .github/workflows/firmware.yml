@@ -64,15 +64,17 @@ jobs:
 
       # <env>.bin is the app only: what /update takes over Wi-Fi. <env>-full.bin adds the
       # bootloader, partition table and boot_app0, and flashes a blank board at 0x0.
+      # dryer-1roll is an ESP32-C3 with 4 MB; dryer-1roll-v2 an ESP32-S3 with 16 MB.
       - name: Make the images
         run: |
           pkgs=~/.platformio/packages
-          for env in dryer-1roll dryer-1roll-v2; do
+          for spec in dryer-1roll:esp32c3:4MB dryer-1roll-v2:esp32s3:16MB; do
+            env=${spec%%:*}; rest=${spec#*:}; chip=${rest%%:*}; size=${rest#*:}
             build=.pio/build/$env
             cp "$build/firmware.bin" "$env.bin"
-            python "$pkgs/tool-esptoolpy/esptool.py" --chip esp32c3 merge_bin \
+            python "$pkgs/tool-esptoolpy/esptool.py" --chip "$chip" merge_bin \
               -o "$env-full.bin" \
-              --flash_mode keep --flash_freq keep --flash_size 4MB \
+              --flash_mode keep --flash_freq keep --flash_size "$size" \
               0x0     "$build/bootloader.bin" \
               0x8000  "$build/partitions.bin" \
               0xe000  "$pkgs/framework-arduinoespressif32/tools/partitions/boot_app0.bin" \
@@ -81,8 +83,8 @@ jobs:
 
       - name: Report flash headroom
         run: |
-          limit=1310720           # app0 in default.csv
-          for env in dryer-1roll dryer-1roll-v2; do
+          for spec in dryer-1roll:1310720 dryer-1roll-v2:6553600; do   # app0 in default.csv / default_16MB.csv
+            env=${spec%%:*}; limit=${spec#*:}
             size=$(stat -c%s "$env.bin")
             pct=$(( size * 100 / limit ))
             echo "$env: ${size} bytes, ${pct}% of the ${limit} byte app partition"

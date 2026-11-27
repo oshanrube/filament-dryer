@@ -112,29 +112,36 @@ No login: the dryer is meant to sit on the local network (like the rest of the c
 
 ## 1-roll v2 (twin scale)
 
-Build `dryer-1roll-v2` (`-D DRYER_BOARD_V2=1`). Differences from `dryer-1roll`:
+Build `dryer-1roll-v2` (`-D DRYER_BOARD_V2=1`) for an **ESP32-S3-DevKitC-1 N16R8** (16 MB flash, 8 MB octal PSRAM, `default_16MB.csv`). Differences from `dryer-1roll`:
 
 - **Pins:**
 
   | Pin | Job |
   |---|---|
-  | GPIO0 / 1 | Left HX711: SCK / DT |
-  | GPIO3 / 6 | Right HX711: SCK / DT |
-  | GPIO2 | DS18B20 |
+  | GPIO1 / 2 | Left HX711: SCK / DT |
+  | GPIO38 / 39 | Right HX711: SCK / DT |
   | GPIO4 | Heater (PC817 → IRF3205) |
   | GPIO5 | Blower (IRLZ44N) |
-  | GPIO7 / 8 | I2C |
-  | GPIO10 | Buzzer |
-  | GPIO20 | Button |
+  | GPIO6 | Buzzer |
+  | GPIO7 | DS18B20 |
+  | GPIO8 / 9 | Sensor I2C SDA / SCL |
+  | GPIO10–14 | Screen SPI: CS, MOSI, SCK, DC, RST |
+  | GPIO47 | Backlight |
+  | GPIO15–18 | Touch I2C SDA, SCL, INT, RST |
 
-  No SFS and no exhaust fan.
+  No SFS, exhaust fan, button or OLED.
+- **Touch screen:** 2.8" ILI9341 + FT6336 capacitive touch, through LovyanGFX 1.1.16 and LVGL 8.3.11 (no `lv_conf.h`: options are build flags, including `LV_SPRINTF_USE_FLOAT=1`, without which every temperature would print blank).
+  - **Code:** the UI is `src/ui_v2.h`, run as its own task on core 1. It reads `snapshot()` and sends the same commands as the web API, so a slow redraw can't hold up the heater.
+  - **Screens:** home, material picker, settings, scale.
+  - **Backlight:** off after 10 min untouched; the first touch only wakes it, and a fault wakes it too.
+  - **Touch direction:** `POST /api/config {"touch_flip":0-3}`, or the *Flip touch* button, mirrors touch x/y for a panel fitted the other way round.
+- **UI on a PC:** `sh tools/ui_sim/run.sh` builds the same screens against stub data and writes one PNG per screen (plus `screens.png`) to `.pio/ui_sim/`. Needs a C/C++ compiler, Python with Pillow, and one `pio run -e dryer-1roll-v2` first, for the LVGL download.
 - **Scale:** total = left + right, each cell with its own factor (`TwinScaleCal` in `DryerCore`).
   - **Calibrate:** tare the empty axle, then `POST /api/calibrate {"grams":500,"step":"left"}` with the weight near the left end, then `"step":"right"` near the right end (`solveTwoPoint`). `"step":"middle"` is a one-step version with the weight centred.
   - **Temperature drift:** `POST /api/scale/learn {"start":true}` with a reel left on, then run one Dry cycle. It logs both cells against the chamber temperature once a minute, fits a line per cell (`DriftFit`, at least 15 °C of range), and subtracts it from then on. It stops by itself when the cycle ends, after 8 h, or on `{"start":false}`.
-  - `/api/state` adds `scale.cells` (left/right grams), `scale.calibrated`, `scale.cal_status` and `scale.drift`; the `filament` object and `exhaust` aren't sent.
+  - `/api/state` adds `scale.cells` (left/right grams), `scale.calibrated`, `scale.cal_status`, `scale.drift` and `touch_flip`; the `filament` object and `exhaust` aren't sent.
 - **65 °C cap** on every setpoint (`Controller::setMaxC`): the load cells sit in the chamber.
-- **Display:** `ssd1309` (2.42", default), `ssd1309_0` (the other 2.42" variant) or `sh1106` (1.3"). Hold the button while powering up to step to the next one, or `POST /api/config {"display":"sh1106"}` (restarts).
-- Settings live in flash under the same `dryer` namespace (keys `o1 o2 k1 k2 d1 d2 refc empty disp`).
+- **Settings** live in flash under the same `dryer` namespace (keys `o1 o2 k1 k2 d1 d2 refc empty tflip`).
 
 ## Bench checks before the first real heat
 

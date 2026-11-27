@@ -1,13 +1,20 @@
 // Filament dryer firmware.
 //   dryer-1roll      the 1-roll PCB and its perfboard build (same pins): one load cell, BTT SFS, two fans
-//   dryer-1roll-v2   1-roll v2 "twin scale" perfboard (DRYER_BOARD_V2): the axle on two load cells,
-//                    one blower, no SFS, 2.42" SSD1309 or 1.3" SH1106 OLED, chamber capped at 65 °C
+//   dryer-1roll-v2   1-roll v2 "twin scale" perfboard (DRYER_BOARD_V2) on an ESP32-S3-DevKitC-1 N16R8:
+//                    the axle on two load cells, one blower, no SFS, a 2.8" capacitive touch screen,
+//                    chamber capped at 65 °C
 //
-// Two FreeRTOS tasks, as in the gate controller:
+// FreeRTOS tasks, as in the gate controller:
 //   control task  sensors, heater, fans, scale, button, buzzer, OLED. Never waits on the network,
 //                 so the heater stays under control while Wi-Fi is down or the setup portal is open.
 //   loop()        Wi-Fi and the setup portal, the web page, the REST API, the WebSocket feed, OTA.
+//   ui task       (v2 only) the touch screen, in ui_v2.h. Reads the same snapshot and sends the same
+//                 commands as the network side, so it can't stall the heater either.
 // The control logic itself (modes, PID, cut-outs, scale maths) is lib/DryerCore, unit-tested on the host.
+#ifndef DRYER_BOARD_V2
+#define DRYER_BOARD_V2 0
+#endif
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <DallasTemperature.h>
@@ -15,7 +22,9 @@
 #include <HX711.h>
 #include <OneWire.h>
 #include <Preferences.h>
+#if !DRYER_BOARD_V2
 #include <U8g2lib.h>
+#endif
 #include <Update.h>
 #include <WebServer.h>
 #include <WebSocketsServer.h>
@@ -34,27 +43,25 @@
 
 using namespace dryer;
 
-#ifndef DRYER_BOARD_V2
-#define DRYER_BOARD_V2 0
-#endif
-
 // ------------------------------------------------------------------------------------------------ pins
 namespace pin {
 #if DRYER_BOARD_V2
-// 1-roll v2 perfboard (1-roll-v2/wiring.svg). Each HX711 has its own clock: two chips on one clock
-// would each be clocked out of step whenever the other is read.
-constexpr int HX_SCK = 0;     // left load cell
-constexpr int HX_DT = 1;
-constexpr int ONEWIRE = 2;    // DS18B20, heater outlet (4.7 k pull-up keeps the strapping pin high)
-constexpr int HX2_SCK = 3;    // right load cell
+// 1-roll v2 perfboard on an ESP32-S3-DevKitC-1 N16R8 (1-roll-v2/wiring.svg). None of these are
+// strapping pins (0, 3, 45, 46) or taken by the octal PSRAM (35-37). Each HX711 has its own clock.
+constexpr int HX_SCK = 1;     // left load cell
+constexpr int HX_DT = 2;
 constexpr int HEATER = 4;     // PC817 -> IRF3205, off at boot
 constexpr int BLOWER = 5;     // IRLZ44N gate
-constexpr int HX2_DT = 6;
-constexpr int SCL = 7;
-constexpr int SDA = 8;        // strapping pin: the 4.7 k I2C pull-up keeps it high
-constexpr int BUZZER = 10;
-constexpr int BUTTON = 20;    // front button to GND (10 k pull-up)
-constexpr int RUNOUT = -1, MOTION = -1, EXHAUST = -1;   // not fitted
+constexpr int BUZZER = 6;
+constexpr int ONEWIRE = 7;    // DS18B20, heater outlet
+constexpr int SDA = 8;        // sensor I2C: SHT40 chamber probe
+constexpr int SCL = 9;
+constexpr int TFT_CS = 10, TFT_MOSI = 11, TFT_SCK = 12, TFT_DC = 13, TFT_RST = 14;
+constexpr int TP_SDA = 15, TP_SCL = 16, TP_INT = 17, TP_RST = 18;   // touch on its own I2C bus (FT6336 is 0x38, as an AHT20)
+constexpr int HX2_SCK = 38;   // right load cell
+constexpr int HX2_DT = 39;
+constexpr int TFT_BL = 47;    // backlight, PWM
+constexpr int BUTTON = -1, RUNOUT = -1, MOTION = -1, EXHAUST = -1;   // not fitted
 #else
 // Same on the 1-roll PCB and the perfboard (see 1-roll/page.html and 1-roll/perfboard/).
 constexpr int HX_SCK = 0;
@@ -100,12 +107,12 @@ static Snapshot snapshot() {
 }
 
 enum class CmdType : uint8_t { SetMode, SetMaterial, ClearFault, Tare, Calibrate, SetEmptyReel, SetMmPerPulse, SetRunoutInvert, ResetMotion,
-                              CalPoint, LearnDrift, SetDisplay };
+                              CalPoint, LearnDrift, SetTouchFlip, Beep };
 enum class CalStep : int { Left = 0, Right = 1, Centre = 2 };
 struct Cmd { CmdType type; Mode mode; int material; float value; };
 static QueueHandle_t g_cmds;
 static volatile bool g_wifiResetRequested = false;
-static volatile bool g_restartRequested = false;
+static volatile uint8_t g_touchFlip = 0;   // v2: bit 0 mirrors touch x, bit 1 mirrors y (some panels are fitted flipped)
 
 static bool sendCmd(const Cmd& c) { return xQueueSend(g_cmds, &c, 0) == pdTRUE; }
 
@@ -199,17 +206,11 @@ static const char* chamberTypeName(ChamberType c) {
 static OneWire g_ow(pin::ONEWIRE);
 static DallasTemperature g_ds(&g_ow);
 static HX711 g_hx;
+#if !DRYER_BOARD_V2
 // SH1106 1.3" OLED. Passing the pins makes U8g2 start Wire on GPIO7/8, not the core's defaults.
 static U8G2_SH1106_128X64_NONAME_F_HW_I2C g_sh1106(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
-#if DRYER_BOARD_V2
-// 2.42" OLEDs are SSD1309; makers wire them two ways, hence two variants (the "display" setting).
-static U8G2_SSD1309_128X64_NONAME2_F_HW_I2C g_ssd1309(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
-static U8G2_SSD1309_128X64_NONAME0_F_HW_I2C g_ssd1309b(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
-#endif
-static const char* const DISPLAY_NAMES[] = {"sh1106", "ssd1309", "ssd1309_0"};
-static const int DISPLAY_COUNT = DRYER_BOARD_V2 ? 3 : 1;
 static U8G2* g_oled = &g_sh1106;
-__attribute__((unused)) static int g_display = 0;
+#endif
 static volatile uint32_t g_motionPulses = 0;
 __attribute__((unused)) static void IRAM_ATTR onMotion() { g_motionPulses = g_motionPulses + 1; }
 
@@ -229,7 +230,8 @@ struct Beeper {
   }
 };
 
-__attribute__((unused)) static void drawOled(const Snapshot& s, const char* netLine) {
+#if !DRYER_BOARD_V2
+static void drawOled(const Snapshot& s, const char* netLine) {
   char buf[32];
   g_oled->clearBuffer();
   g_oled->setFont(u8g2_font_6x12_tr);
@@ -259,43 +261,6 @@ __attribute__((unused)) static void drawOled(const Snapshot& s, const char* netL
   g_oled->sendBuffer();
 }
 
-#if DRYER_BOARD_V2
-// 1-roll v2 front: status line, big temperature and humidity, the reel, then Wi-Fi or a prompt.
-static void drawOledV2(const Snapshot& s, const char* netLine) {
-  char buf[32];
-  g_oled->clearBuffer();
-  g_oled->setFont(u8g2_font_6x12_tr);
-  if (s.fault != Fault::None) snprintf(buf, sizeof buf, "FAULT %s", faultName(s.fault));
-  else if (s.mode == Mode::Dry) {
-    uint32_t m = s.dryRemainingS / 60;
-    snprintf(buf, sizeof buf, "DRY %s %.0fC %lu:%02lu", MATERIALS[s.material].name, s.setpointC, (unsigned long)(m / 60), (unsigned long)(m % 60));
-  } else if (s.mode == Mode::KeepDry) snprintf(buf, sizeof buf, s.boost ? "KEEP DRY  boost 45C" : "KEEP DRY");
-  else if (s.mode == Mode::Print) snprintf(buf, sizeof buf, "PRINT %s %.0fC", MATERIALS[s.material].name, s.setpointC);
-  else snprintf(buf, sizeof buf, "OFF  (%s)", MATERIALS[s.material].name);
-  g_oled->drawStr(0, 10, buf);
-  if (s.heaterOn || s.duty > 0) { snprintf(buf, sizeof buf, "%d%%", (int)(s.duty * 100 + 0.5f)); g_oled->drawStr(128 - g_oled->getStrWidth(buf), 10, buf); }
-
-  g_oled->setFont(u8g2_font_logisoso22_tr);
-  if (s.chamberOk) {
-    snprintf(buf, sizeof buf, "%.1f", s.chamberC);
-    g_oled->drawStr(0, 38, buf);
-    int w = g_oled->getStrWidth(buf);
-    g_oled->setFont(u8g2_font_6x12_tr); g_oled->drawStr(w + 2, 24, "C");
-    g_oled->setFont(u8g2_font_logisoso22_tr);
-    snprintf(buf, sizeof buf, "%.0f%%", s.chamberRh);
-    g_oled->drawStr(128 - g_oled->getStrWidth(buf), 38, buf);
-  } else {
-    g_oled->setFont(u8g2_font_6x12_tr); g_oled->drawStr(0, 32, "No chamber sensor");
-  }
-
-  g_oled->setFont(u8g2_font_6x12_tr);
-  if (!s.scaleOk) snprintf(buf, sizeof buf, "Scale: no reading");
-  else if (!s.scaleCalibrated) snprintf(buf, sizeof buf, "Scale: calibrate me");
-  else snprintf(buf, sizeof buf, "Reel %.0f g  %.0f m", s.gramsLeft, s.metresLeft);
-  g_oled->drawStr(0, 51, buf);
-  g_oled->drawStr(0, 63, s.learning ? "Learning scale drift" : netLine);
-  g_oled->sendBuffer();
-}
 #endif
 
 static char g_netLine[32] = "Wi-Fi: starting";
@@ -304,18 +269,10 @@ static void controlTask(void*) {
   esp_task_wdt_add(NULL);
 
   Wire.begin(pin::SDA, pin::SCL, 100000);
-#if DRYER_BOARD_V2
-  pinMode(pin::BUTTON, INPUT_PULLUP);
-  g_display = prefs.getUChar("disp", 1);                  // default: the 2.42" SSD1309
-  if (digitalRead(pin::BUTTON) == LOW) {                  // button held at power-up: next display type
-    g_display = (g_display + 1) % DISPLAY_COUNT;
-    prefs.putUChar("disp", g_display);
-  }
-  if (g_display >= DISPLAY_COUNT) g_display = 0;
-  g_oled = g_display == 1 ? (U8G2*)&g_ssd1309 : g_display == 2 ? (U8G2*)&g_ssd1309b : (U8G2*)&g_sh1106;
-#endif
+#if !DRYER_BOARD_V2
   g_oled->setBusClock(100000);
   g_oled->begin();
+#endif
 
   g_ds.begin();
   g_ds.setResolution(11);
@@ -324,7 +281,7 @@ static void controlTask(void*) {
 
   g_hx.begin(pin::HX_DT, pin::HX_SCK);
 
-  pinMode(pin::BUTTON, INPUT_PULLUP);
+  if (pin::BUTTON >= 0) pinMode(pin::BUTTON, INPUT_PULLUP);
 #if DRYER_BOARD_V2
   static HX711 hx2;
   hx2.begin(pin::HX2_DT, pin::HX2_SCK);
@@ -370,7 +327,11 @@ static void controlTask(void*) {
   Fault lastFault = Fault::None;
   uint32_t lastFaultBeep = 0;
   // button
+#if !DRYER_BOARD_V2
   bool btnDown = false; uint32_t btnSince = 0;
+#else
+  (void)lastOled;
+#endif
 
   TickType_t wake = xTaskGetTickCount();
   for (;;) {
@@ -430,9 +391,8 @@ static void controlTask(void*) {
             else calStatus = "drift: not enough temperature range";
           }
           break;
-        case CmdType::SetDisplay:
-          if (c.material >= 0 && c.material < DISPLAY_COUNT) { prefs.putUChar("disp", (uint8_t)c.material); g_restartRequested = true; }
-          break;
+        case CmdType::SetTouchFlip: g_touchFlip = (uint8_t)(c.material & 3); prefs.putUChar("tflip", g_touchFlip); break;
+        case CmdType::Beep: beeper.play({(uint16_t)(c.value > 0 ? c.value : 30)}, now); break;
         case CmdType::SetEmptyReel: g_twin.emptyReelG = c.value; saveTwin(); break;
         case CmdType::Calibrate: break;
 #else
@@ -441,7 +401,7 @@ static void controlTask(void*) {
           if (median.count() && g_cal.calibrate(median.value(), c.value)) { saveCal(); beeper.play({60, 80, 60}, now); }
           break;
         case CmdType::SetEmptyReel: g_cal.emptyReelG = c.value; saveCal(); break;
-        case CmdType::CalPoint: case CmdType::LearnDrift: case CmdType::SetDisplay: break;
+        case CmdType::CalPoint: case CmdType::LearnDrift: case CmdType::SetTouchFlip: case CmdType::Beep: break;
 #endif
         case CmdType::SetMmPerPulse: if (c.value > 0) { mmPerPulse = c.value; prefs.putFloat("mmpp", mmPerPulse); } break;
         case CmdType::SetRunoutInvert: runoutInvert = c.value != 0; prefs.putBool("runinv", runoutInvert); break;
@@ -522,6 +482,7 @@ static void controlTask(void*) {
     if (pin::EXHAUST >= 0) digitalWrite(pin::EXHAUST, out.exhaust ? HIGH : LOW);
     digitalWrite(pin::BUZZER, beeper.update(now) ? HIGH : LOW);
 
+#if !DRYER_BOARD_V2
     // ---- front button: short = acknowledge a fault, or next mode; 3 s = tare; 10 s = forget Wi-Fi
     bool down = digitalRead(pin::BUTTON) == LOW;
     if (down && !btnDown) { btnDown = true; btnSince = now; }
@@ -541,6 +502,7 @@ static void controlTask(void*) {
         beeper.play({60}, now);
       }
     }
+#endif
 
     // ---- publish
     if (now - lastSnap >= 200) {
@@ -586,6 +548,7 @@ static void controlTask(void*) {
       g_snap = s;
       portEXIT_CRITICAL(&g_mux);
     }
+#if !DRYER_BOARD_V2
     if (now - lastOled >= 1000) {
       lastOled = now;
       char line[32];
@@ -594,12 +557,9 @@ static void controlTask(void*) {
       portEXIT_CRITICAL(&g_mux);
       if (btnDown && now - btnSince >= 10000) strcpy(line, "Release: forget Wi-Fi");
       else if (btnDown && now - btnSince >= 3000) strcpy(line, "Release: tare scale");
-#if DRYER_BOARD_V2
-      drawOledV2(snapshot(), line);
-#else
       drawOled(snapshot(), line);
-#endif
     }
+#endif
   }
 }
 
@@ -639,7 +599,7 @@ static String stateJson() {
 #if DRYER_BOARD_V2
   d["board"] = "1roll-v2";
   d["max_c"] = 65;
-  d["display"] = DISPLAY_NAMES[g_display];
+  d["touch_flip"] = g_touchFlip;
   sc["calibrated"] = s.scaleCalibrated;
   sc["cal_status"] = s.calStatus;
   JsonArray cells = sc.createNestedArray("cells");
@@ -704,13 +664,13 @@ static String handleCommand(const String& cmd, JsonVariantConst body) {
     if (body.containsKey("empty_reel_g")) { c.type = CmdType::SetEmptyReel; c.value = body["empty_reel_g"] | 0.0f; sendCmd(c); }
     if (body.containsKey("mm_per_pulse")) { c.type = CmdType::SetMmPerPulse; c.value = body["mm_per_pulse"] | 0.0f; sendCmd(c); }
     if (body.containsKey("runout_invert")) { c.type = CmdType::SetRunoutInvert; c.value = (body["runout_invert"] | false) ? 1 : 0; sendCmd(c); }
-    if (body.containsKey("display")) {
-      String want = body["display"] | "";
-      int idx = -1;
-      for (int k = 0; k < DISPLAY_COUNT; k++) if (want == DISPLAY_NAMES[k]) idx = k;
-      if (idx < 0) return "display must be one of: sh1106" + String(DISPLAY_COUNT > 1 ? ", ssd1309, ssd1309_0" : "");
-      c.type = CmdType::SetDisplay; c.material = idx; sendCmd(c);   // applied after a restart
+#if DRYER_BOARD_V2
+    if (body.containsKey("touch_flip")) {   // 0..3: bit 0 mirrors x, bit 1 mirrors y
+      int f = body["touch_flip"] | -1;
+      if (f < 0 || f > 3) return "touch_flip must be 0-3";
+      c.type = CmdType::SetTouchFlip; c.material = f; sendCmd(c);
     }
+#endif
     return "";
   }
   return "unknown command";
@@ -780,6 +740,10 @@ static void startServices() {
   g_servicesUp = true;
 }
 
+#if DRYER_BOARD_V2
+#include "ui_v2.h"
+#endif
+
 void setup() {
   // outputs low before anything else (the board also pulls the gates low)
   for (int p : {pin::HEATER, pin::BLOWER, pin::EXHAUST, pin::BUZZER})
@@ -791,6 +755,7 @@ void setup() {
   g_cal.emptyReelG = prefs.getFloat("empty", 0);
 #if DRYER_BOARD_V2
   loadTwin();
+  g_touchFlip = prefs.getUChar("tflip", 0) & 3;
 #endif
 
   uint8_t mac[6];
@@ -802,6 +767,9 @@ void setup() {
   g_cmds = xQueueCreate(16, sizeof(Cmd));
   esp_task_wdt_init(10, true);              // the control task resets the chip if it ever stalls 10 s
   xTaskCreate(controlTask, "control", 8192, nullptr, 2, nullptr);
+#if DRYER_BOARD_V2
+  ui::start();                              // touch screen, its own task (ui_v2.h)
+#endif
 
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(name);
@@ -835,10 +803,6 @@ void loop() {
       String s = stateJson();
       g_ws.broadcastTXT(s);
     }
-  }
-  if (g_restartRequested) {   // display type changed: it takes effect on the next start
-    delay(500);
-    ESP.restart();
   }
   if (g_wifiResetRequested) {
     g_wifiResetRequested = false;

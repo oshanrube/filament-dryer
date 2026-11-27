@@ -1,6 +1,6 @@
 <header>
   <h1>Single-Reel Dryer v2: Twin Scale</h1>
-  <p class="lead">The single-reel box with its axle resting on two load cells, one under each end, so the reel weighs right wherever it sits on the axle. A 12 V 150 W PTC heater and a blower, an SHT40 probe for chamber temperature and humidity, a heater-outlet probe, and a 2.42" OLED on the front. Hand-built on perfboard from through-hole parts and AliExpress modules, running the dryer firmware on an ESP32-C3 SuperMini. No filament sensor in the box: the BTT SFS goes on the printer.</p>
+  <p class="lead">The single-reel box with its axle resting on two load cells, one under each end, so the reel weighs right wherever it sits on the axle. A 12 V 150 W PTC heater and a blower, an SHT40 probe for chamber temperature and humidity, a heater-outlet probe, and a 2.8" colour touch screen on the front. Hand-built on perfboard from through-hole parts and AliExpress modules, running the dryer firmware on an ESP32-S3 board. No filament sensor in the box: the BTT SFS goes on the printer.</p>
   <p class="meta">Plan as of 2026-11-27 · parts about US${{BOM_PER_BOX}} per box, housing filament and a crimp kit included.</p>
   <div class="links">
     <a href="wiring.svg">Schematic (SVG)</a>
@@ -17,7 +17,7 @@
     <li><a href="#drift">Heat and the scale</a></li>
     <li><a href="#schematic">Schematic and pins</a></li>
     <li><a href="#perfboard">Perfboard</a></li>
-    <li><a href="#front">Front panel</a></li>
+    <li><a href="#front">Front panel and touch screen</a></li>
     <li><a href="#firmware">Firmware</a></li>
     <li><a href="#parts">Parts</a></li>
     <li><a href="#build">Build and test</a></li>
@@ -31,8 +31,8 @@
     <tr><td>Reel support</td><td>Bearing rollers on one load cell</td><td>Fixed 8 mm axle, its two ends on two load cells; the reel spins on hub cones with 608 bearings</td></tr>
     <tr><td>Filament sensor</td><td>BTT SFS at the box exit</td><td>None in the box (the SFS mounts on the printer)</td></tr>
     <tr><td>Fans</td><td>Blower + exhaust</td><td>One blower; a passive vent in the lid</td></tr>
-    <tr><td>Display</td><td>1.3" OLED (optional)</td><td>2.42" OLED filling a 90 × 70 mm front (1.3" also supported)</td></tr>
-    <tr><td>Controller</td><td>JLCPCB-assembled board</td><td>Perfboard: SuperMini, HX711 and MP1584 modules, through-hole parts</td></tr>
+    <tr><td>Display and controls</td><td>1.3" OLED (optional) and a button</td><td>2.8" capacitive touch screen filling a 90 × 70 mm front; no button</td></tr>
+    <tr><td>Controller</td><td>JLCPCB-assembled board, ESP32-C3</td><td>Perfboard: ESP32-S3-DevKitC-1 N16R8, HX711 and MP1584 modules, through-hole parts</td></tr>
     <tr><td>Hottest setting</td><td>70 °C</td><td>65 °C, because the load cells sit in the chamber</td></tr>
   </tbody>
 </table></div>
@@ -61,19 +61,21 @@
 </ul>
 
 <h2 id="schematic">Schematic and pins</h2>
-<figure><a href="wiring.svg"><img src="wiring.svg" alt="Schematic: 12 V through a 20 A fuse; MP1584 to 5 V for the ESP32-C3 SuperMini; two HX711s with a load cell each; SHT40 probe and OLED on I2C; DS18B20 on GPIO2; button and buzzer; IRLZ44N blower switch; PC817 driving an IRF3205 that switches the 150 W PTC heater through a KSD301 and thermal fuse." loading="lazy"></a><figcaption>Schematic (open full size). Crossing wires are not joined unless a dot is shown.</figcaption></figure>
+<figure><a href="wiring.svg"><img src="wiring.svg" alt="Schematic: 12 V through a 20 A fuse; MP1584 to 5 V for the ESP32-S3 DevKitC; two HX711s with a load cell each; SHT40 probe on I2C; DS18B20 on GPIO7; the 2.8 inch touch screen on SPI with its touch chip on a second I2C bus; buzzer; IRLZ44N blower switch; PC817 driving an IRF3205 that switches the 150 W PTC heater through a KSD301 and thermal fuse." loading="lazy"></a><figcaption>Schematic (open full size). Crossing wires are not joined unless a dot is shown.</figcaption></figure>
 <div class="table-wrap"><table>
-  <thead><tr><th>SuperMini pin</th><th>Goes to</th><th>Notes</th></tr></thead>
+  <thead><tr><th>DevKitC pin</th><th>Goes to</th><th>Notes</th></tr></thead>
   <tbody>
-    <tr><td>GPIO0 / GPIO1</td><td>HX711 left: SCK / DT</td><td></td></tr>
-    <tr><td>GPIO3 / GPIO6</td><td>HX711 right: SCK / DT</td><td>Its own clock</td></tr>
-    <tr><td>GPIO2</td><td>DS18B20 heater-outlet probe</td><td>R9 4.7 k pull-up, which also holds this strapping pin high at boot</td></tr>
+    <tr><td>GPIO1 / GPIO2</td><td>HX711 left: SCK / DT</td><td></td></tr>
+    <tr><td>GPIO38 / GPIO39</td><td>HX711 right: SCK / DT</td><td>Each HX711 has its own clock</td></tr>
     <tr><td>GPIO4</td><td>Heater: R1 470 Ω → PC817 → IRF3205 gate (from 12 V)</td><td>R3 10 k holds the gate low at power-up</td></tr>
     <tr><td>GPIO5</td><td>Blower: R4 100 Ω → IRLZ44N gate</td><td>R5 10 k pull-down</td></tr>
-    <tr><td>GPIO7 / GPIO8</td><td>I2C SCL / SDA: SHT40 (0x44), OLED (0x3C)</td><td>R8 / R7 4.7 k pull-ups</td></tr>
-    <tr><td>GPIO10</td><td>Buzzer through Q3 2N2222A (R6 1 k)</td><td></td></tr>
-    <tr><td>GPIO20</td><td>Front button to GND</td><td>R10 10 k pull-up</td></tr>
-    <tr><td>GPIO9, GPIO21</td><td>Spare</td><td>GPIO9 is the board's BOOT button</td></tr>
+    <tr><td>GPIO6</td><td>Buzzer through Q3 2N2222A (R6 1 k)</td><td></td></tr>
+    <tr><td>GPIO7</td><td>DS18B20 heater-outlet probe</td><td>R9 4.7 k pull-up</td></tr>
+    <tr><td>GPIO8 / GPIO9</td><td>Sensor I2C SDA / SCL: SHT40 probe (0x44)</td><td>R7 / R8 4.7 k pull-ups</td></tr>
+    <tr><td>GPIO10, 11, 12, 13, 14</td><td>Screen SPI: CS, SDI (MOSI), SCK, DC, RESET</td><td>40 MHz; keep the wires under 20 cm</td></tr>
+    <tr><td>GPIO47</td><td>Screen LED (backlight)</td><td>Dimmed to off after 10 min untouched</td></tr>
+    <tr><td>GPIO15, 16, 17, 18</td><td>Touch I2C: CTP_SDA, CTP_SCL, CTP_INT, CTP_RST</td><td>Its own bus: the FT6336 is at 0x38, like an AHT20</td></tr>
+    <tr><td>GPIO21, 40, 41, 42</td><td>Spare</td><td>GPIO0, 3, 45, 46 are strapping pins and 35–37 belong to the PSRAM: none are used</td></tr>
   </tbody>
 </table></div>
 <p><strong>The 150 W heater draws about 12.5 A.</strong> The heater path never runs along perfboard tracks:</p>
@@ -84,21 +86,47 @@
 </ul>
 
 <h2 id="perfboard">Perfboard</h2>
-<figure><a href="images/perfboard.svg"><img src="images/perfboard.svg" alt="Top view of the 70 by 90 mm perfboard: 12 V terminal, MP1584, IRF3205 on its heatsink and the PC817 along the top; SuperMini on the left edge with USB-C facing out; buzzer and pull-ups in the middle; blower MOSFET and JST sockets on the right; the two HX711s along the bottom." loading="lazy"></a><figcaption>Placement on a 7 × 9 cm double-sided dot board. Modules plug into female headers; sensors, OLED, button and blower plug into JST-XH sockets.</figcaption></figure>
+<figure><a href="images/perfboard.svg"><img src="images/perfboard.svg" alt="Top view of the 90 by 150 mm perfboard: 12 V terminal, MP1584, PC817, buzzer, blower MOSFET and the IRF3205 on its heatsink along the top; the ESP32-S3 DevKitC across the middle with USB-C at the left edge; the screen header and JST sockets below it; the two HX711s at the far end." loading="lazy"></a><figcaption>Placement on a 9 × 15 cm double-sided dot board. Modules plug into female headers; probes, blower and cells into JST-XH sockets; the screen into a 14-pin header.</figcaption></figure>
 
-<h2 id="front">Front panel</h2>
-<figure><a href="images/front-panel.svg"><img src="images/front-panel.svg" alt="90 by 70 mm front panel with a 57 by 30 mm window for the 2.42 inch OLED, four M2.5 standoff holes, and a 12 mm button hole below." loading="lazy"></a><figcaption>The front: the OLED's window and a 12 mm button. The buzzer is inside, on the board.</figcaption></figure>
-<p>The screen shows:</p>
-<ul>
-  <li>The mode, material, setpoint and time left, with the heater % in the corner.</li>
-  <li>The chamber temperature and humidity in large digits.</li>
-  <li>Grams and metres left on the reel.</li>
-  <li>The Wi-Fi address, or "Learning scale drift" while that runs.</li>
-</ul>
+<h2 id="front">Front panel and touch screen</h2>
+<figure><a href="images/front-panel.svg"><img src="images/front-panel.svg" alt="90 by 70 mm front panel with a 59 by 45 mm window for the 2.8 inch touch screen module, which sits behind on four M3 standoffs." loading="lazy"></a><figcaption>The front: the 2.8" module behind a 59 × 45 mm window. It's 86 mm wide, so the panel needs about 87 mm clear behind it.</figcaption></figure>
+<p>A 2.8" 320 × 240 IPS screen with capacitive touch (ILI9341 + FT6336): glass, like a phone, with no touch calibration. It sits in the cool electronics bay, not the chamber.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Screen</th><th>Shows and does</th></tr></thead>
+  <tbody>
+    <tr><td>Home</td><td>
+      <ul>
+        <li>Shows the chamber temperature and humidity in large digits, grams and metres left on the reel, and the mode with its target and time left.</li>
+        <li>Buttons: Dry, Keep dry, Print and Off.</li>
+        <li>A red banner with Clear appears on a fault.</li>
+      </ul>
+    </td></tr>
+    <tr><td>Material</td><td>Pick the material for Dry or Print; each button shows its temperature (capped at 65 °C) and drying time</td></tr>
+    <tr><td>Settings</td><td>
+      <ul>
+        <li>Shows the dryer's name, address, signal and firmware version.</li>
+        <li><em>Flip touch</em> for a panel mounted the other way round.</li>
+        <li><em>Forget Wi-Fi</em>, after a confirm.</li>
+      </ul>
+    </td></tr>
+    <tr><td>Scale</td><td>
+      <ul>
+        <li>Shows the left and right cells and the total.</li>
+        <li>Tare, after a "take the reel off" confirm.</li>
+        <li>Calibration weight ±, and the Left end, Right end and Middle calibration steps.</li>
+        <li>Empty reel weight.</li>
+        <li>Start or stop drift learning.</li>
+      </ul>
+    </td></tr>
+  </tbody>
+</table></div>
+<p>The backlight goes off after 10 minutes untouched. The first touch only wakes it, so a stray tap can't change anything, and a fault wakes it too. Every action clicks the buzzer.</p>
 
 <h2 id="firmware">Firmware</h2>
 <p>The same firmware as the 1-roll (<a href="https://github.com/oshanrube/filament-dryer/tree/main/firmware">firmware/</a>), built as <code>dryer-1roll-v2</code>. It keeps the modes (Dry per material, Keep dry, Print, Off), the PID, the safety cut-outs, the Wi-Fi setup hotspot, the status page, the REST and WebSocket API for the Printer Control Center, and updates over Wi-Fi. For v2 it adds:</p>
 <ul>
+  <li><strong>ESP32-S3 build</strong> for the DevKitC-1 N16R8: 16 MB flash, 8 MB PSRAM.</li>
+  <li><strong>Touch UI in its own task</strong>, made with LVGL. Like the web API, it only reads the dryer's state and sends commands, so a slow redraw can't hold up the heater control.</li>
   <li><strong>Two-cell scale:</strong>
     <ul>
       <li><code>POST /api/calibrate {"grams":500,"step":"left"|"right"|"middle"}</code></li>
@@ -107,15 +135,9 @@
     </ul>
   </li>
   <li><strong>65 °C cap</strong> on every setpoint.</li>
-  <li><strong>Display type:</strong> <code>ssd1309</code> (2.42", the default), <code>ssd1309_0</code> (the other common 2.42" wiring) or <code>sh1106</code> (1.3"). To change it, hold the button while powering up to step to the next type, or send <code>POST /api/config {"display":"sh1106"}</code>.</li>
-  <li><strong>Button:</strong>
-    <ul>
-      <li>Short press: next mode, or clear a fault.</li>
-      <li>Hold 3 s: tare.</li>
-      <li>Hold 10 s: forget Wi-Fi.</li>
-    </ul>
-  </li>
+  <li><code>POST /api/config {"touch_flip":0-3}</code> mirrors the touch x and/or y, the same as the <em>Flip touch</em> button.</li>
 </ul>
+<p>The screens can be checked on a PC without the hardware: <code>sh firmware/tools/ui_sim/run.sh</code> renders each one to a PNG.</p>
 <p>Flash <code>dryer-1roll-v2-full.bin</code> at 0x0 the first time; after that, upload <code>dryer-1roll-v2.bin</code> at <code>/update</code>.</p>
 
 <h2 id="parts">Parts</h2>
@@ -124,8 +146,8 @@
 
 <h2 id="build">Build and test</h2>
 <ol>
-  <li><strong>Buck first:</strong> power the bare board from 12 V and set the MP1584 to 5.0 V before fitting the SuperMini.</li>
-  <li><strong>Flash and check the screen:</strong> flash <code>dryer-1roll-v2-full.bin</code> over USB-C. If the screen stays dark or garbled, hold the button while powering up to try the next display type.</li>
+  <li><strong>Buck first:</strong> power the bare board from 12 V and set the MP1584 to 5.0 V before fitting the DevKitC.</li>
+  <li><strong>Flash and check the screen:</strong> flash <code>dryer-1roll-v2-full.bin</code> over either USB-C port. The home screen should appear within a few seconds. If touches land in the wrong place, press <em>Flip touch</em> under Settings until they don't (or send <code>touch_flip</code> over the API).</li>
   <li><strong>Heater disconnected:</strong> join the <code>FilamentDryer-XXXX</code> hotspot and set up Wi-Fi. Check the chamber and outlet probes read sensibly. Select Dry and measure Q1's gate: about 11 V while on, 0 V at power-up.</li>
   <li><strong>Scale:</strong>
     <ol>
