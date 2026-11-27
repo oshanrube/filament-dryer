@@ -89,6 +89,8 @@ class Controller {
  public:
   Controller();
   void setMaterial(int index);              // ignored if out of range
+  void setMaxC(float c) { maxC_ = c; }      // cap every setpoint (1-roll v2: load cells in the chamber, 65 °C)
+  float maxC() const { return maxC_; }
   int material() const { return material_; }
   void setMode(Mode m, uint32_t nowMs);     // ignored while a fault is latched (except Off)
   void clearFault(uint32_t nowMs);          // back to Off
@@ -108,6 +110,7 @@ class Controller {
   bool heating() const { return setpoint() > 0; }
 
   int material_ = 0;
+  float maxC_ = 1000.0f;
   Mode mode_ = Mode::Off;
   Fault fault_ = Fault::None;
   uint32_t modeStartMs_ = 0;
@@ -179,5 +182,50 @@ struct ScaleCal {
 };
 // metres of 1.75 mm filament in the given grams: 1 m is 2.405 cm³
 float metresLeft(float grams, float density);
+
+// ---- 1-roll v2: the axle rests on two load cells, one at each end, each with its own HX711.
+// Total = left + right, wherever the reel sits on the axle, once each cell has its own scale
+// factor. Those come from a two-point calibration (the weight near the left end, then near the
+// right end) or, less exactly, one point with the weight in the middle.
+// The cells sit in the heated chamber, so each cell's zero drifts with temperature. driftPerC
+// (counts per °C, learned once by DriftFit) corrects it from the chamber temperature.
+struct TwinScaleCal {
+  float offset[2] = {0, 0};          // counts at tare
+  float gramsPerCount[2] = {0, 0};   // 0 = not calibrated
+  float driftPerC[2] = {0, 0};       // zero drift, counts per °C
+  float refC = 25;                   // chamber temperature at tare
+  float emptyReelG = 0;
+
+  bool calibrated() const { return gramsPerCount[0] != 0 && gramsPerCount[1] != 0; }
+  // counts above the tare, with the zero drift since the tare taken out
+  float net(int i, float raw, float tempC) const { return raw - offset[i] - driftPerC[i] * (tempC - refC); }
+  float cellGrams(int i, float raw, float tempC) const { return net(i, raw, tempC) * gramsPerCount[i]; }
+  float grams(float rawL, float rawR, float tempC) const { return cellGrams(0, rawL, tempC) + cellGrams(1, rawR, tempC); }
+  void tare(float rawL, float rawR, float tempC) { offset[0] = rawL; offset[1] = rawR; refC = tempC; }
+};
+
+// Two-point calibration. netL1/netR1: net counts with the weight near the left end; netL2/netR2:
+// near the right end. Solves kL*netL + kR*netR = grams for both points. False when the two points
+// are too alike (the weight wasn't moved) or the result is nonsense (a cell not responding).
+bool solveTwoPoint(float netL1, float netR1, float netL2, float netR2, float grams, float* kL, float* kR);
+// One point with the weight in the middle of the axle: each cell carries half.
+bool solveCentre(float netL, float netR, float grams, float* kL, float* kR);
+
+// Least-squares fit of each cell's raw counts against chamber temperature, under a constant load,
+// over one heat cycle. Needs at least kMinSamples samples spread over kMinSpanC.
+class DriftFit {
+ public:
+  static constexpr size_t kMinSamples = 20;
+  static constexpr float kMinSpanC = 15.0f;
+  void reset() { *this = DriftFit(); }
+  void add(float tempC, float rawL, float rawR);
+  size_t count() const { return n_; }
+  float spanC() const { return n_ ? maxC_ - minC_ : 0; }
+  bool solve(float* perCL, float* perCR) const;   // counts per °C for each cell
+ private:
+  size_t n_ = 0;
+  double st_ = 0, stt_ = 0, sl_ = 0, stl_ = 0, sr_ = 0, str_ = 0;
+  float minC_ = 0, maxC_ = 0;
+};
 
 }  // namespace dryer

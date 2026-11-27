@@ -1,8 +1,13 @@
 # Filament dryer firmware
 
-PlatformIO + Arduino firmware for the ESP32-C3, set up like the gate controller. One build, `dryer-1roll`, runs both 1-roll controllers: the 1-roll PCB (`pcb/1-roll/`) and the perfboard build (`1-roll/perfboard/`). They share a pin map. The 2-roll feeder board (MCP23017, feeder drivers) is not covered yet.
+PlatformIO + Arduino firmware for the ESP32-C3, set up like the gate controller. Two builds:
 
-**Status:** builds, and the control logic passes its 16 host tests. It has **not run on real hardware yet**: check the bench steps below before trusting it with a heater.
+- **`dryer-1roll`** runs both 1-roll controllers: the 1-roll PCB (`pcb/1-roll/`) and the perfboard build (`1-roll/perfboard/`). They share a pin map.
+- **`dryer-1roll-v2`** runs the 1-roll v2 "twin scale" perfboard (`1-roll-v2/`): two load cells, one blower, no SFS, a 2.42" or 1.3" OLED. See [1-roll v2](#1-roll-v2-twin-scale) below.
+
+The 2-roll feeder board (MCP23017, feeder drivers) is not covered yet.
+
+**Status:** both build, and the control logic passes its 23 host tests. It has **not run on real hardware yet**: check the bench steps below before trusting it with a heater.
 
 ## Files
 
@@ -19,8 +24,8 @@ PlatformIO + Arduino firmware for the ESP32-C3, set up like the gate controller.
 
 | File | Flash it | When |
 | --- | --- | --- |
-| `dryer-1roll-full.bin` | at **0x0** over USB | A blank board: bootloader, partition table, boot_app0 and the app in one image |
-| `dryer-1roll.bin` | through the dryer's web page, `http://filament-dryer-xxxx.local/update` | Updates over Wi-Fi |
+| `dryer-1roll-full.bin` (`dryer-1roll-v2-full.bin` for v2) | at **0x0** over USB | A blank board: bootloader, partition table, boot_app0 and the app in one image |
+| `dryer-1roll.bin` (`dryer-1roll-v2.bin`) | through the dryer's web page, `http://filament-dryer-xxxx.local/update` | Updates over Wi-Fi |
 
 Flashing the full image over USB-C, either way:
 
@@ -38,7 +43,7 @@ On the 1-roll PCB the USB port carries data only: **plug in the 12 V feed while 
 ```bash
 cd firmware
 pio test -e native        # control-logic tests on this computer
-pio run -e dryer-1roll    # build
+pio run -e dryer-1roll    # build (dryer-1roll-v2 for the twin-scale board)
 pio run -e dryer-1roll -t upload
 ```
 
@@ -104,6 +109,32 @@ No login: the dryer is meant to sit on the local network (like the rest of the c
 - **WebSocket** on port **81**: sends the state on connect and every second, and takes the same commands as `{"cmd":"mode","mode":"print"}`, `{"cmd":"tare"}`, and so on. This is the "one live connection per dryer".
 - **mDNS:** `filament-dryer-xxxx.local`, with `_http._tcp` on 80 and `_filament-dryer._tcp` on 81 for discovery.
 - **OTA:** `POST /update` with the app image, or the form at `/update`.
+
+## 1-roll v2 (twin scale)
+
+Build `dryer-1roll-v2` (`-D DRYER_BOARD_V2=1`). Differences from `dryer-1roll`:
+
+- **Pins:**
+
+  | Pin | Job |
+  |---|---|
+  | GPIO0 / 1 | Left HX711: SCK / DT |
+  | GPIO3 / 6 | Right HX711: SCK / DT |
+  | GPIO2 | DS18B20 |
+  | GPIO4 | Heater (PC817 → IRF3205) |
+  | GPIO5 | Blower (IRLZ44N) |
+  | GPIO7 / 8 | I2C |
+  | GPIO10 | Buzzer |
+  | GPIO20 | Button |
+
+  No SFS and no exhaust fan.
+- **Scale:** total = left + right, each cell with its own factor (`TwinScaleCal` in `DryerCore`).
+  - **Calibrate:** tare the empty axle, then `POST /api/calibrate {"grams":500,"step":"left"}` with the weight near the left end, then `"step":"right"` near the right end (`solveTwoPoint`). `"step":"middle"` is a one-step version with the weight centred.
+  - **Temperature drift:** `POST /api/scale/learn {"start":true}` with a reel left on, then run one Dry cycle. It logs both cells against the chamber temperature once a minute, fits a line per cell (`DriftFit`, at least 15 °C of range), and subtracts it from then on. It stops by itself when the cycle ends, after 8 h, or on `{"start":false}`.
+  - `/api/state` adds `scale.cells` (left/right grams), `scale.calibrated`, `scale.cal_status` and `scale.drift`; the `filament` object and `exhaust` aren't sent.
+- **65 °C cap** on every setpoint (`Controller::setMaxC`): the load cells sit in the chamber.
+- **Display:** `ssd1309` (2.42", default), `ssd1309_0` (the other 2.42" variant) or `sh1106` (1.3"). Hold the button while powering up to step to the next one, or `POST /api/config {"display":"sh1106"}` (restarts).
+- Settings live in flash under the same `dryer` namespace (keys `o1 o2 k1 k2 d1 d2 refc empty disp`).
 
 ## Bench checks before the first real heat
 

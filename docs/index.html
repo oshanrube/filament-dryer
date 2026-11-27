@@ -40,7 +40,7 @@
   nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
   nav.toc li { break-inside: avoid; }
   @media (max-width: 600px) { nav.toc ol { columns: 1; } }
-  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; overflow-wrap: anywhere; }
   .table-wrap { overflow-x: auto; margin: 12px 0 20px; border: 1px solid var(--border); border-radius: 8px; }
   table { border-collapse: collapse; width: 100%; font-size: .92rem; }
   th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--border); }
@@ -76,7 +76,7 @@
 <body>
 <main>
 <div class="site"><a class="brand" href="index.html">Filament Dryer</a><a class="repo" href="https://github.com/oshanrube/filament-dryer">GitHub repository</a></div>
-<nav class="tabs" aria-label="Versions"><a href="index.html" aria-current="page">Overview</a><a href="2-roll-feeder/index.html">2-roll feeder</a><a href="1-roll/index.html">1 roll</a><a href="dumb/index.html">Dumb (STC-3028)</a></nav>
+<nav class="tabs" aria-label="Versions"><a href="index.html" aria-current="page">Overview</a><a href="2-roll-feeder/index.html">2-roll feeder</a><a href="1-roll/index.html">1 roll</a><a href="1-roll-v2/index.html">1 roll v2 (twin scale)</a><a href="dumb/index.html">Dumb (STC-3028)</a></nav>
 <header>
   <h1>Filament Dryer</h1>
   <p class="lead">3D-printed filament dryer boxes for a fleet of Creality printers: one box per printer, printed in ABS/ASA, heated to 40-70 °C, weighing the reel and reporting to the Printer Control Center over Wi-Fi. Two versions share the same heater, fans, controller, sensors and 12 V feed, so they use the same spares.</p>
@@ -95,6 +95,12 @@
     <img src="1-roll/images/housing-isometric.svg" alt="Single-reel box, isometric wireframe." loading="lazy">
     <p>One reel, no feeders. Smaller and simpler; when the reel runs out the printer pauses as it does today.</p>
     <p class="meta">About US$174 per box · 250 × 155 × 335 mm</p>
+  </div>
+  <div class="card">
+    <h3><a href="1-roll-v2/index.html">1 roll v2 (twin scale)</a></h3>
+    <img src="1-roll-v2/images/front-panel.svg" alt="The v2 front panel: a 2.42 inch OLED window and a button." loading="lazy">
+    <p>One reel on an axle resting on two load cells, a big OLED on the front, and a hand-built perfboard controller from AliExpress parts. No filament sensor in the box.</p>
+    <p class="meta">About US$148 per box, housing included</p>
   </div>
   <div class="card">
     <h3><a href="dumb/index.html">Dumb (STC-3028)</a></h3>

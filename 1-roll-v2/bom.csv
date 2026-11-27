@@ -1,0 +1,42 @@
+section,part,qty,aliexpress_search,approx_usd,why
+Control electronics,Controller: ESP32-C3 SuperMini,1 (buy 2),ESP32-C3 SuperMini,2.5,"USB-C, enough pins, the same chip and firmware as the 1-roll"
+Control electronics,Load cell amplifiers: HX711 module,2 (buy 3),HX711 load cell amplifier module,1.5,"One per cell, each on its own clock pin"
+Control electronics,12 V to 5 V buck: MP1584EN module,1 (buy 3),MP1584EN mini buck module,0.6,Set to 5.0 V before the SuperMini goes in
+Control electronics,"Display: 2.42"" OLED 128x64, SSD1309, I2C",1,2.42 inch OLED module I2C 4 pin SSD1309,9,"Fills the 90 x 70 mm front and reads from across the room. Get the 4-pin I2C version. A 1.3"" SH1106 I2C (about US$3) also works: hold the button while powering up to switch display type"
+Control electronics,Front button: 12 mm metal momentary,1,12mm metal push button momentary,1,"Mode, clear fault, tare, Wi-Fi reset"
+Control electronics,Buzzer: 5 V active 12 mm,1 (pack),5V active buzzer 12mm,0.5,"Dry done, faults"
+Switching (through-hole),Heater MOSFET Q1: IRF3205 TO-220,1 (pack of 10),IRF3205 TO-220,2,"About 2 W at 12.5 A with the 12 V gate drive"
+Switching (through-hole),Heatsink for Q1: TO-220 25 x 23 x 16 mm,1 (pack),TO-220 heatsink 25x23x16mm,1,Keeps Q1 about 20 °C above the bay
+Switching (through-hole),Gate optocoupler OK1: PC817 DIP-4,1 (pack),PC817 DIP-4,0.5,Drives Q1's gate from 12 V
+Switching (through-hole),Blower MOSFET Q2: IRLZ44N TO-220,1 (pack of 10),IRLZ44N TO-220,2,Logic-level: fully on from 3.3 V
+Switching (through-hole),Buzzer transistor Q3: 2N2222A TO-92,1 (pack),2N2222A TO-92,0.5,
+Switching (through-hole),Flyback diode D1: 1N5819,1 (pack),1N5819 DO-41,0.5,Across the blower
+Board and passives,"Resistors, 1/4 W (100 R, 470 R, 1 k, 4.7 k, 10 k)",1 kit,1/4W metal film resistor kit,2.5,"R1 470 R, R2 1 k, R3 10 k, R4 100 R, R5 10 k, R6 1 k, R7-R9 4.7 k, R10 10 k"
+Board and passives,"Capacitors: 100 uF 25 V electrolytic, 100 nF ceramic",1 kit each,electrolytic capacitor kit + 100nF ceramic capacitor,2,"C1 100 uF + C2 100 nF on 12 V in, C3 100 nF on 3V3"
+Board and passives,Board: double-sided prototype board 7 x 9 cm,1 (pack of 5),7x9cm double sided prototype PCB,2,FR4 copes with the warm bay
+Board and passives,Female header strips 2.54 mm,1 pack,2.54mm female header 40 pin,1,"Sockets for the SuperMini, HX711s and MP1584"
+Board and passives,12 V input screw terminal 5.08 mm 2-pin,1 (pack),KF128 5.08mm 2 pin screw terminal,0.5,Board power only: the heater current doesn't pass through it
+Board and passives,JST-XH 2.54 kit with crimper,1,JST XH 2.54 connector kit crimper,8,"Unpluggable cells, probes, OLED, button and blower"
+Sensors,Load cells: 3 kg straight bar,2 (buy 3),3kg load cell straight bar,5,"One under each axle end; each carries about 0.75 kg, 3 kg leaves room for dropping a reel in"
+Sensors,Chamber probe: SHT40 in a sintered metal housing on a cable,1,SHT40 probe sintered stainless I2C,7,"Accurate at low RH, rated to 125 °C (an SHT31 probe also works)"
+Sensors,Heater-outlet probe: DS18B20 waterproof 1 m,1,DS18B20 waterproof probe 1m,1,Catches a stalled blower before the KSD301 does
+Sensors,Calibration weight 500 g,1,calibration weight 500g,5,For the two-point scale calibration
+Heating and air,PTC air heater 12 V 150 W,1 (buy 2),PTC heater 12V 150W insulated aluminium,10,"The same heater as the 1-roll and 2-roll boxes; the PID limits it"
+Heating and air,Blower: 5015 12 V dual ball bearing,1 (buy 2),5015 blower 12V dual ball bearing,7,Ball bearings outlast sleeve bearings in the heat
+Heating and air,KSD301 85 °C normally closed 16 A,2,KSD301 85 normally closed 16A,1.5,"Hardware cut-out, resets as it cools; 16 A for the 12.5 A heater"
+Heating and air,Thermal fuse 92 °C 15 A,10-pack,thermal fuse 92C 15A,1.5,One-shot last resort
+Power and wiring,XT60 male + female pair,1,XT60 male female pair,0.5,From the shared 12 V supply
+Power and wiring,Inline ATO fuse holder (14 AWG) + 20 A fuses,1,inline ATO blade fuse holder 14AWG 20A,2,F1 on the + lead
+Power and wiring,Heater-path wire 14 AWG silicone,2 m red + 2 m black,14AWG silicone wire,4,"About 12.5 A: supply in, heater, Q1"
+Power and wiring,Signal wire 22 AWG silicone,set,22AWG silicone wire 6 colours,5,"Cells, probes, OLED, blower"
+Power and wiring,Heat-shrink,set,heat shrink tube kit,3,
+Scale mechanics,Axle: 8 mm linear shaft 250 mm,1,8mm linear shaft 250mm,3,"Rests in a printed U-cradle on each load cell's free end"
+Scale mechanics,608ZZ bearings,2 (pack of 10),608ZZ bearing,3,"One in each printed hub cone, so the reel spins on the fixed axle"
+Scale mechanics,Load-cell screws (match the cells: M4 or M5),1 set,M4 M5 stainless screw kit,2,"Two to fix each cell to its wall bracket, two for the cradle"
+Housing,Lid gasket,3 m,silicone D seal strip self adhesive,4,Stays soft at 70 °C
+Housing,Lid latches,2,mini stainless toggle latch,4,
+Housing,Insulation,0.5 m2,NBR rubber foam aluminium foil self adhesive 6mm,8,Rated to about 105 °C
+Housing,Desiccant,500 g,orange indicating silica gel,5,Changes colour when spent
+Housing,Filament exit,2 + 2 m,PC4-M10 coupler + PTFE tube 2x4mm,5,Box to printer
+Housing,Heat-set inserts and screws,1 set,M3 heat set insert + M3 stainless screw kit,8,
+Housing,Housing filament,~1 kg,ABS or ASA filament,16,"Not PLA: the chamber runs at up to 65 °C"

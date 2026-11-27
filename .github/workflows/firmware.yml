@@ -58,33 +58,38 @@ jobs:
       - name: Test the control logic
         run: pio test -e native
 
+      # dryer-1roll: the 1-roll PCB and its perfboard. dryer-1roll-v2: the twin-scale perfboard.
       - name: Build
-        run: pio run -e dryer-1roll
+        run: pio run -e dryer-1roll -e dryer-1roll-v2
 
-      # dryer-1roll.bin is the app only: what /update takes over Wi-Fi. dryer-1roll-full.bin adds
-      # the bootloader, partition table and boot_app0, and flashes a blank board at 0x0.
+      # <env>.bin is the app only: what /update takes over Wi-Fi. <env>-full.bin adds the
+      # bootloader, partition table and boot_app0, and flashes a blank board at 0x0.
       - name: Make the images
         run: |
-          build=.pio/build/dryer-1roll
           pkgs=~/.platformio/packages
-          cp "$build/firmware.bin" dryer-1roll.bin
-          python "$pkgs/tool-esptoolpy/esptool.py" --chip esp32c3 merge_bin \
-            -o dryer-1roll-full.bin \
-            --flash_mode keep --flash_freq keep --flash_size 4MB \
-            0x0     "$build/bootloader.bin" \
-            0x8000  "$build/partitions.bin" \
-            0xe000  "$pkgs/framework-arduinoespressif32/tools/partitions/boot_app0.bin" \
-            0x10000 "$build/firmware.bin"
+          for env in dryer-1roll dryer-1roll-v2; do
+            build=.pio/build/$env
+            cp "$build/firmware.bin" "$env.bin"
+            python "$pkgs/tool-esptoolpy/esptool.py" --chip esp32c3 merge_bin \
+              -o "$env-full.bin" \
+              --flash_mode keep --flash_freq keep --flash_size 4MB \
+              0x0     "$build/bootloader.bin" \
+              0x8000  "$build/partitions.bin" \
+              0xe000  "$pkgs/framework-arduinoespressif32/tools/partitions/boot_app0.bin" \
+              0x10000 "$build/firmware.bin"
+          done
 
       - name: Report flash headroom
         run: |
-          size=$(stat -c%s dryer-1roll.bin)
           limit=1310720           # app0 in default.csv
-          pct=$(( size * 100 / limit ))
-          echo "firmware: ${size} bytes, ${pct}% of the ${limit} byte app partition"
-          if [ "$pct" -ge 90 ]; then
-            echo "::warning::Firmware is at ${pct}% of the app partition."
-          fi
+          for env in dryer-1roll dryer-1roll-v2; do
+            size=$(stat -c%s "$env.bin")
+            pct=$(( size * 100 / limit ))
+            echo "$env: ${size} bytes, ${pct}% of the ${limit} byte app partition"
+            if [ "$pct" -ge 90 ]; then
+              echo "::warning::$env is at ${pct}% of the app partition."
+            fi
+          done
 
       # Manual runs only: a tag's release already carries the images. The .elf is for
       # esp32_exception_decoder and must come from the same build as the running firmware.
@@ -93,9 +98,8 @@ jobs:
         with:
           name: dryer-firmware
           path: |
-            firmware/dryer-1roll.bin
-            firmware/dryer-1roll-full.bin
-            firmware/.pio/build/dryer-1roll/firmware.elf
+            firmware/dryer-1roll*.bin
+            firmware/.pio/build/dryer-1roll*/firmware.elf
           if-no-files-found: error
           retention-days: 1
 
@@ -104,6 +108,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dryer-1roll.bin dryer-1roll-full.bin \
-              --generate-notes \
-            || gh release upload "$GITHUB_REF_NAME" dryer-1roll.bin dryer-1roll-full.bin --clobber
+          files="dryer-1roll.bin dryer-1roll-full.bin dryer-1roll-v2.bin dryer-1roll-v2-full.bin"
+          gh release create "$GITHUB_REF_NAME" $files --generate-notes \
+            || gh release upload "$GITHUB_REF_NAME" $files --clobber

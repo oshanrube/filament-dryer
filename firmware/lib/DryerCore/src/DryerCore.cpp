@@ -88,13 +88,14 @@ void Controller::setMaterial(int index) {
 float Controller::setpoint() const {
   if (fault_ != Fault::None) return 0;
   const Material& m = MATERIALS[material_];
+  float sp = 0;
   switch (mode_) {
-    case Mode::Dry: return m.dryC;
-    case Mode::Print: return m.feedC;
-    case Mode::KeepDry: return boostActive_ ? Limits::kBoostC : 0;
-    case Mode::Off: return 0;
+    case Mode::Dry: sp = m.dryC; break;
+    case Mode::Print: sp = m.feedC; break;
+    case Mode::KeepDry: sp = boostActive_ ? Limits::kBoostC : 0; break;
+    case Mode::Off: sp = 0; break;
   }
-  return 0;
+  return sp > maxC_ ? maxC_ : sp;
 }
 
 uint32_t Controller::dryRemainingS(uint32_t nowMs) const {
@@ -238,6 +239,56 @@ bool ScaleCal::calibrate(float raw, float knownGrams) {
 float metresLeft(float grams, float density) {
   if (grams <= 0 || density <= 0) return 0;
   return grams / (density * 2.405f);
+}
+
+static float fabsf_(float v) { return v < 0 ? -v : v; }
+
+bool solveTwoPoint(float l1, float r1, float l2, float r2, float grams, float* kL, float* kR) {
+  if (grams <= 0) return false;
+  // [l1 r1; l2 r2] [kL kR]' = [g g]'
+  double det = (double)l1 * r2 - (double)l2 * r1;
+  double scale = (fabsf_(l1) + fabsf_(r1)) * (fabsf_(l2) + fabsf_(r2));
+  if (scale <= 0 || fabsf_((float)det) < 0.05 * scale) return false;   // the weight wasn't moved enough
+  double a = grams * ((double)r2 - r1) / det;
+  double b = grams * ((double)l1 - l2) / det;
+  if (a == 0 || b == 0) return false;
+  // each cell must carry a sensible share at both points (catches a dead or unplugged cell)
+  float shares[4] = {(float)(a * l1), (float)(b * r1), (float)(a * l2), (float)(b * r2)};
+  for (float s : shares)
+    if (s < -0.1f * grams || s > 1.1f * grams) return false;
+  *kL = (float)a;
+  *kR = (float)b;
+  return true;
+}
+
+bool solveCentre(float netL, float netR, float grams, float* kL, float* kR) {
+  if (grams <= 0 || netL == 0 || netR == 0) return false;
+  // with the weight in the middle both cells should move a similar amount (within 3x)
+  float ratio = fabsf_(netL) / fabsf_(netR);
+  if (ratio > 3.0f || ratio < 1.0f / 3.0f) return false;
+  *kL = grams / 2 / netL;
+  *kR = grams / 2 / netR;
+  return true;
+}
+
+void DriftFit::add(float t, float l, float r) {
+  if (n_ == 0) { minC_ = maxC_ = t; }
+  if (t < minC_) minC_ = t;
+  if (t > maxC_) maxC_ = t;
+  n_++;
+  st_ += t; stt_ += (double)t * t;
+  sl_ += l; stl_ += (double)t * l;
+  sr_ += r; str_ += (double)t * r;
+}
+
+bool DriftFit::solve(float* perCL, float* perCR) const {
+  if (n_ < kMinSamples || spanC() < kMinSpanC) return false;
+  double n = (double)n_;
+  double d = n * stt_ - st_ * st_;
+  if (d <= 0) return false;
+  *perCL = (float)((n * stl_ - st_ * sl_) / d);
+  *perCR = (float)((n * str_ - st_ * sr_) / d);
+  return true;
 }
 
 }  // namespace dryer

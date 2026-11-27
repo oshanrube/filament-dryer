@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="620" viewBox="0 0 980 620" role="img"><title>1-roll v2 front panel</title><style>
+text{font-family:Inter,Arial,sans-serif}
+.t{font-size:18px;font-weight:600;fill:#111}.r{font-size:14px;fill:#111}.v{font-size:12px;fill:#444}.p{font-size:11px;fill:#666}
+.bx{fill:#fff;stroke:#111;stroke-width:1.6}.mod{fill:#f4f8ff;stroke:#1565c0;stroke-width:1.6}.safe{fill:#fff4e5;stroke:#ef6c00;stroke-width:1.6}
+</style><rect width="980" height="620" fill="#fff"/>
+<text class="t" x="30" y="36" text-anchor="start">1-roll v2: front panel (90 × 70 mm)</text>
+<text class="v" x="30" y="58" text-anchor="start">2.42" OLED module (about 73 × 43 mm) and a 12 mm push button. Measure your module before printing: sizes vary a little.</text>
+<rect x="60" y="90" width="540" height="420" rx="12" fill="#eceff1" stroke="#455a64" stroke-width="2"/>
+<rect x="109.5" y="114" width="441.0" height="258" fill="none" stroke="#90a4ae" stroke-dasharray="6 4" stroke-width="1.5"/>
+<rect x="159.0" y="159.0" width="342" height="180" fill="#111"/>
+<text class="r" fill="#fff" style="fill:#fff" x="330.0" y="254.0" text-anchor="middle">window 57 × 30 mm</text>
+<circle cx="124.5" cy="129.0" r="8.399999999999999" fill="#fff" stroke="#455a64" stroke-width="1.4"/>
+<circle cx="535.5" cy="129.0" r="8.399999999999999" fill="#fff" stroke="#455a64" stroke-width="1.4"/>
+<circle cx="124.5" cy="357.0" r="8.399999999999999" fill="#fff" stroke="#455a64" stroke-width="1.4"/>
+<circle cx="535.5" cy="357.0" r="8.399999999999999" fill="#fff" stroke="#455a64" stroke-width="1.4"/>
+<circle cx="330.0" cy="438" r="36" fill="#fff" stroke="#455a64" stroke-width="2"/>
+<text class="p" x="330.0" y="442" text-anchor="middle">Ø 12</text>
+<text class="v" x="330.0" y="534" text-anchor="middle">90 mm</text>
+<text class="v" x="48" y="300.0" text-anchor="end">70 mm</text>
+<text class="v" x="630" y="110" text-anchor="start">Dashed: the OLED module behind the</text>
+<text class="v" x="630" y="130" text-anchor="start">panel, on M2.5 screws into printed</text>
+<text class="v" x="630" y="150" text-anchor="start">standoffs (holes 2.5 mm from its</text>
+<text class="v" x="630" y="170" text-anchor="start">corners on most modules).</text>
+<text class="v" x="630" y="190" text-anchor="start"></text>
+<text class="v" x="630" y="210" text-anchor="start">Button: short press = next mode or</text>
+<text class="v" x="630" y="230" text-anchor="start">clear a fault; hold 3 s = tare;</text>
+<text class="v" x="630" y="250" text-anchor="start">hold 10 s = forget Wi-Fi; held while</text>
+<text class="v" x="630" y="270" text-anchor="start">powering up = switch display type.</text>
+<text class="v" x="630" y="290" text-anchor="start"></text>
+<text class="v" x="630" y="310" text-anchor="start">The buzzer sits on the board inside.</text>
+</svg>

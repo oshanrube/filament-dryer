@@ -1,4 +1,7 @@
-// Filament dryer firmware, 1-roll board (the 1-roll PCB and the perfboard build use the same pins).
+// Filament dryer firmware.
+//   dryer-1roll      the 1-roll PCB and its perfboard build (same pins): one load cell, BTT SFS, two fans
+//   dryer-1roll-v2   1-roll v2 "twin scale" perfboard (DRYER_BOARD_V2): the axle on two load cells,
+//                    one blower, no SFS, 2.42" SSD1309 or 1.3" SH1106 OLED, chamber capped at 65 °C
 //
 // Two FreeRTOS tasks, as in the gate controller:
 //   control task  sensors, heater, fans, scale, button, buzzer, OLED. Never waits on the network,
@@ -31,9 +34,29 @@
 
 using namespace dryer;
 
+#ifndef DRYER_BOARD_V2
+#define DRYER_BOARD_V2 0
+#endif
+
 // ------------------------------------------------------------------------------------------------ pins
-// Same on the 1-roll PCB and the perfboard (see 1-roll/page.html and 1-roll/perfboard/).
 namespace pin {
+#if DRYER_BOARD_V2
+// 1-roll v2 perfboard (1-roll-v2/wiring.svg). Each HX711 has its own clock: two chips on one clock
+// would each be clocked out of step whenever the other is read.
+constexpr int HX_SCK = 0;     // left load cell
+constexpr int HX_DT = 1;
+constexpr int ONEWIRE = 2;    // DS18B20, heater outlet (4.7 k pull-up keeps the strapping pin high)
+constexpr int HX2_SCK = 3;    // right load cell
+constexpr int HEATER = 4;     // PC817 -> IRF3205, off at boot
+constexpr int BLOWER = 5;     // IRLZ44N gate
+constexpr int HX2_DT = 6;
+constexpr int SCL = 7;
+constexpr int SDA = 8;        // strapping pin: the 4.7 k I2C pull-up keeps it high
+constexpr int BUZZER = 10;
+constexpr int BUTTON = 20;    // front button to GND (10 k pull-up)
+constexpr int RUNOUT = -1, MOTION = -1, EXHAUST = -1;   // not fitted
+#else
+// Same on the 1-roll PCB and the perfboard (see 1-roll/page.html and 1-roll/perfboard/).
 constexpr int HX_SCK = 0;
 constexpr int HX_DT = 1;
 constexpr int ONEWIRE = 2;    // DS18B20, heater outlet
@@ -46,6 +69,7 @@ constexpr int SDA = 8;
 constexpr int BUZZER = 10;
 constexpr int BUTTON = 20;    // front button to GND (10 k pull-up)
 constexpr int MOTION = 21;    // BTT SFS V2 motion pulses, through 1 k
+#endif
 }  // namespace pin
 
 // ------------------------------------------------------------------------------------------------ shared state
@@ -59,6 +83,10 @@ struct Snapshot {
   float setpointC = 0, duty = 0; bool heaterOn = false, blower = false, exhaust = false;
   uint32_t dryRemainingS = 0, modeElapsedS = 0;
   float mmPerPulse = 2.88f; bool runoutInvert = false;
+  // 1-roll v2: two load cells
+  float cellG[2] = {0, 0}; bool scaleCalibrated = false; float refC = 25; float driftGPerC[2] = {0, 0};
+  bool driftLearned = false, learning = false; uint32_t learnSamples = 0; float learnSpanC = 0;
+  const char* calStatus = "";
 };
 static Snapshot g_snap;
 static portMUX_TYPE g_mux = portMUX_INITIALIZER_UNLOCKED;
@@ -71,10 +99,13 @@ static Snapshot snapshot() {
   return s;
 }
 
-enum class CmdType : uint8_t { SetMode, SetMaterial, ClearFault, Tare, Calibrate, SetEmptyReel, SetMmPerPulse, SetRunoutInvert, ResetMotion };
+enum class CmdType : uint8_t { SetMode, SetMaterial, ClearFault, Tare, Calibrate, SetEmptyReel, SetMmPerPulse, SetRunoutInvert, ResetMotion,
+                              CalPoint, LearnDrift, SetDisplay };
+enum class CalStep : int { Left = 0, Right = 1, Centre = 2 };
 struct Cmd { CmdType type; Mode mode; int material; float value; };
 static QueueHandle_t g_cmds;
 static volatile bool g_wifiResetRequested = false;
+static volatile bool g_restartRequested = false;
 
 static bool sendCmd(const Cmd& c) { return xQueueSend(g_cmds, &c, 0) == pdTRUE; }
 
@@ -82,10 +113,25 @@ static bool sendCmd(const Cmd& c) { return xQueueSend(g_cmds, &c, 0) == pdTRUE; 
 static Preferences prefs;
 static ScaleCal g_cal;
 
-static void saveCal() {
+__attribute__((unused)) static void saveCal() {
   prefs.putFloat("offset", g_cal.offset);
   prefs.putFloat("scale", g_cal.scale);
   prefs.putFloat("empty", g_cal.emptyReelG);
+}
+
+// 1-roll v2: both cells' calibration, kept in flash
+static TwinScaleCal g_twin;
+__attribute__((unused)) static void saveTwin() {
+  prefs.putFloat("o1", g_twin.offset[0]); prefs.putFloat("o2", g_twin.offset[1]);
+  prefs.putFloat("k1", g_twin.gramsPerCount[0]); prefs.putFloat("k2", g_twin.gramsPerCount[1]);
+  prefs.putFloat("d1", g_twin.driftPerC[0]); prefs.putFloat("d2", g_twin.driftPerC[1]);
+  prefs.putFloat("refc", g_twin.refC); prefs.putFloat("empty", g_twin.emptyReelG);
+}
+__attribute__((unused)) static void loadTwin() {
+  g_twin.offset[0] = prefs.getFloat("o1", 0); g_twin.offset[1] = prefs.getFloat("o2", 0);
+  g_twin.gramsPerCount[0] = prefs.getFloat("k1", 0); g_twin.gramsPerCount[1] = prefs.getFloat("k2", 0);
+  g_twin.driftPerC[0] = prefs.getFloat("d1", 0); g_twin.driftPerC[1] = prefs.getFloat("d2", 0);
+  g_twin.refC = prefs.getFloat("refc", 25); g_twin.emptyReelG = prefs.getFloat("empty", 0);
 }
 
 // ------------------------------------------------------------------------------------------------ sensors
@@ -154,9 +200,18 @@ static OneWire g_ow(pin::ONEWIRE);
 static DallasTemperature g_ds(&g_ow);
 static HX711 g_hx;
 // SH1106 1.3" OLED. Passing the pins makes U8g2 start Wire on GPIO7/8, not the core's defaults.
-static U8G2_SH1106_128X64_NONAME_F_HW_I2C g_oled(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
+static U8G2_SH1106_128X64_NONAME_F_HW_I2C g_sh1106(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
+#if DRYER_BOARD_V2
+// 2.42" OLEDs are SSD1309; makers wire them two ways, hence two variants (the "display" setting).
+static U8G2_SSD1309_128X64_NONAME2_F_HW_I2C g_ssd1309(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
+static U8G2_SSD1309_128X64_NONAME0_F_HW_I2C g_ssd1309b(U8G2_R0, U8X8_PIN_NONE, pin::SCL, pin::SDA);
+#endif
+static const char* const DISPLAY_NAMES[] = {"sh1106", "ssd1309", "ssd1309_0"};
+static const int DISPLAY_COUNT = DRYER_BOARD_V2 ? 3 : 1;
+static U8G2* g_oled = &g_sh1106;
+__attribute__((unused)) static int g_display = 0;
 static volatile uint32_t g_motionPulses = 0;
-static void IRAM_ATTR onMotion() { g_motionPulses = g_motionPulses + 1; }
+__attribute__((unused)) static void IRAM_ATTR onMotion() { g_motionPulses = g_motionPulses + 1; }
 
 struct Beeper {
   // a queue of on/off steps in ms, played from the control task
@@ -174,10 +229,10 @@ struct Beeper {
   }
 };
 
-static void drawOled(const Snapshot& s, const char* netLine) {
+__attribute__((unused)) static void drawOled(const Snapshot& s, const char* netLine) {
   char buf[32];
-  g_oled.clearBuffer();
-  g_oled.setFont(u8g2_font_6x12_tr);
+  g_oled->clearBuffer();
+  g_oled->setFont(u8g2_font_6x12_tr);
   if (s.fault != Fault::None) {
     snprintf(buf, sizeof buf, "FAULT %s", faultName(s.fault));
   } else if (s.mode == Mode::Dry) {
@@ -190,19 +245,58 @@ static void drawOled(const Snapshot& s, const char* netLine) {
   } else {
     snprintf(buf, sizeof buf, "OFF  (%s)", MATERIALS[s.material].name);
   }
-  g_oled.drawStr(0, 11, buf);
+  g_oled->drawStr(0, 11, buf);
   if (s.chamberOk) snprintf(buf, sizeof buf, "Chamber %.1fC %.0f%%", s.chamberC, s.chamberRh);
   else snprintf(buf, sizeof buf, "Chamber: no sensor");
-  g_oled.drawStr(0, 24, buf);
+  g_oled->drawStr(0, 24, buf);
   if (s.outletOk) snprintf(buf, sizeof buf, "Outlet %.0fC  heat %d%%", s.outletC, (int)(s.duty * 100 + 0.5f));
   else snprintf(buf, sizeof buf, "Outlet: no probe");
-  g_oled.drawStr(0, 37, buf);
+  g_oled->drawStr(0, 37, buf);
   if (s.scaleOk) snprintf(buf, sizeof buf, "Reel %.0f g  %.0f m", s.gramsLeft, s.metresLeft);
   else snprintf(buf, sizeof buf, "Scale: no reading");
-  g_oled.drawStr(0, 50, buf);
-  g_oled.drawStr(0, 63, netLine);
-  g_oled.sendBuffer();
+  g_oled->drawStr(0, 50, buf);
+  g_oled->drawStr(0, 63, netLine);
+  g_oled->sendBuffer();
 }
+
+#if DRYER_BOARD_V2
+// 1-roll v2 front: status line, big temperature and humidity, the reel, then Wi-Fi or a prompt.
+static void drawOledV2(const Snapshot& s, const char* netLine) {
+  char buf[32];
+  g_oled->clearBuffer();
+  g_oled->setFont(u8g2_font_6x12_tr);
+  if (s.fault != Fault::None) snprintf(buf, sizeof buf, "FAULT %s", faultName(s.fault));
+  else if (s.mode == Mode::Dry) {
+    uint32_t m = s.dryRemainingS / 60;
+    snprintf(buf, sizeof buf, "DRY %s %.0fC %lu:%02lu", MATERIALS[s.material].name, s.setpointC, (unsigned long)(m / 60), (unsigned long)(m % 60));
+  } else if (s.mode == Mode::KeepDry) snprintf(buf, sizeof buf, s.boost ? "KEEP DRY  boost 45C" : "KEEP DRY");
+  else if (s.mode == Mode::Print) snprintf(buf, sizeof buf, "PRINT %s %.0fC", MATERIALS[s.material].name, s.setpointC);
+  else snprintf(buf, sizeof buf, "OFF  (%s)", MATERIALS[s.material].name);
+  g_oled->drawStr(0, 10, buf);
+  if (s.heaterOn || s.duty > 0) { snprintf(buf, sizeof buf, "%d%%", (int)(s.duty * 100 + 0.5f)); g_oled->drawStr(128 - g_oled->getStrWidth(buf), 10, buf); }
+
+  g_oled->setFont(u8g2_font_logisoso22_tr);
+  if (s.chamberOk) {
+    snprintf(buf, sizeof buf, "%.1f", s.chamberC);
+    g_oled->drawStr(0, 38, buf);
+    int w = g_oled->getStrWidth(buf);
+    g_oled->setFont(u8g2_font_6x12_tr); g_oled->drawStr(w + 2, 24, "C");
+    g_oled->setFont(u8g2_font_logisoso22_tr);
+    snprintf(buf, sizeof buf, "%.0f%%", s.chamberRh);
+    g_oled->drawStr(128 - g_oled->getStrWidth(buf), 38, buf);
+  } else {
+    g_oled->setFont(u8g2_font_6x12_tr); g_oled->drawStr(0, 32, "No chamber sensor");
+  }
+
+  g_oled->setFont(u8g2_font_6x12_tr);
+  if (!s.scaleOk) snprintf(buf, sizeof buf, "Scale: no reading");
+  else if (!s.scaleCalibrated) snprintf(buf, sizeof buf, "Scale: calibrate me");
+  else snprintf(buf, sizeof buf, "Reel %.0f g  %.0f m", s.gramsLeft, s.metresLeft);
+  g_oled->drawStr(0, 51, buf);
+  g_oled->drawStr(0, 63, s.learning ? "Learning scale drift" : netLine);
+  g_oled->sendBuffer();
+}
+#endif
 
 static char g_netLine[32] = "Wi-Fi: starting";
 
@@ -210,8 +304,18 @@ static void controlTask(void*) {
   esp_task_wdt_add(NULL);
 
   Wire.begin(pin::SDA, pin::SCL, 100000);
-  g_oled.setBusClock(100000);
-  g_oled.begin();
+#if DRYER_BOARD_V2
+  pinMode(pin::BUTTON, INPUT_PULLUP);
+  g_display = prefs.getUChar("disp", 1);                  // default: the 2.42" SSD1309
+  if (digitalRead(pin::BUTTON) == LOW) {                  // button held at power-up: next display type
+    g_display = (g_display + 1) % DISPLAY_COUNT;
+    prefs.putUChar("disp", g_display);
+  }
+  if (g_display >= DISPLAY_COUNT) g_display = 0;
+  g_oled = g_display == 1 ? (U8G2*)&g_ssd1309 : g_display == 2 ? (U8G2*)&g_ssd1309b : (U8G2*)&g_sh1106;
+#endif
+  g_oled->setBusClock(100000);
+  g_oled->begin();
 
   g_ds.begin();
   g_ds.setResolution(11);
@@ -220,19 +324,39 @@ static void controlTask(void*) {
 
   g_hx.begin(pin::HX_DT, pin::HX_SCK);
 
-  pinMode(pin::RUNOUT, INPUT_PULLUP);
   pinMode(pin::BUTTON, INPUT_PULLUP);
+#if DRYER_BOARD_V2
+  static HX711 hx2;
+  hx2.begin(pin::HX2_DT, pin::HX2_SCK);
+  Median<100> median2;                    // right cell
+  DriftFit drift;
+  bool learning = false;
+  uint32_t learnStartMs = 0, lastLearnSample = 0;
+  float calNetL = 0, calNetR = 0, calGrams = 0;   // the first point of a two-point calibration
+  bool haveCalPoint = false;
+  const char* calStatus = g_twin.calibrated() ? "" : "not calibrated";
+  uint32_t hx2AtMs = 0;
+#else
+  pinMode(pin::RUNOUT, INPUT_PULLUP);
   pinMode(pin::MOTION, INPUT);
   attachInterrupt(digitalPinToInterrupt(pin::MOTION), onMotion, RISING);
+#endif
 
   Controller ctl;
   ctl.setMaterial(prefs.getInt("material", 0));
+#if DRYER_BOARD_V2
+  ctl.setMaxC(65);                        // the load cells sit in the chamber: rated to about 65 °C
+#endif
   HeaterWindow window(2000, 100);
   Median<100> median;                     // 10 s of 10 Hz HX711 reads
   Beeper beeper;
   float mmPerPulse = prefs.getFloat("mmpp", 2.88f);
   bool runoutInvert = prefs.getBool("runinv", false);
   uint32_t motionBase = 0;
+  (void)motionBase;
+  float chamberC = 0, chamberRh = 0, bayC = 0, bayRh = 0, outletC = 0;
+  uint32_t chamberAtMs = 0, outletAtMs = 0, bayAtMs = 0, hxAtMs = 0;
+  bool haveChamber = false, haveOutlet = false, haveBay = false;
 
   // restore keep-dry after a power cut; any other mode starts off
   uint32_t now = millis();
@@ -240,9 +364,6 @@ static void controlTask(void*) {
 
   ChamberType chamberType = ChamberType::None;
   bool bayPresent = false;
-  float chamberC = 0, chamberRh = 0, bayC = 0, bayRh = 0, outletC = 0;
-  uint32_t chamberAtMs = 0, outletAtMs = 0, bayAtMs = 0, hxAtMs = 0;
-  bool haveChamber = false, haveOutlet = false, haveBay = false;
   uint32_t lastDs = 0, lastI2c = 0, lastDetect = 0, lastCtl = 0, lastOled = 0, lastSnap = 0;
   Outputs out;
   Mode lastMode = ctl.mode();
@@ -264,11 +385,64 @@ static void controlTask(void*) {
         case CmdType::SetMaterial: ctl.setMaterial(c.material); prefs.putInt("material", ctl.material()); break;
         case CmdType::SetMode: ctl.setMode(c.mode, now); beeper.play({60}, now); break;
         case CmdType::ClearFault: ctl.clearFault(now); beeper.play({60}, now); break;
+#if DRYER_BOARD_V2
+        case CmdType::Tare:
+          if (median.count() && median2.count()) {
+            g_twin.tare(median.value(), median2.value(), haveChamber ? chamberC : g_twin.refC);
+            saveTwin(); calStatus = "tared"; beeper.play({60, 80, 60}, now);
+          }
+          break;
+        case CmdType::CalPoint: {
+          if (!median.count() || !median2.count()) { calStatus = "no scale reading"; beeper.play({400}, now); break; }
+          float tc = haveChamber ? chamberC : g_twin.refC;
+          float nl = g_twin.net(0, median.value(), tc), nr = g_twin.net(1, median2.value(), tc);
+          float kl, kr;
+          CalStep step = (CalStep)c.material;
+          if (step == CalStep::Centre) {
+            if (solveCentre(nl, nr, c.value, &kl, &kr)) {
+              g_twin.gramsPerCount[0] = kl; g_twin.gramsPerCount[1] = kr; saveTwin();
+              calStatus = "calibrated (middle)"; beeper.play({60, 80, 60}, now);
+            } else { calStatus = "failed: is the weight in the middle?"; beeper.play({400}, now); }
+            haveCalPoint = false;
+          } else if (!haveCalPoint) {
+            calNetL = nl; calNetR = nr; calGrams = c.value; haveCalPoint = true;
+            calStatus = step == CalStep::Left ? "left saved: now the right end" : "right saved: now the left end";
+            beeper.play({60}, now);
+          } else {
+            bool ok = c.value > calGrams - 1 && c.value < calGrams + 1 &&
+                      solveTwoPoint(calNetL, calNetR, nl, nr, c.value, &kl, &kr);
+            if (ok) {
+              g_twin.gramsPerCount[0] = kl; g_twin.gramsPerCount[1] = kr; saveTwin();
+              calStatus = "calibrated"; beeper.play({60, 80, 60}, now);
+            } else { calStatus = "failed: move the weight to the other end"; beeper.play({400}, now); }
+            haveCalPoint = false;
+          }
+          break;
+        }
+        case CmdType::LearnDrift:
+          if (c.value > 0) {
+            drift.reset(); learning = true; learnStartMs = now; lastLearnSample = 0;
+            calStatus = "learning drift: keep the load the same";
+          } else if (learning) {
+            float dl, dr;
+            learning = false;
+            if (drift.solve(&dl, &dr)) { g_twin.driftPerC[0] = dl; g_twin.driftPerC[1] = dr; saveTwin(); calStatus = "drift learned"; }
+            else calStatus = "drift: not enough temperature range";
+          }
+          break;
+        case CmdType::SetDisplay:
+          if (c.material >= 0 && c.material < DISPLAY_COUNT) { prefs.putUChar("disp", (uint8_t)c.material); g_restartRequested = true; }
+          break;
+        case CmdType::SetEmptyReel: g_twin.emptyReelG = c.value; saveTwin(); break;
+        case CmdType::Calibrate: break;
+#else
         case CmdType::Tare: if (median.count()) { g_cal.tare(median.value()); saveCal(); beeper.play({60, 80, 60}, now); } break;
         case CmdType::Calibrate:
           if (median.count() && g_cal.calibrate(median.value(), c.value)) { saveCal(); beeper.play({60, 80, 60}, now); }
           break;
         case CmdType::SetEmptyReel: g_cal.emptyReelG = c.value; saveCal(); break;
+        case CmdType::CalPoint: case CmdType::LearnDrift: case CmdType::SetDisplay: break;
+#endif
         case CmdType::SetMmPerPulse: if (c.value > 0) { mmPerPulse = c.value; prefs.putFloat("mmpp", mmPerPulse); } break;
         case CmdType::SetRunoutInvert: runoutInvert = c.value != 0; prefs.putBool("runinv", runoutInvert); break;
         case CmdType::ResetMotion: motionBase = g_motionPulses; break;
@@ -303,11 +477,26 @@ static void controlTask(void*) {
       g_ds.requestTemperatures();
     }
     if (g_hx.is_ready()) { median.add((float)g_hx.read()); hxAtMs = now; }
+#if DRYER_BOARD_V2
+    if (hx2.is_ready()) { median2.add((float)hx2.read()); hx2AtMs = now; }
+#endif
 
     bool chamberOk = haveChamber && now - chamberAtMs < 6000;
     bool outletOk = haveOutlet && now - outletAtMs < 4000;
     bool bayOk = haveBay && now - bayAtMs < 6000;
     bool scaleOk = median.count() > 0 && now - hxAtMs < 2000;
+#if DRYER_BOARD_V2
+    scaleOk = scaleOk && median2.count() > 0 && now - hx2AtMs < 2000;
+    // drift learning: one sample a minute under a constant load; ends by itself after 8 h, or once
+    // the dry cycle that heated it is over (with at least 25 °C of range)
+    if (learning && scaleOk && chamberOk && now - lastLearnSample >= 60000) {
+      lastLearnSample = now;
+      drift.add(chamberC, median.value(), median2.value());
+    }
+    if (learning && (now - learnStartMs >= 8UL * 3600 * 1000 || (drift.spanC() >= 25 && ctl.mode() != Mode::Dry))) {
+      Cmd stop{}; stop.type = CmdType::LearnDrift; stop.value = 0; sendCmd(stop);
+    }
+#endif
 
     // ---- control, twice a second
     if (now - lastCtl >= 500) {
@@ -330,7 +519,7 @@ static void controlTask(void*) {
     bool heatOn = window.on(out.heaterDuty, now);
     digitalWrite(pin::HEATER, heatOn ? HIGH : LOW);
     digitalWrite(pin::BLOWER, out.blower ? HIGH : LOW);
-    digitalWrite(pin::EXHAUST, out.exhaust ? HIGH : LOW);
+    if (pin::EXHAUST >= 0) digitalWrite(pin::EXHAUST, out.exhaust ? HIGH : LOW);
     digitalWrite(pin::BUZZER, beeper.update(now) ? HIGH : LOW);
 
     // ---- front button: short = acknowledge a fault, or next mode; 3 s = tare; 10 s = forget Wi-Fi
@@ -340,7 +529,7 @@ static void controlTask(void*) {
       btnDown = false;
       uint32_t held = now - btnSince;
       if (held >= 10000) { g_wifiResetRequested = true; beeper.play({500}, now); }
-      else if (held >= 3000) { if (median.count()) { g_cal.tare(median.value()); saveCal(); beeper.play({60, 80, 60}, now); } }
+      else if (held >= 3000) { Cmd t{}; t.type = CmdType::Tare; sendCmd(t); }
       else if (held >= 40) {
         if (ctl.fault() != Fault::None) ctl.clearFault(now);
         else {
@@ -356,16 +545,36 @@ static void controlTask(void*) {
     // ---- publish
     if (now - lastSnap >= 200) {
       lastSnap = now;
+      Snapshot s;
+#if DRYER_BOARD_V2
+      float tc = chamberOk ? chamberC : g_twin.refC;
+      float grams = 0;
+      if (scaleOk) {
+        s.cellG[0] = g_twin.cellGrams(0, median.value(), tc);
+        s.cellG[1] = g_twin.cellGrams(1, median2.value(), tc);
+        grams = s.cellG[0] + s.cellG[1];
+      }
+      float emptyReel = g_twin.emptyReelG;
+      s.scaleCalibrated = g_twin.calibrated(); s.refC = g_twin.refC;
+      s.driftGPerC[0] = g_twin.driftPerC[0] * g_twin.gramsPerCount[0];
+      s.driftGPerC[1] = g_twin.driftPerC[1] * g_twin.gramsPerCount[1];
+      s.driftLearned = g_twin.driftPerC[0] != 0 || g_twin.driftPerC[1] != 0;
+      s.learning = learning; s.learnSamples = drift.count(); s.learnSpanC = drift.spanC();
+      s.calStatus = calStatus;
+      bool runHigh = false;
+      uint32_t pulses = 0;
+#else
       float grams = scaleOk ? g_cal.gramsFromRaw(median.value()) : 0;
-      float left = grams - g_cal.emptyReelG;
-      if (left < 0) left = 0;
+      float emptyReel = g_cal.emptyReelG;
       bool runHigh = digitalRead(pin::RUNOUT) == HIGH;
       uint32_t pulses = g_motionPulses - motionBase;
-      Snapshot s;
+#endif
+      float left = grams - emptyReel;
+      if (left < 0) left = 0;
       s.chamberOk = chamberOk; s.chamberC = chamberC; s.chamberRh = chamberRh; s.chamberSensor = chamberTypeName(chamberType);
       s.bayOk = bayOk; s.bayC = bayC; s.bayRh = bayRh;
       s.outletOk = outletOk; s.outletC = outletC;
-      s.scaleOk = scaleOk; s.grams = grams; s.gramsLeft = left; s.emptyReelG = g_cal.emptyReelG;
+      s.scaleOk = scaleOk; s.grams = grams; s.gramsLeft = left; s.emptyReelG = emptyReel;
       s.metresLeft = metresLeft(left, MATERIALS[ctl.material()].density);
       s.motionPulses = pulses; s.motionMm = pulses * mmPerPulse;
       s.runoutPinHigh = runHigh; s.filamentPresent = runHigh != runoutInvert;
@@ -385,7 +594,11 @@ static void controlTask(void*) {
       portEXIT_CRITICAL(&g_mux);
       if (btnDown && now - btnSince >= 10000) strcpy(line, "Release: forget Wi-Fi");
       else if (btnDown && now - btnSince >= 3000) strcpy(line, "Release: tare scale");
+#if DRYER_BOARD_V2
+      drawOledV2(snapshot(), line);
+#else
       drawOled(snapshot(), line);
+#endif
     }
   }
 }
@@ -421,12 +634,28 @@ static String stateJson() {
   JsonObject h = d.createNestedObject("heater");
   h["duty"] = s.duty; h["on"] = s.heaterOn;
   d["blower"] = s.blower;
-  d["exhaust"] = s.exhaust;
   JsonObject sc = d.createNestedObject("scale");
   sc["ok"] = s.scaleOk; sc["grams"] = s.grams; sc["empty_reel_g"] = s.emptyReelG; sc["grams_left"] = s.gramsLeft; sc["metres_left"] = s.metresLeft;
+#if DRYER_BOARD_V2
+  d["board"] = "1roll-v2";
+  d["max_c"] = 65;
+  d["display"] = DISPLAY_NAMES[g_display];
+  sc["calibrated"] = s.scaleCalibrated;
+  sc["cal_status"] = s.calStatus;
+  JsonArray cells = sc.createNestedArray("cells");
+  cells.add(s.cellG[0]); cells.add(s.cellG[1]);
+  JsonObject dr = sc.createNestedObject("drift");
+  dr["learned"] = s.driftLearned; dr["learning"] = s.learning; dr["samples"] = s.learnSamples; dr["span_c"] = s.learnSpanC;
+  dr["ref_c"] = s.refC;
+  JsonArray gpc = dr.createNestedArray("g_per_c");
+  gpc.add(s.driftGPerC[0]); gpc.add(s.driftGPerC[1]);
+#else
+  d["board"] = "1roll";
+  d["exhaust"] = s.exhaust;
   JsonObject fi = d.createNestedObject("filament");
   fi["present"] = s.filamentPresent; fi["runout_pin_high"] = s.runoutPinHigh; fi["runout_invert"] = s.runoutInvert;
   fi["motion_mm"] = s.motionMm; fi["motion_pulses"] = s.motionPulses; fi["mm_per_pulse"] = s.mmPerPulse;
+#endif
   String out;
   serializeJson(d, out);
   return out;
@@ -454,12 +683,34 @@ static String handleCommand(const String& cmd, JsonVariantConst body) {
   if (cmd == "calibrate") {
     float g = body["grams"] | 0.0f;
     if (g <= 0) return "grams must be > 0";
+#if DRYER_BOARD_V2
+    // two load cells: {"grams":500,"step":"left"} then "right"; or one "middle" step
+    String step = body["step"] | "";
+    if (step == "left") c.material = (int)CalStep::Left;
+    else if (step == "right") c.material = (int)CalStep::Right;
+    else if (step == "middle" || step == "centre" || step == "center") c.material = (int)CalStep::Centre;
+    else return "step must be left, right or middle";
+    c.type = CmdType::CalPoint; c.value = g; sendCmd(c); return "";
+#else
     c.type = CmdType::Calibrate; c.value = g; sendCmd(c); return "";
+#endif
   }
+#if DRYER_BOARD_V2
+  if (cmd == "learn_drift") {
+    c.type = CmdType::LearnDrift; c.value = (body["start"] | false) ? 1 : 0; sendCmd(c); return "";
+  }
+#endif
   if (cmd == "config") {
     if (body.containsKey("empty_reel_g")) { c.type = CmdType::SetEmptyReel; c.value = body["empty_reel_g"] | 0.0f; sendCmd(c); }
     if (body.containsKey("mm_per_pulse")) { c.type = CmdType::SetMmPerPulse; c.value = body["mm_per_pulse"] | 0.0f; sendCmd(c); }
     if (body.containsKey("runout_invert")) { c.type = CmdType::SetRunoutInvert; c.value = (body["runout_invert"] | false) ? 1 : 0; sendCmd(c); }
+    if (body.containsKey("display")) {
+      String want = body["display"] | "";
+      int idx = -1;
+      for (int k = 0; k < DISPLAY_COUNT; k++) if (want == DISPLAY_NAMES[k]) idx = k;
+      if (idx < 0) return "display must be one of: sh1106" + String(DISPLAY_COUNT > 1 ? ", ssd1309, ssd1309_0" : "");
+      c.type = CmdType::SetDisplay; c.material = idx; sendCmd(c);   // applied after a restart
+    }
     return "";
   }
   return "unknown command";
@@ -506,6 +757,7 @@ static void startServices() {
   g_http.on("/api/calibrate", HTTP_POST, [] { restCommand("calibrate"); });
   g_http.on("/api/config", HTTP_POST, [] { restCommand("config"); });
   g_http.on("/api/motion/reset", HTTP_POST, [] { restCommand("reset_motion"); });
+  g_http.on("/api/scale/learn", HTTP_POST, [] { restCommand("learn_drift"); });   // 1-roll v2: {"start":true|false}
   // firmware update: POST the app .bin (dryer-1roll.bin) as a file field
   g_http.on("/update", HTTP_GET, [] { g_http.send_P(200, "text/html", UPDATE_HTML); });
   g_http.on(
@@ -530,12 +782,16 @@ static void startServices() {
 
 void setup() {
   // outputs low before anything else (the board also pulls the gates low)
-  for (int p : {pin::HEATER, pin::BLOWER, pin::EXHAUST, pin::BUZZER}) { pinMode(p, OUTPUT); digitalWrite(p, LOW); }
+  for (int p : {pin::HEATER, pin::BLOWER, pin::EXHAUST, pin::BUZZER})
+    if (p >= 0) { pinMode(p, OUTPUT); digitalWrite(p, LOW); }
   Serial.begin(115200);
   prefs.begin("dryer", false);
   g_cal.offset = prefs.getFloat("offset", 0);
   g_cal.scale = prefs.getFloat("scale", 1);
   g_cal.emptyReelG = prefs.getFloat("empty", 0);
+#if DRYER_BOARD_V2
+  loadTwin();
+#endif
 
   uint8_t mac[6];
   WiFi.macAddress(mac);
@@ -579,6 +835,10 @@ void loop() {
       String s = stateJson();
       g_ws.broadcastTXT(s);
     }
+  }
+  if (g_restartRequested) {   // display type changed: it takes effect on the next start
+    delay(500);
+    ESP.restart();
   }
   if (g_wifiResetRequested) {
     g_wifiResetRequested = false;

@@ -211,6 +211,94 @@ void test_median_and_scale() {
   TEST_ASSERT_FLOAT_WITHIN(0.5f, 335.4f, metresLeft(1000, 1.24f));   // 1 kg PLA is about 335 m
 }
 
+// ---- 1-roll v2: two load cells
+void test_max_c_caps_setpoints() {
+  Controller c;
+  c.setMaxC(65);
+  c.setMaterial(materialIndex("ABS"));      // dry preset 70 °C
+  c.setMode(Mode::Dry, 0);
+  TEST_ASSERT_EQUAL_FLOAT(65, c.setpoint());
+  c.setMaterial(materialIndex("PLA"));      // 50 °C: under the cap, unchanged
+  TEST_ASSERT_EQUAL_FLOAT(50, c.setpoint());
+}
+
+void test_two_point_calibration_is_position_independent() {
+  // true cells: left 400 counts/g... expressed as grams per count
+  const float kLtrue = 1.0f / 400, kRtrue = 1.0f / 520;
+  const float w = 500;
+  // weight at 20 % of the axle from the left: left carries 80 %, right 20 %
+  float l1 = 0.8f * w / kLtrue, r1 = 0.2f * w / kRtrue;
+  float l2 = 0.25f * w / kLtrue, r2 = 0.75f * w / kRtrue;
+  float kL, kR;
+  TEST_ASSERT_TRUE(solveTwoPoint(l1, r1, l2, r2, w, &kL, &kR));
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, kLtrue, kL);
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, kRtrue, kR);
+  // a 1000 g reel anywhere on the axle reads 1000 g
+  for (float share = 0.1f; share < 0.95f; share += 0.2f) {
+    TwinScaleCal cal;
+    cal.gramsPerCount[0] = kL; cal.gramsPerCount[1] = kR;
+    float g = cal.grams(share * 1000 / kLtrue, (1 - share) * 1000 / kRtrue, 25);
+    TEST_ASSERT_FLOAT_WITHIN(0.5f, 1000, g);
+  }
+}
+
+void test_two_point_rejects_bad_input() {
+  float kL, kR;
+  TEST_ASSERT_FALSE(solveTwoPoint(1000, 1000, 1000, 1000, 500, &kL, &kR));   // weight not moved
+  TEST_ASSERT_FALSE(solveTwoPoint(1000, 0, 900, 0, 500, &kL, &kR));          // right cell dead
+  TEST_ASSERT_FALSE(solveTwoPoint(1000, 200, 300, 900, 0, &kL, &kR));        // no weight
+}
+
+void test_negative_counts_still_work() {
+  // a cell wired the other way round gives negative counts: the factor comes out negative too
+  const float kLtrue = -1.0f / 400, kRtrue = 1.0f / 400;
+  float kL, kR;
+  TEST_ASSERT_TRUE(solveTwoPoint(0.7f * 500 / kLtrue, 0.3f * 500 / kRtrue, 0.3f * 500 / kLtrue, 0.7f * 500 / kRtrue, 500, &kL, &kR));
+  TEST_ASSERT_FLOAT_WITHIN(1e-6f, kLtrue, kL);
+}
+
+void test_centre_calibration() {
+  float kL, kR;
+  TEST_ASSERT_TRUE(solveCentre(100000, 130000, 500, &kL, &kR));
+  TEST_ASSERT_FLOAT_WITHIN(1e-7f, 250.0f / 100000, kL);
+  TEST_ASSERT_FLOAT_WITHIN(1e-7f, 250.0f / 130000, kR);
+  TEST_ASSERT_FALSE(solveCentre(100000, 10000, 500, &kL, &kR));   // weight nowhere near the middle
+}
+
+void test_drift_fit_and_compensation() {
+  // each cell's zero rises 30 and falls 45 counts per °C; the reel itself never changes
+  DriftFit fit;
+  for (int i = 0; i < 40; i++) {
+    float t = 25 + i;                       // 25 -> 64 °C over a heat-up
+    fit.add(t, 100000 + 30 * (t - 25), 80000 - 45 * (t - 25));
+  }
+  float dL, dR;
+  TEST_ASSERT_TRUE(fit.solve(&dL, &dR));
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 30, dL);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, -45, dR);
+
+  TwinScaleCal cal;
+  cal.gramsPerCount[0] = cal.gramsPerCount[1] = 1.0f / 400;
+  cal.tare(20000, 20000, 25);
+  // 80000 counts on each cell above tare = 400 g total, at 25 °C
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 400, cal.grams(100000, 100000, 25));
+  // at 65 °C without compensation the drift reads as weight: 40 °C x (30 - 45) counts = -600 counts = -1.5 g
+  float hotL = 100000 + 30 * 40, hotR = 100000 - 45 * 40;
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 398.5f, cal.grams(hotL, hotR, 65));
+  cal.driftPerC[0] = dL; cal.driftPerC[1] = dR;
+  TEST_ASSERT_FLOAT_WITHIN(0.05f, 400, cal.grams(hotL, hotR, 65));
+}
+
+void test_drift_fit_needs_a_real_heat_cycle() {
+  DriftFit fit;
+  for (int i = 0; i < 40; i++) fit.add(25 + i * 0.2f, 1000, 1000);   // only 8 °C of range
+  float a, b;
+  TEST_ASSERT_FALSE(fit.solve(&a, &b));
+  DriftFit few;
+  for (int i = 0; i < 5; i++) few.add(25 + i * 10, 1000, 1000);       // too few samples
+  TEST_ASSERT_FALSE(few.solve(&a, &b));
+}
+
 int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_materials_and_modes);
@@ -229,5 +317,12 @@ int main(int, char**) {
   RUN_TEST(test_print_mode_runs_cool_and_no_vent);
   RUN_TEST(test_heater_window);
   RUN_TEST(test_median_and_scale);
+  RUN_TEST(test_max_c_caps_setpoints);
+  RUN_TEST(test_two_point_calibration_is_position_independent);
+  RUN_TEST(test_two_point_rejects_bad_input);
+  RUN_TEST(test_negative_counts_still_work);
+  RUN_TEST(test_centre_calibration);
+  RUN_TEST(test_drift_fit_and_compensation);
+  RUN_TEST(test_drift_fit_needs_a_real_heat_cycle);
   return UNITY_END();
 }

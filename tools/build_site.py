@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the GitHub Pages site in docs/ from the version folders.
 
-Each version folder (2-roll-feeder/, 1-roll/) holds page.html (the page body),
+Each version folder (2-roll-feeder/, 1-roll/, 1-roll-v2/, dumb/) holds page.html (the page body),
 bom.csv, wiring.svg and images/. This script wraps each page in
 site/layout.html, fills in the parts tables from bom.csv, copies the assets,
 and writes the overview page from site/overview.html.
@@ -23,6 +23,8 @@ VERSIONS = [
      "Two-reel dryer and feeder with automatic reel switch-over, per-reel weighing and motion sensing."),
     ("1-roll", "1 roll", "Single-Reel Filament Dryer",
      "Single-reel dryer with weighing, filament motion sensing and Printer Control Center integration."),
+    ("1-roll-v2", "1 roll v2 (twin scale)", "Single-Reel Dryer v2: Twin Scale",
+     "Single-reel dryer with the axle on two load cells, a 2.42 inch OLED and a hand-built perfboard controller."),
     ("dumb", "Dumb (STC-3028)", "Dumb Filament Dryer",
      "The cheapest box: a humidity-controlled heater with an STC-3028 and a W1209, no microcontroller."),
 ]

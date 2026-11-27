@@ -40,7 +40,7 @@
   nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
   nav.toc li { break-inside: avoid; }
   @media (max-width: 600px) { nav.toc ol { columns: 1; } }
-  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: .9em; overflow-wrap: anywhere; }
   .table-wrap { overflow-x: auto; margin: 12px 0 20px; border: 1px solid var(--border); border-radius: 8px; }
   table { border-collapse: collapse; width: 100%; font-size: .92rem; }
   th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--border); }
@@ -76,7 +76,7 @@
 <body>
 <main>
 <div class="site"><a class="brand" href="../index.html">Filament Dryer</a><a class="repo" href="https://github.com/oshanrube/filament-dryer">GitHub repository</a></div>
-<nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html">2-roll feeder</a><a href="../1-roll/index.html">1 roll</a><a href="../dumb/index.html" aria-current="page">Dumb (STC-3028)</a></nav>
+<nav class="tabs" aria-label="Versions"><a href="../index.html">Overview</a><a href="../2-roll-feeder/index.html">2-roll feeder</a><a href="../1-roll/index.html">1 roll</a><a href="../1-roll-v2/index.html">1 roll v2 (twin scale)</a><a href="../dumb/index.html" aria-current="page">Dumb (STC-3028)</a></nav>
 <header>
   <h1>Dumb Filament Dryer</h1>
   <p class="lead">The cheapest box that keeps a reel dry: a single-reel housing, a 96 W heater and an off-the-shelf STC-3028 humidity + temperature controller. No microcontroller, no firmware, no scale, no Wi-Fi. The heater runs only while the box is too humid and below a temperature cap, and a W1209 thermostat drops half the heater for the last 5 °C so it doesn't overshoot.</p>

@@ -1,0 +1,139 @@
+<header>
+  <h1>Single-Reel Dryer v2: Twin Scale</h1>
+  <p class="lead">The single-reel box with its axle resting on two load cells, one under each end, so the reel weighs right wherever it sits on the axle. A 12 V 150 W PTC heater and a blower, an SHT40 probe for chamber temperature and humidity, a heater-outlet probe, and a 2.42" OLED on the front. Hand-built on perfboard from through-hole parts and AliExpress modules, running the dryer firmware on an ESP32-C3 SuperMini. No filament sensor in the box: the BTT SFS goes on the printer.</p>
+  <p class="meta">Plan as of 2026-11-27 · parts about US${{BOM_PER_BOX}} per box, housing filament and a crimp kit included.</p>
+  <div class="links">
+    <a href="wiring.svg">Schematic (SVG)</a>
+    <a href="images/perfboard.svg">Perfboard layout</a>
+    <a href="images/front-panel.svg">Front panel</a>
+    <a href="bom.csv">Parts list (CSV)</a>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#changes">What changes from the 1-roll</a></li>
+    <li><a href="#scale">Two load cells</a></li>
+    <li><a href="#drift">Heat and the scale</a></li>
+    <li><a href="#schematic">Schematic and pins</a></li>
+    <li><a href="#perfboard">Perfboard</a></li>
+    <li><a href="#front">Front panel</a></li>
+    <li><a href="#firmware">Firmware</a></li>
+    <li><a href="#parts">Parts</a></li>
+    <li><a href="#build">Build and test</a></li>
+  </ol>
+</nav>
+
+<h2 id="changes">What changes from the 1-roll</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>1-roll</th><th>1-roll v2</th></tr></thead>
+  <tbody>
+    <tr><td>Reel support</td><td>Bearing rollers on one load cell</td><td>Fixed 8 mm axle, its two ends on two load cells; the reel spins on hub cones with 608 bearings</td></tr>
+    <tr><td>Filament sensor</td><td>BTT SFS at the box exit</td><td>None in the box (the SFS mounts on the printer)</td></tr>
+    <tr><td>Fans</td><td>Blower + exhaust</td><td>One blower; a passive vent in the lid</td></tr>
+    <tr><td>Display</td><td>1.3" OLED (optional)</td><td>2.42" OLED filling a 90 × 70 mm front (1.3" also supported)</td></tr>
+    <tr><td>Controller</td><td>JLCPCB-assembled board</td><td>Perfboard: SuperMini, HX711 and MP1584 modules, through-hole parts</td></tr>
+    <tr><td>Hottest setting</td><td>70 °C</td><td>65 °C, because the load cells sit in the chamber</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="scale">Two load cells</h2>
+<p>The axle is fixed and drops into a printed U-cradle on the free end of each bar load cell. The other end of each cell is screwed to a bracket on the side wall. The reel spins on two printed hub cones, each with a 608ZZ bearing, so loading stays top-down: lift the axle out, slide the reel on, drop it back in.</p>
+<ul>
+  <li><strong>Total = left + right.</strong> Each cell carries whatever share the reel's position gives it, so the sum is right wherever the reel sits, as long as each cell has its own scale factor.</li>
+  <li><strong>Two-point calibration.</strong>
+    <ol>
+      <li>Tare with the empty axle and cones in place.</li>
+      <li>Put the 500 g weight near the left end and press <em>Left end</em>.</li>
+      <li>Move it near the right end and press <em>Right end</em>.</li>
+    </ol>
+    The firmware solves for both cells' factors from the two readings. <em>Middle</em> is a quicker one-step version that assumes the weight is centred.</li>
+  <li><strong>Each cell has its own HX711 and clock pin.</strong> Two HX711s sharing a clock would each be clocked out of step whenever the other is read. The two sides are also reported separately, so a reel rubbing on a wall, or a dead cell, shows up as a lopsided split.</li>
+  <li><strong>3 kg cells:</strong> each end carries about 0.75 kg with a full 1 kg reel, and 3 kg leaves room for a reel dropped in. The HX711s read 10 times a second, and the firmware reports a 10 s median: about ±2 g.</li>
+</ul>
+
+<h2 id="drift">Heat and the scale</h2>
+<p>The cells sit in the heated chamber. Bar load cells are temperature-compensated only to about 40 °C, and their zero drifts with temperature.</p>
+<ul>
+  <li><strong>Drift:</strong> about 0.05–0.1 % of full scale per 10 °C. For 3 kg cells heating from 25 to 65 °C, that's roughly 10–25 g on the total, or 3–8 m of PLA.</li>
+  <li><strong>Correction:</strong> learned once. Leave a reel on, start <em>Learn drift</em> on the dryer's page, and run one Dry cycle. The firmware logs both cells against the chamber temperature once a minute, fits a line per cell, and from then on subtracts the drift. Expect about ±5 g after that. It needs at least 15 °C of range, and stops by itself when the Dry cycle ends.</li>
+  <li><strong>Chamber capped at 65 °C.</strong> The cells are usually rated to run up to about 65 °C; above that the glue under the gauges can shift the zero for good. ABS, ASA, nylon and PC dry at 65 °C, for longer.</li>
+</ul>
+
+<h2 id="schematic">Schematic and pins</h2>
+<figure><a href="wiring.svg"><img src="wiring.svg" alt="Schematic: 12 V through a 20 A fuse; MP1584 to 5 V for the ESP32-C3 SuperMini; two HX711s with a load cell each; SHT40 probe and OLED on I2C; DS18B20 on GPIO2; button and buzzer; IRLZ44N blower switch; PC817 driving an IRF3205 that switches the 150 W PTC heater through a KSD301 and thermal fuse." loading="lazy"></a><figcaption>Schematic (open full size). Crossing wires are not joined unless a dot is shown.</figcaption></figure>
+<div class="table-wrap"><table>
+  <thead><tr><th>SuperMini pin</th><th>Goes to</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>GPIO0 / GPIO1</td><td>HX711 left: SCK / DT</td><td></td></tr>
+    <tr><td>GPIO3 / GPIO6</td><td>HX711 right: SCK / DT</td><td>Its own clock</td></tr>
+    <tr><td>GPIO2</td><td>DS18B20 heater-outlet probe</td><td>R9 4.7 k pull-up, which also holds this strapping pin high at boot</td></tr>
+    <tr><td>GPIO4</td><td>Heater: R1 470 Ω → PC817 → IRF3205 gate (from 12 V)</td><td>R3 10 k holds the gate low at power-up</td></tr>
+    <tr><td>GPIO5</td><td>Blower: R4 100 Ω → IRLZ44N gate</td><td>R5 10 k pull-down</td></tr>
+    <tr><td>GPIO7 / GPIO8</td><td>I2C SCL / SDA: SHT40 (0x44), OLED (0x3C)</td><td>R8 / R7 4.7 k pull-ups</td></tr>
+    <tr><td>GPIO10</td><td>Buzzer through Q3 2N2222A (R6 1 k)</td><td></td></tr>
+    <tr><td>GPIO20</td><td>Front button to GND</td><td>R10 10 k pull-up</td></tr>
+    <tr><td>GPIO9, GPIO21</td><td>Spare</td><td>GPIO9 is the board's BOOT button</td></tr>
+  </tbody>
+</table></div>
+<p><strong>The 150 W heater draws about 12.5 A.</strong> The heater path never runs along perfboard tracks:</p>
+<ul>
+  <li>14 AWG silicone wire from the XT60 through the 20 A fuse, the KSD301 (16 A) and the thermal fuse (15 A) to the heater.</li>
+  <li>The heater's return soldered straight to Q1's drain leg, and Q1's source leg straight back to the XT60.</li>
+  <li>Q1 on a 25 mm heatsink: it gives off about 2 W.</li>
+</ul>
+
+<h2 id="perfboard">Perfboard</h2>
+<figure><a href="images/perfboard.svg"><img src="images/perfboard.svg" alt="Top view of the 70 by 90 mm perfboard: 12 V terminal, MP1584, IRF3205 on its heatsink and the PC817 along the top; SuperMini on the left edge with USB-C facing out; buzzer and pull-ups in the middle; blower MOSFET and JST sockets on the right; the two HX711s along the bottom." loading="lazy"></a><figcaption>Placement on a 7 × 9 cm double-sided dot board. Modules plug into female headers; sensors, OLED, button and blower plug into JST-XH sockets.</figcaption></figure>
+
+<h2 id="front">Front panel</h2>
+<figure><a href="images/front-panel.svg"><img src="images/front-panel.svg" alt="90 by 70 mm front panel with a 57 by 30 mm window for the 2.42 inch OLED, four M2.5 standoff holes, and a 12 mm button hole below." loading="lazy"></a><figcaption>The front: the OLED's window and a 12 mm button. The buzzer is inside, on the board.</figcaption></figure>
+<p>The screen shows:</p>
+<ul>
+  <li>The mode, material, setpoint and time left, with the heater % in the corner.</li>
+  <li>The chamber temperature and humidity in large digits.</li>
+  <li>Grams and metres left on the reel.</li>
+  <li>The Wi-Fi address, or "Learning scale drift" while that runs.</li>
+</ul>
+
+<h2 id="firmware">Firmware</h2>
+<p>The same firmware as the 1-roll (<a href="https://github.com/oshanrube/filament-dryer/tree/main/firmware">firmware/</a>), built as <code>dryer-1roll-v2</code>. It keeps the modes (Dry per material, Keep dry, Print, Off), the PID, the safety cut-outs, the Wi-Fi setup hotspot, the status page, the REST and WebSocket API for the Printer Control Center, and updates over Wi-Fi. For v2 it adds:</p>
+<ul>
+  <li><strong>Two-cell scale:</strong>
+    <ul>
+      <li><code>POST /api/calibrate {"grams":500,"step":"left"|"right"|"middle"}</code></li>
+      <li><code>POST /api/scale/learn {"start":true|false}</code> for the drift</li>
+      <li><code>scale.cells</code> (left and right grams) and <code>scale.drift</code> in <code>/api/state</code></li>
+    </ul>
+  </li>
+  <li><strong>65 °C cap</strong> on every setpoint.</li>
+  <li><strong>Display type:</strong> <code>ssd1309</code> (2.42", the default), <code>ssd1309_0</code> (the other common 2.42" wiring) or <code>sh1106</code> (1.3"). To change it, hold the button while powering up to step to the next type, or send <code>POST /api/config {"display":"sh1106"}</code>.</li>
+  <li><strong>Button:</strong>
+    <ul>
+      <li>Short press: next mode, or clear a fault.</li>
+      <li>Hold 3 s: tare.</li>
+      <li>Hold 10 s: forget Wi-Fi.</li>
+    </ul>
+  </li>
+</ul>
+<p>Flash <code>dryer-1roll-v2-full.bin</code> at 0x0 the first time; after that, upload <code>dryer-1roll-v2.bin</code> at <code>/update</code>.</p>
+
+<h2 id="parts">Parts</h2>
+<p>All from AliExpress, through-hole where there's a choice. About US${{BOM_PER_BOX}} per box, housing filament, a crimp kit and the "buy 2" spares included. Also available as <a href="bom.csv">bom.csv</a>.</p>
+{{BOM_TABLES}}
+
+<h2 id="build">Build and test</h2>
+<ol>
+  <li><strong>Buck first:</strong> power the bare board from 12 V and set the MP1584 to 5.0 V before fitting the SuperMini.</li>
+  <li><strong>Flash and check the screen:</strong> flash <code>dryer-1roll-v2-full.bin</code> over USB-C. If the screen stays dark or garbled, hold the button while powering up to try the next display type.</li>
+  <li><strong>Heater disconnected:</strong> join the <code>FilamentDryer-XXXX</code> hotspot and set up Wi-Fi. Check the chamber and outlet probes read sensibly. Select Dry and measure Q1's gate: about 11 V while on, 0 V at power-up.</li>
+  <li><strong>Scale:</strong>
+    <ol>
+      <li>Tare the empty axle, then calibrate left end and right end with the 500 g weight.</li>
+      <li>Check a known reel reads the same at both ends of the axle.</li>
+    </ol>
+  </li>
+  <li><strong>Safety parts:</strong> check the KSD301 opens with a hot-air gun before fitting it.</li>
+  <li><strong>First heat, attended:</strong> connect the heater and run a PLA Dry with the lid open, then closed.</li>
+  <li><strong>Drift:</strong> start <em>Learn drift</em> with a reel on, and run one ABS Dry cycle (65 °C).</li>
+</ol>
